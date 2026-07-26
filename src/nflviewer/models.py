@@ -40,7 +40,7 @@ class TeamRating(APIModel):
     previous_record: RecordSummary
     current_record: RecordSummary
     previous_win_rate: float = Field(ge=0, le=1)
-    adjusted_win_rate: float = Field(ge=0, le=1)
+    scoring_win_rate: float = Field(ge=0, le=1)
     is_good: bool
 
 

@@ -36,6 +36,7 @@ def _ranking_response(data: SeasonData, query: RankingQuery) -> list[GameSummary
     inputs = [
         MatchupInput(
             game_id=matchup.game_id,
+            week=matchup.week,
             kickoff=matchup.kickoff,
             home_team_id=matchup.home_team_id,
             home_team_name=data.teams[matchup.home_team_id].name,

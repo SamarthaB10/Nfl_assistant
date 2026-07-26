@@ -15,6 +15,7 @@ from nflviewer.rivalries import (
 @dataclass(frozen=True)
 class MatchupInput:
     game_id: str
+    week: int
     kickoff: datetime
     home_team_id: str
     home_team_name: str
@@ -36,6 +37,7 @@ def score_matchup(
         logo_url=matchup.home_logo_url,
         previous_record=previous_records[matchup.home_team_id],
         current_record=current_records[matchup.home_team_id],
+        week=matchup.week,
     )
     away = build_team_rating(
         team_id=matchup.away_team_id,
@@ -43,10 +45,11 @@ def score_matchup(
         logo_url=matchup.away_logo_url,
         previous_record=previous_records[matchup.away_team_id],
         current_record=current_records[matchup.away_team_id],
+        week=matchup.week,
     )
 
     both_good = home.is_good and away.is_good
-    record_quality = min(home.adjusted_win_rate, away.adjusted_win_rate) if both_good else 0.0
+    record_quality = min(home.scoring_win_rate, away.scoring_win_rate) if both_good else 0.0
     rivalry_category, rivalry_value = classify_rivalry(
         matchup.home_team_id,
         matchup.away_team_id,
@@ -57,7 +60,10 @@ def score_matchup(
 
     reasons: list[str] = []
     if both_good:
-        reasons.append("Both teams have adjusted winning records")
+        if matchup.week <= 5:
+            reasons.append("Both teams rate above .500 using early-season adjusted records")
+        else:
+            reasons.append("Both teams have winning records")
     if rivalry_category == DIVISIONAL:
         reasons.append("Divisional matchup")
     elif rivalry_category == CONFERENCE_OR_INTERCONFERENCE:

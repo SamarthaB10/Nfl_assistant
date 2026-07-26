@@ -15,11 +15,13 @@ def matchup(
     home: str,
     away: str,
     *,
+    week: int = 1,
     kickoff_hour: int = 18,
     is_divisional: bool = False,
 ) -> MatchupInput:
     return MatchupInput(
         game_id=game_id,
+        week=week,
         kickoff=datetime(2025, 9, 7, kickoff_hour, tzinfo=UTC),
         home_team_id=home,
         home_team_name=home,
@@ -32,7 +34,7 @@ def matchup(
 
 
 def test_two_bad_teams_receive_no_record_quality_or_score() -> None:
-    game = matchup("bad", "CAR", "TEN")
+    game = matchup("bad", "CAR", "TEN", week=9)
     previous = {"CAR": record(8, 8), "TEN": record(8, 8)}
     current = {"CAR": record(2, 6), "TEN": record(2, 6)}
 
@@ -43,7 +45,7 @@ def test_two_bad_teams_receive_no_record_quality_or_score() -> None:
 
 
 def test_bad_divisional_matchup_only_receives_rivalry_value() -> None:
-    game = matchup("bad-division", "NE", "BUF", is_divisional=True)
+    game = matchup("bad-division", "NE", "BUF", week=9, is_divisional=True)
     previous = {"NE": record(8, 8), "BUF": record(8, 8)}
     current = {"NE": record(2, 6), "BUF": record(2, 6)}
 
@@ -53,37 +55,37 @@ def test_bad_divisional_matchup_only_receives_rivalry_value() -> None:
     assert result.watchability_score == 0.20
 
 
-def test_two_good_teams_use_weaker_adjusted_record_as_quality() -> None:
-    game = matchup("good", "A", "B")
+def test_two_good_teams_use_weaker_current_record_after_week_five() -> None:
+    game = matchup("good", "A", "B", week=9)
     previous = {"A": record(8, 8), "B": record(8, 8)}
     current = {"A": record(5, 3), "B": record(6, 2)}
 
     result = score_matchup(game, previous, current)
 
-    assert result.breakdown.record_quality == pytest.approx(7 / 12)
-    assert result.watchability_score == 0.58
-    assert result.reasons == ["Both teams have adjusted winning records"]
+    assert result.breakdown.record_quality == pytest.approx(5 / 8)
+    assert result.watchability_score == 0.62
+    assert result.reasons == ["Both teams have winning records"]
 
 
 def test_divisional_value_saturates_instead_of_adding_directly() -> None:
-    game = matchup("good-division", "A", "B", is_divisional=True)
+    game = matchup("good-division", "A", "B", week=9, is_divisional=True)
     previous = {"A": record(8, 8), "B": record(8, 8)}
     current = {"A": record(5, 3), "B": record(6, 2)}
 
     result = score_matchup(game, previous, current)
 
-    quality = 7 / 12
+    quality = 5 / 8
     assert result.breakdown.raw_score == pytest.approx(quality + (1 - quality) * 0.20)
-    assert result.watchability_score == 0.67
+    assert result.watchability_score == 0.70
     assert result.reasons == [
-        "Both teams have adjusted winning records",
+        "Both teams have winning records",
         "Divisional matchup",
     ]
 
 
 def test_elite_records_score_above_moderate_winning_records() -> None:
-    moderate = matchup("moderate", "A", "B")
-    elite = matchup("elite", "C", "D")
+    moderate = matchup("moderate", "A", "B", week=13)
+    elite = matchup("elite", "C", "D", week=13)
     previous = {
         "A": record(8, 8),
         "B": record(8, 8),
@@ -101,6 +103,24 @@ def test_elite_records_score_above_moderate_winning_records() -> None:
     elite_score = score_matchup(elite, previous, current).watchability_score
 
     assert elite_score > moderate_score
+
+
+def test_week_eighteen_ignores_previous_season_strength() -> None:
+    game = matchup(
+        "2025_18_BAL_PIT",
+        "PIT",
+        "BAL",
+        week=18,
+        is_divisional=True,
+    )
+    previous = {"BAL": record(12, 5), "PIT": record(10, 7)}
+    current = {"BAL": record(8, 8), "PIT": record(9, 7)}
+
+    result = score_matchup(game, previous, current)
+
+    assert result.breakdown.record_quality == 0
+    assert result.watchability_score == 0.20
+    assert result.reasons == ["Divisional matchup"]
 
 
 def test_ranking_uses_raw_score_and_applies_top_after_sorting() -> None:

@@ -1,6 +1,7 @@
 from nflviewer.models import RecordSummary, TeamRating
 
 PRIOR_GAMES = 4
+ADJUSTED_RATE_MAX_WEEK = 5
 
 
 def win_rate(record: RecordSummary) -> float:
@@ -21,6 +22,17 @@ def adjusted_win_rate(
     )
 
 
+def scoring_win_rate(
+    previous_record: RecordSummary,
+    current_record: RecordSummary,
+    *,
+    week: int,
+) -> float:
+    if week <= ADJUSTED_RATE_MAX_WEEK:
+        return adjusted_win_rate(previous_record, current_record)
+    return win_rate(current_record)
+
+
 def build_team_rating(
     *,
     team_id: str,
@@ -28,9 +40,10 @@ def build_team_rating(
     logo_url: str | None,
     previous_record: RecordSummary,
     current_record: RecordSummary,
+    week: int,
 ) -> TeamRating:
     previous_rate = win_rate(previous_record)
-    adjusted_rate = adjusted_win_rate(previous_record, current_record)
+    scoring_rate = scoring_win_rate(previous_record, current_record, week=week)
     return TeamRating(
         team_id=team_id,
         team_name=team_name,
@@ -38,6 +51,6 @@ def build_team_rating(
         previous_record=previous_record,
         current_record=current_record,
         previous_win_rate=previous_rate,
-        adjusted_win_rate=adjusted_rate,
-        is_good=adjusted_rate > 0.5,
+        scoring_win_rate=scoring_rate,
+        is_good=scoring_rate > 0.5,
     )

@@ -1,7 +1,7 @@
 import pytest
 
 from nflviewer.models import RecordSummary
-from nflviewer.records import adjusted_win_rate, build_team_rating, win_rate
+from nflviewer.records import adjusted_win_rate, build_team_rating, scoring_win_rate, win_rate
 
 
 def record(wins: int, losses: int, ties: int = 0) -> RecordSummary:
@@ -38,6 +38,20 @@ def test_current_results_progressively_outweigh_previous_season() -> None:
     assert after_eight_games < after_four_games
 
 
+def test_week_five_uses_adjusted_win_rate() -> None:
+    previous = record(12, 4)
+    current = record(2, 2)
+
+    assert scoring_win_rate(previous, current, week=5) == pytest.approx(0.625)
+
+
+def test_week_six_uses_only_current_win_rate() -> None:
+    previous = record(15, 2)
+    current = record(2, 3)
+
+    assert scoring_win_rate(previous, current, week=6) == pytest.approx(0.4)
+
+
 def test_good_team_gate_uses_strictly_greater_than_half() -> None:
     rating = build_team_rating(
         team_id="DAL",
@@ -45,7 +59,8 @@ def test_good_team_gate_uses_strictly_greater_than_half() -> None:
         logo_url=None,
         previous_record=record(8, 8),
         current_record=record(0, 0),
+        week=1,
     )
 
-    assert rating.adjusted_win_rate == 0.5
+    assert rating.scoring_win_rate == 0.5
     assert rating.is_good is False
