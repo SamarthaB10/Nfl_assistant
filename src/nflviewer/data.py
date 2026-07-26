@@ -8,6 +8,8 @@ from zoneinfo import ZoneInfo
 
 import polars as pl
 
+from nflviewer.standings import TeamStanding, build_standings
+
 TARGET_SEASON = 2025
 PREVIOUS_SEASON = 2024
 TEAM_ALIASES = {"LA": "LAR", "JAC": "JAX"}
@@ -214,6 +216,24 @@ class SeasonData:
     def current_records_before_week(self, week: int) -> dict[str, Record]:
         return self._records_for(
             self._schedules.filter((pl.col("season") == TARGET_SEASON) & (pl.col("week") < week))
+        )
+
+    def current_standings_before_week(self, week: int) -> dict[str, TeamStanding]:
+        games = self._schedules.filter(
+            (pl.col("season") == TARGET_SEASON) & (pl.col("week") < week)
+        )
+        point_differentials = {team_id: 0 for team_id in self.teams}
+        completed = games.filter(
+            pl.col("away_score").is_not_null() & pl.col("home_score").is_not_null()
+        )
+        for game in completed.iter_rows(named=True):
+            margin = game["away_score"] - game["home_score"]
+            point_differentials[game["away_team"]] += margin
+            point_differentials[game["home_team"]] -= margin
+        return build_standings(
+            self.teams,
+            self._records_for(games),
+            point_differentials,
         )
 
     def _records_for(self, games: pl.DataFrame) -> dict[str, Record]:

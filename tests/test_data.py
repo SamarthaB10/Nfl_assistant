@@ -143,6 +143,20 @@ def test_calculates_previous_and_preweek_records_without_future_leakage() -> Non
     }
 
 
+def test_builds_standings_from_only_games_before_the_selected_week() -> None:
+    data = SeasonData.from_frames(schedule_rows(), team_rows())
+
+    week_one = data.current_standings_before_week(1)
+    week_three = data.current_standings_before_week(3)
+
+    assert week_one["JAX"].record.wins == 0
+    assert week_one["JAX"].point_differential == 0
+    assert week_three["JAX"].record.losses == 1
+    assert week_three["JAX"].point_differential == -3
+    assert week_three["LAR"].record.wins == 1
+    assert week_three["LAR"].point_differential == 3
+
+
 def test_missing_completed_game_does_not_create_a_record_or_bye() -> None:
     schedules = schedule_rows().with_columns(
         pl.when(pl.col("game_id") == "2025_01_LA_JAC")

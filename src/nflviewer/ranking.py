@@ -10,6 +10,7 @@ from nflviewer.rivalries import (
     HISTORIC_OR_REGIONAL,
     classify_rivalry,
 )
+from nflviewer.standings import TeamStanding, matchup_leverage
 
 
 @dataclass(frozen=True)
@@ -30,6 +31,8 @@ def score_matchup(
     matchup: MatchupInput,
     previous_records: Mapping[str, RecordSummary],
     current_records: Mapping[str, RecordSummary],
+    *,
+    standings: Mapping[str, TeamStanding] | None = None,
 ) -> RankedGame:
     home = build_team_rating(
         team_id=matchup.home_team_id,
@@ -55,7 +58,19 @@ def score_matchup(
         matchup.away_team_id,
         is_divisional=matchup.is_divisional,
     )
-    raw_score = record_quality + (1 - record_quality) * rivalry_value
+    base_score = record_quality + (1 - record_quality) * rivalry_value
+    leverage = (
+        matchup_leverage(
+            matchup.home_team_id,
+            matchup.away_team_id,
+            week=matchup.week,
+            standings=standings,
+        )
+        if standings is not None
+        else None
+    )
+    leverage_value = leverage.value if leverage else 0.0
+    raw_score = base_score + (1 - base_score) * leverage_value
     display_score = round(min(max(raw_score, 0.0), 1.0), 2)
 
     reasons: list[str] = []
@@ -70,6 +85,8 @@ def score_matchup(
         reasons.append("Recognized conference or interconference rivalry")
     elif rivalry_category == HISTORIC_OR_REGIONAL:
         reasons.append("Historic or regional rivalry")
+    if leverage and leverage.reason and leverage.value > 0:
+        reasons.append(leverage.reason)
 
     return RankedGame(
         rank=1,
@@ -82,6 +99,8 @@ def score_matchup(
             record_quality=record_quality,
             rivalry_category=rivalry_category,
             rivalry_value=rivalry_value,
+            leverage_value=leverage_value,
+            leverage_reason=leverage.reason if leverage else None,
             raw_score=raw_score,
             display_score=display_score,
         ),
@@ -94,16 +113,26 @@ def rank_matchups(
     previous_records: Mapping[str, RecordSummary],
     current_records: Mapping[str, RecordSummary],
     *,
+    standings: Mapping[str, TeamStanding] | None = None,
     top: int | None = None,
 ) -> list[RankedGame]:
     if top is not None and top < 1:
         raise ValueError("top must be at least 1")
 
-    scored = [score_matchup(matchup, previous_records, current_records) for matchup in matchups]
+    scored = [
+        score_matchup(
+            matchup,
+            previous_records,
+            current_records,
+            standings=standings,
+        )
+        for matchup in matchups
+    ]
     scored.sort(
         key=lambda game: (
             -game.breakdown.raw_score,
             -game.breakdown.record_quality,
+            -game.breakdown.leverage_value,
             -game.breakdown.rivalry_value,
             game.kickoff,
             game.game_id,

@@ -52,6 +52,7 @@ def _ranking_response(data: SeasonData, query: RankingQuery) -> list[GameSummary
         inputs,
         _record_summaries(data.previous_records()),
         _record_summaries(data.current_records_before_week(query.week)),
+        standings=data.current_standings_before_week(query.week),
         top=query.top,
     )
     return [

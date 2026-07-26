@@ -4,6 +4,7 @@ import pytest
 
 from nflviewer.models import RecordSummary
 from nflviewer.ranking import MatchupInput, rank_matchups, score_matchup
+from nflviewer.standings import TeamStanding
 
 
 def record(wins: int, losses: int, ties: int = 0) -> RecordSummary:
@@ -121,6 +122,46 @@ def test_week_eighteen_ignores_previous_season_strength() -> None:
     assert result.breakdown.record_quality == 0
     assert result.watchability_score == 0.20
     assert result.reasons == ["Divisional matchup"]
+
+
+def test_week_eighteen_division_title_context_raises_watchability() -> None:
+    game = matchup(
+        "2025_18_BAL_PIT",
+        "PIT",
+        "BAL",
+        week=18,
+        is_divisional=True,
+    )
+    previous = {"BAL": record(12, 5), "PIT": record(10, 7)}
+    current = {"BAL": record(8, 8), "PIT": record(9, 7)}
+    standings = {
+        "BAL": TeamStanding(
+            team_id="BAL",
+            conference="AFC",
+            division="AFC North",
+            record=current["BAL"],
+            point_differential=10,
+            conference_rank=7,
+            division_rank=2,
+        ),
+        "PIT": TeamStanding(
+            team_id="PIT",
+            conference="AFC",
+            division="AFC North",
+            record=current["PIT"],
+            point_differential=20,
+            conference_rank=5,
+            division_rank=1,
+        ),
+    }
+
+    result = score_matchup(game, previous, current, standings=standings)
+
+    assert result.watchability_score == 0.86
+    assert result.reasons == [
+        "Divisional matchup",
+        "Direct division race matchup",
+    ]
 
 
 def test_ranking_uses_raw_score_and_applies_top_after_sorting() -> None:

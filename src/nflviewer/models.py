@@ -55,6 +55,8 @@ class ScoreBreakdown(APIModel):
     record_quality: float = Field(ge=0, le=1)
     rivalry_category: RivalryCategory | None
     rivalry_value: float = Field(ge=0, le=1)
+    leverage_value: float = Field(default=0, ge=0, le=1)
+    leverage_reason: str | None = None
     raw_score: float = Field(ge=0, le=1)
     display_score: float = Field(ge=0, le=1)
 
