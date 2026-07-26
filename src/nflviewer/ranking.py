@@ -71,7 +71,8 @@ def score_matchup(
     )
     leverage_value = leverage.value if leverage else 0.0
     raw_score = base_score + (1 - base_score) * leverage_value
-    display_score = round(min(max(raw_score, 0.0), 1.0), 2)
+    normalized_score = min(max(raw_score, 0.0), 1.0)
+    display_score = round(1 + 4 * normalized_score, 2)
 
     reasons: list[str] = []
     if both_good:

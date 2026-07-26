@@ -34,7 +34,7 @@ def matchup(
     )
 
 
-def test_two_bad_teams_receive_no_record_quality_or_score() -> None:
+def test_two_bad_teams_receive_no_record_quality_and_minimum_score() -> None:
     game = matchup("bad", "CAR", "TEN", week=9)
     previous = {"CAR": record(8, 8), "TEN": record(8, 8)}
     current = {"CAR": record(2, 6), "TEN": record(2, 6)}
@@ -42,7 +42,7 @@ def test_two_bad_teams_receive_no_record_quality_or_score() -> None:
     result = score_matchup(game, previous, current)
 
     assert result.breakdown.record_quality == 0
-    assert result.watchability_score == 0
+    assert result.watchability_score == 1.0
 
 
 def test_bad_divisional_matchup_only_receives_rivalry_value() -> None:
@@ -53,7 +53,7 @@ def test_bad_divisional_matchup_only_receives_rivalry_value() -> None:
     result = score_matchup(game, previous, current)
 
     assert result.breakdown.record_quality == 0
-    assert result.watchability_score == 0.20
+    assert result.watchability_score == 1.80
 
 
 def test_two_good_teams_use_weaker_current_record_after_week_five() -> None:
@@ -64,7 +64,7 @@ def test_two_good_teams_use_weaker_current_record_after_week_five() -> None:
     result = score_matchup(game, previous, current)
 
     assert result.breakdown.record_quality == pytest.approx(5 / 8)
-    assert result.watchability_score == 0.62
+    assert result.watchability_score == 3.50
     assert result.reasons == ["Both teams have winning records"]
 
 
@@ -77,7 +77,7 @@ def test_divisional_value_saturates_instead_of_adding_directly() -> None:
 
     quality = 5 / 8
     assert result.breakdown.raw_score == pytest.approx(quality + (1 - quality) * 0.20)
-    assert result.watchability_score == 0.70
+    assert result.watchability_score == 3.80
     assert result.reasons == [
         "Both teams have winning records",
         "Divisional matchup",
@@ -120,7 +120,7 @@ def test_week_eighteen_ignores_previous_season_strength() -> None:
     result = score_matchup(game, previous, current)
 
     assert result.breakdown.record_quality == 0
-    assert result.watchability_score == 0.20
+    assert result.watchability_score == 1.80
     assert result.reasons == ["Divisional matchup"]
 
 
@@ -157,7 +157,7 @@ def test_week_eighteen_division_title_context_raises_watchability() -> None:
 
     result = score_matchup(game, previous, current, standings=standings)
 
-    assert result.watchability_score == 0.86
+    assert result.watchability_score == 4.42
     assert result.reasons == [
         "Divisional matchup",
         "Direct division race matchup",

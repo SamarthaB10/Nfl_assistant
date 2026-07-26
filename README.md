@@ -34,7 +34,7 @@ The response contains only the information needed to display each game:
       "SEA": "13-3",
       "SF": "12-4"
     },
-    "score": 0.96,
+    "score": 4.86,
     "reasons": [
       "Both teams have winning records",
       "Divisional matchup",
@@ -49,6 +49,10 @@ Scores use only information available before the selected game's week.
 Headlines are display-only reasons: they never change a score or ranking.
 The API reads both nflverse data and the headline JSON from local cache, so a
 ranking request does not call an external service.
+
+The watchability score uses a `1.00–5.00` scale and is rounded to two decimal
+places. A `1.00` game has no scoring boost; a `5.00` game reaches the model's
+maximum possible value.
 
 ## Verification
 

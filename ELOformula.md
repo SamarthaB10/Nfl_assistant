@@ -1,8 +1,10 @@
-# Standings Watchability Formula v2
+# Standings Watchability Formula v3
 
-The score is an absolute `0.00–1.00` watchability index, not a probability.
-It uses only information available before the selected week. Despite this
-file's original "ELO" name, the MVP does not calculate Elo ratings.
+The displayed score is an absolute `1.00–5.00` watchability rating, not a
+probability. The formula calculates a normalized value internally and converts
+it to the five-point scale at the end. It uses only information available
+before the selected week. Despite this file's original "ELO" name, the MVP
+does not calculate Elo ratings.
 
 ## Variables
 
@@ -14,7 +16,8 @@ file's original "ELO" name, the MVP does not calculate Elo ratings.
 | `I` | Estimated impact on a standings objective | `0.00–1.00` |
 | `M` | Season maturity | `0.00–1.00` |
 | `L` | Weekly standings leverage | `0.00–0.82` |
-| `S` | Final watchability score | `0.00–1.00` |
+| `N` | Normalized final value used for sorting | `0.00–1.00` |
+| `S` | Displayed watchability score | `1.00–5.00` |
 
 ## 1. Team scoring win rate
 
@@ -185,24 +188,34 @@ The strongest applicable reason is displayed as division race, playoff cutoff,
 or conference top-seed implications. A direct late-season division race can
 meaningfully lift an otherwise ordinary game.
 
-## 7. Final score (`S`)
+## 7. Final score (`N` and `S`)
 
 ### Formula
 
 ```text
-S_raw = B + (1 - B) × L
-S = round(clamp(S_raw, 0, 1), 2)
+N = B + (1 - B) × L
+S = round(1 + 4 × clamp(N, 0, 1), 2)
 ```
 
 ### Meaning
 
 Standings leverage fills some of the score not already supplied by team
-quality and rivalry. Every layer saturates, so the final value cannot exceed
-`1.00`.
+quality and rivalry. The linear conversion maps normalized `0.00` to displayed
+`1.00` and normalized `1.00` to displayed `5.00`:
+
+| Normalized value | Displayed score |
+| ---: | ---: |
+| `0.00` | `1.00` |
+| `0.25` | `2.00` |
+| `0.50` | `3.00` |
+| `0.75` | `4.00` |
+| `1.00` | `5.00` |
 
 ### How it is used
 
-Sorting uses the unrounded score, then record quality, leverage, rivalry,
+The displayed score is rounded to two decimal places. Sorting continues to use
+the unrounded normalized value, so changing the display scale does not change
+the matchup order. Ties are resolved by record quality, leverage, rivalry,
 kickoff, and game ID. `top` is applied only after every game is scored.
 
 ## 8. Headline reasons
