@@ -18,7 +18,12 @@ All inputs are calculated before the selected week.
 
 ```text
 teamStrength =
-  mean(scoringWinRate, offensePercentile, defensePercentile)
+  mean(
+    scoringWinRate,
+    offensePercentile,
+    defensePercentile,
+    pointDifferentialPercentile
+  )
 
 homeExpectedPoints =
   mean(homePointsForPerGame, awayPointsAllowedPerGame)
@@ -74,8 +79,7 @@ def matchup_quality(
     away_win_rate: float,
     home_metrics: TeamMetrics,
     away_metrics: TeamMetrics,
-) -> MatchupQuality:
-    ...
+) -> MatchupQuality: ...
 ```
 
 ## Testing Strategy

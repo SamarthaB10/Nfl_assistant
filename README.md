@@ -1,8 +1,9 @@
 # NFL Viewer
 
-FastAPI backend that ranks 2025 NFL regular-season matchups by record quality,
-rivalry context, and pregame standings leverage. Relevant historical ESPN
-headlines are included as explanatory context. Swagger UI is the MVP interface.
+FastAPI backend that ranks 2025 NFL regular-season matchups using `55%` pure
+matchup quality and `45%` context and standings stakes. Relevant historical
+ESPN headlines are included as explanatory context. Swagger UI is the MVP
+interface.
 
 ## Setup
 
@@ -34,11 +35,12 @@ The response contains only the information needed to display each game:
       "SEA": "13-3",
       "SF": "12-4"
     },
-    "score": 4.86,
+    "score": 4.14,
     "reasons": [
       "Both teams have winning records",
       "Divisional matchup",
       "Direct division race matchup",
+      "Strong, competitive team matchup",
       "Headline: 49ers host the Seahawks in the season finale with the division title and top NFC seed on the line"
     ]
   }
@@ -53,6 +55,11 @@ ranking request does not call an external service.
 The watchability score uses a `1.00–5.00` scale and is rounded to two decimal
 places. A `1.00` game has no scoring boost; a `5.00` game reaches the model's
 maximum possible value.
+
+Pure matchup quality combines both teams' pregame records, offense percentile,
+defense percentile, point-differential percentile, and expected
+offense-versus-defense closeness. Context combines rivalry value with pregame
+division, playoff-cutoff, and top-seed leverage. Injuries are not part of v4.
 
 ## Verification
 

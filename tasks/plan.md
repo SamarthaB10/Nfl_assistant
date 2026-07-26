@@ -19,29 +19,29 @@ pregame-only data boundary.
 
 ### Phase 1: Pregame quality foundation
 
-- [ ] Add leakage-safe weekly offense and defense metrics.
-- [ ] Add pure team-strength and matchup-closeness calculations.
+- [x] Add leakage-safe weekly offense and defense metrics.
+- [x] Add pure team-strength and matchup-closeness calculations.
 
 ### Checkpoint: Quality
 
-- [ ] Focused data and matchup-quality tests pass.
-- [ ] Commit the working quality slice.
+- [x] Focused data and matchup-quality tests pass.
+- [x] Commit the working quality slice.
 
 ### Phase 2: Formula integration
 
-- [ ] Compose `55%` matchup quality and `45%` context in rankings.
-- [ ] Add meaningful quality reasons without changing the response shape.
-- [ ] Update formula version and expected API scores.
+- [x] Compose `55%` matchup quality and `45%` context in rankings.
+- [x] Add meaningful quality reasons without changing the response shape.
+- [x] Update formula version and expected API scores.
 
 ### Checkpoint: Integration
 
-- [ ] Ranking and API tests pass.
-- [ ] Commit the formula integration slice.
+- [x] Ranking and API tests pass.
+- [x] Commit the formula integration slice.
 
 ### Phase 3: Documentation and runtime
 
-- [ ] Update `ELOformula.md` and `README.md`.
-- [ ] Run the full test, lint, formatting, and live API checks.
+- [x] Update `ELOformula.md` and `README.md`.
+- [x] Run the full test, lint, formatting, and live API checks.
 - [ ] Push the feature branch.
 
 ## Risks and Mitigations
