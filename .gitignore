@@ -5,3 +5,6 @@
 __pycache__/
 *.py[cod]
 data/processed/
+frontend/.next/
+frontend/coverage/
+frontend/node_modules/
