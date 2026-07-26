@@ -2,7 +2,7 @@
 
 ## Objective
 
-Rank 2025 NFL regular-season games on a `1.00–5.00` scale using two
+Rank 2025 NFL regular-season games on a `1.00–10.00` scale using two
 interpretable benchmarks:
 
 - `55%` pure matchup quality;
@@ -42,7 +42,7 @@ context =
   standingsLeverage + (1 - standingsLeverage) × rivalryValue
 
 normalizedScore = 0.55 × matchupQuality + 0.45 × context
-displayScore = round(1 + 4 × normalizedScore, 2)
+displayScore = round(1 + 9 × normalizedScore, 2)
 ```
 
 Offense percentile ranks points scored per game from worst to best. Defense
@@ -94,7 +94,7 @@ def matchup_quality(
 ## Boundaries
 
 - Always: use pregame data only; keep the public score between `1.00` and
-  `5.00`; sort using the unrounded normalized score.
+  `10.00`; sort using the unrounded normalized score.
 - Ask first: add dependencies, change the API response shape, or change the
   user-approved `55/45` split.
 - Never: use future results, Vegas lines, headlines as numeric inputs, or

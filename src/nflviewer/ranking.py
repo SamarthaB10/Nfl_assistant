@@ -98,7 +98,7 @@ def score_matchup(
     context_value = leverage_value + (1 - leverage_value) * rivalry_value
     raw_score = MATCHUP_QUALITY_WEIGHT * quality.value + CONTEXT_WEIGHT * context_value
     normalized_score = min(max(raw_score, 0.0), 1.0)
-    display_score = round(1 + 4 * normalized_score, 2)
+    display_score = round(1 + 9 * normalized_score, 2)
 
     reasons: list[str] = []
     if both_good:

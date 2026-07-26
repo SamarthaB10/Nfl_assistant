@@ -13,7 +13,7 @@ pregame-only data boundary.
 - Put pure matchup math in `matchup_quality.py` and keep weekly aggregation in
   `data.py`.
 - Preserve normalized raw values for sorting and convert only the displayed
-  score to `1.00–5.00`.
+  score to `1.00–10.00`.
 
 ## Task List
 

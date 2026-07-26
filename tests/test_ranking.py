@@ -79,7 +79,7 @@ def test_final_score_uses_55_percent_quality_and_45_percent_context() -> None:
     assert result.breakdown.matchup_quality == pytest.approx(quality)
     assert result.breakdown.context_value == expected_context
     assert result.breakdown.raw_score == pytest.approx(expected_raw)
-    assert result.watchability_score == round(1 + 4 * expected_raw, 2)
+    assert result.watchability_score == round(1 + 9 * expected_raw, 2)
 
 
 def test_two_bad_teams_receive_low_quality_even_when_evenly_matched() -> None:
@@ -95,7 +95,7 @@ def test_two_bad_teams_receive_low_quality_even_when_evenly_matched() -> None:
 
     assert result.breakdown.record_quality == 0
     assert result.breakdown.competitive_closeness == 1
-    assert result.watchability_score == 1.30
+    assert result.watchability_score == 1.68
 
 
 def test_bad_divisional_matchup_only_receives_rivalry_value() -> None:
@@ -111,7 +111,7 @@ def test_bad_divisional_matchup_only_receives_rivalry_value() -> None:
 
     assert result.breakdown.record_quality == 0
     assert result.breakdown.context_value == 0.20
-    assert result.watchability_score == 1.66
+    assert result.watchability_score == 2.49
 
 
 def test_two_good_teams_use_weaker_current_record_after_week_five() -> None:
@@ -146,7 +146,7 @@ def test_divisional_value_saturates_instead_of_adding_directly() -> None:
 
     expected_raw = 0.55 * result.breakdown.matchup_quality + 0.45 * 0.20
     assert result.breakdown.raw_score == pytest.approx(expected_raw)
-    assert result.watchability_score == round(1 + 4 * expected_raw, 2)
+    assert result.watchability_score == round(1 + 9 * expected_raw, 2)
     assert result.reasons == [
         "Both teams have winning records",
         "Divisional matchup",

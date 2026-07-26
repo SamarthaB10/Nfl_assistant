@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from nflviewer.models import RankingQuery
+from nflviewer.models import GameSummary, RankingQuery
 
 
 def test_ranking_query_defaults_to_all_2025_games() -> None:
@@ -35,3 +35,14 @@ def test_ranking_query_rejects_unsupported_values(field: str, value: int) -> Non
 def test_ranking_query_rejects_top_and_bottom_together() -> None:
     with pytest.raises(ValidationError, match="mutually exclusive"):
         RankingQuery(week=4, top=3, bottom=3)
+
+
+def test_game_summary_accepts_ten_point_watchability_score() -> None:
+    game = GameSummary(
+        matchup="Team A vs Team B",
+        records={"A": "10-2", "B": "11-1"},
+        score=10,
+        reasons=[],
+    )
+
+    assert game.score == 10

@@ -16,7 +16,7 @@ class HealthResponse(APIModel):
     status: Literal["ok"] = "ok"
     data_loaded: bool
     supported_season: Literal[2025] = 2025
-    formula_version: Literal["dynamic-watchability-v4"] = "dynamic-watchability-v4"
+    formula_version: Literal["dynamic-watchability-v5"] = "dynamic-watchability-v5"
 
 
 class RankingQuery(BaseModel):
@@ -80,7 +80,7 @@ class ScoreBreakdown(APIModel):
     leverage_reason: str | None = None
     context_value: float = Field(ge=0, le=1)
     raw_score: float = Field(ge=0, le=1)
-    display_score: float = Field(ge=1, le=5)
+    display_score: float = Field(ge=1, le=10)
 
 
 class RankedGame(APIModel):
@@ -89,7 +89,7 @@ class RankedGame(APIModel):
     kickoff: datetime
     away_team: TeamRating
     home_team: TeamRating
-    watchability_score: float = Field(ge=1, le=5)
+    watchability_score: float = Field(ge=1, le=10)
     breakdown: ScoreBreakdown
     reasons: list[str]
 
@@ -97,5 +97,5 @@ class RankedGame(APIModel):
 class GameSummary(APIModel):
     matchup: str
     records: dict[str, str]
-    score: float = Field(ge=1, le=5)
+    score: float = Field(ge=1, le=10)
     reasons: list[str]

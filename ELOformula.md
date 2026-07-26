@@ -1,6 +1,6 @@
-# Dynamic Watchability Formula v4
+# Dynamic Watchability Formula v5
 
-The API displays an absolute `1.00–5.00` watchability rating, not a win
+The API displays an absolute `1.00–10.00` watchability rating, not a win
 probability. The formula first calculates a normalized `0.00–1.00` value using
 two benchmarks:
 
@@ -26,7 +26,7 @@ Despite this file's historical name, the prototype does not calculate Elo.
 | `L` | Weekly standings leverage | `0.00–0.82` |
 | `X` | Combined context and stakes | `0.00–1.00` |
 | `N` | Unrounded normalized watchability | `0.00–1.00` |
-| `S` | Displayed watchability score | `1.00–5.00` |
+| `S` | Displayed watchability score | `1.00–10.00` |
 
 ## 1. Pregame data boundary
 
@@ -266,7 +266,7 @@ disadvantage, but rivalry alone cannot make two poor teams an elite matchup.
 
 ```text
 N = 0.55 × Q + 0.45 × X
-S = round(1 + 4 × clamp(N, 0, 1), 2)
+S = round(1 + 9 × clamp(N, 0, 1), 2)
 ```
 
 ### Scale
@@ -274,13 +274,13 @@ S = round(1 + 4 × clamp(N, 0, 1), 2)
 | Normalized value | Displayed score |
 | ---: | ---: |
 | `0.00` | `1.00` |
-| `0.25` | `2.00` |
-| `0.50` | `3.00` |
-| `0.75` | `4.00` |
-| `1.00` | `5.00` |
+| `0.25` | `3.25` |
+| `0.50` | `5.50` |
+| `0.75` | `7.75` |
+| `1.00` | `10.00` |
 
 The API returns a number rounded to two-decimal precision. A JSON consumer may
-render `3.50` as `3.5`; a UI should format it to two places.
+render `8.50` as `8.5`; a UI should format it to two places.
 
 ## 12. Ranking tiebreakers
 

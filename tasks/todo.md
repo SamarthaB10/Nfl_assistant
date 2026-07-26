@@ -20,7 +20,7 @@
   - Files: `src/nflviewer/ranking.py`, `src/nflviewer/models.py`,
     `src/nflviewer/app.py`, ranking/API tests
 
-- [x] Task 4: Document and verify formula v4
+- [x] Task 4: Document and verify the current formula
   - Acceptance: docs contain every variable and live Week 2025 output uses the
     new formula.
   - Verify: full pytest, Ruff, formatting, and live HTTP request

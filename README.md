@@ -38,7 +38,7 @@ The response contains only the information needed to display each game:
       "SEA": "13-3",
       "SF": "12-4"
     },
-    "score": 4.14,
+    "score": 8.06,
     "reasons": [
       "Both teams have winning records",
       "Divisional matchup",
@@ -55,14 +55,14 @@ Headlines are display-only reasons: they never change a score or ranking.
 The API reads both nflverse data and the headline JSON from local cache, so a
 ranking request does not call an external service.
 
-The watchability score uses a `1.00–5.00` scale and is rounded to two decimal
-places. A `1.00` game has no scoring boost; a `5.00` game reaches the model's
+The watchability score uses a `1.00–10.00` scale and is rounded to two decimal
+places. A `1.00` game has no scoring boost; a `10.00` game reaches the model's
 maximum possible value.
 
 Pure matchup quality combines both teams' pregame records, offense percentile,
 defense percentile, point-differential percentile, and expected
 offense-versus-defense closeness. Context combines rivalry value with pregame
-division, playoff-cutoff, and top-seed leverage. Injuries are not part of v4.
+division, playoff-cutoff, and top-seed leverage. Injuries are not part of v5.
 
 ## Verification
 
