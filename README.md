@@ -19,6 +19,17 @@ Open <http://127.0.0.1:8000/docs>, expand `GET /api/v1/rankings`, and enter:
 - `top`: an optional integer from `1` to `16`; omit it for every game
 
 For example, `week=4&top=5` returns the five highest-rated Week 4 games.
+The response contains only the information needed to display each game:
+
+```json
+[
+  {
+    "matchup": "Tampa Bay Buccaneers vs Seattle Seahawks",
+    "score": 0.67,
+    "reasons": ["Both teams have adjusted winning records"]
+  }
+]
+```
 
 ## Verification
 
