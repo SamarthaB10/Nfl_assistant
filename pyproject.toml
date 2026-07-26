@@ -1,0 +1,40 @@
+[project]
+name = "nflviewer"
+version = "0.1.0"
+description = "FastAPI backend for ranking NFL matchups by watchability"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi[standard]>=0.115,<1",
+    "nflreadpy==0.1.5",
+    "polars>=1,<2",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28,<1",
+    "pytest>=8,<9",
+    "ruff>=0.12,<1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/nflviewer"]
+
+[tool.fastapi]
+entrypoint = "nflviewer.app:app"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
