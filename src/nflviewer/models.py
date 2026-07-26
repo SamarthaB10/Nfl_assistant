@@ -72,5 +72,6 @@ class RankedGame(APIModel):
 
 class GameSummary(APIModel):
     matchup: str
+    records: dict[str, str]
     score: float = Field(ge=0, le=1)
     reasons: list[str]

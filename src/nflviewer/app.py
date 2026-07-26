@@ -24,6 +24,13 @@ def _record_summaries(records: Mapping[str, Record]) -> dict[str, RecordSummary]
     }
 
 
+def _display_record(record: RecordSummary) -> str:
+    record_parts = [record.wins, record.losses]
+    if record.ties:
+        record_parts.append(record.ties)
+    return "-".join(str(value) for value in record_parts)
+
+
 def _ranking_response(data: SeasonData, query: RankingQuery) -> list[GameSummary]:
     matchups = data.matchups_for_week(query.week)
     inputs = [
@@ -49,6 +56,10 @@ def _ranking_response(data: SeasonData, query: RankingQuery) -> list[GameSummary
     return [
         GameSummary(
             matchup=f"{game.away_team.team_name} vs {game.home_team.team_name}",
+            records={
+                game.away_team.team_id: _display_record(game.away_team.current_record),
+                game.home_team.team_id: _display_record(game.home_team.current_record),
+            },
             score=game.watchability_score,
             reasons=game.reasons,
         )
