@@ -110,14 +110,18 @@ def test_rankings_returns_all_games_in_rank_order() -> None:
         response = client.get("/api/v1/rankings", params={"week": 1})
 
     assert response.status_code == 200
-    body = response.json()
-    assert body["season"] == 2025
-    assert body["week"] == 1
-    assert body["requestedTop"] is None
-    assert body["totalMatchups"] == 2
-    assert body["returnedMatchups"] == 2
-    assert [game["rank"] for game in body["games"]] == [1, 2]
-    assert body["games"][0]["gameId"] == "2025_01_NE_BUF"
+    assert response.json() == [
+        {
+            "matchup": "New England Patriots vs Buffalo Bills",
+            "score": 0.2,
+            "reasons": ["Divisional matchup"],
+        },
+        {
+            "matchup": "New York Giants vs Dallas Cowboys",
+            "score": 0.2,
+            "reasons": ["Divisional matchup"],
+        },
+    ]
 
 
 def test_rankings_applies_top_after_scoring_all_games() -> None:
@@ -128,9 +132,13 @@ def test_rankings_applies_top_after_scoring_all_games() -> None:
         )
 
     assert response.status_code == 200
-    assert response.json()["totalMatchups"] == 2
-    assert response.json()["returnedMatchups"] == 1
-    assert response.json()["requestedTop"] == 1
+    assert response.json() == [
+        {
+            "matchup": "New England Patriots vs Buffalo Bills",
+            "score": 0.2,
+            "reasons": ["Divisional matchup"],
+        }
+    ]
 
 
 def test_rankings_validates_query_fields() -> None:

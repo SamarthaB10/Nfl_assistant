@@ -7,7 +7,7 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 
 from nflviewer.data import Record, Repository, SeasonData
-from nflviewer.models import HealthResponse, RankingQuery, RankingResponse, RecordSummary
+from nflviewer.models import GameSummary, HealthResponse, RankingQuery, RecordSummary
 from nflviewer.ranking import MatchupInput, rank_matchups
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ def _record_summaries(records: Mapping[str, Record]) -> dict[str, RecordSummary]
     }
 
 
-def _ranking_response(data: SeasonData, query: RankingQuery) -> RankingResponse:
+def _ranking_response(data: SeasonData, query: RankingQuery) -> list[GameSummary]:
     matchups = data.matchups_for_week(query.week)
     inputs = [
         MatchupInput(
@@ -46,14 +46,14 @@ def _ranking_response(data: SeasonData, query: RankingQuery) -> RankingResponse:
         _record_summaries(data.current_records_before_week(query.week)),
         top=query.top,
     )
-    return RankingResponse(
-        season=query.season,
-        week=query.week,
-        requested_top=query.top,
-        total_matchups=len(matchups),
-        returned_matchups=len(games),
-        games=games,
-    )
+    return [
+        GameSummary(
+            matchup=f"{game.away_team.team_name} vs {game.home_team.team_name}",
+            score=game.watchability_score,
+            reasons=game.reasons,
+        )
+        for game in games
+    ]
 
 
 def create_app(repository: DataRepository | None = None) -> FastAPI:
@@ -86,13 +86,13 @@ def create_app(repository: DataRepository | None = None) -> FastAPI:
 
     @application.get(
         "/api/v1/rankings",
-        response_model=RankingResponse,
+        response_model=list[GameSummary],
         summary="Rank a week of 2025 NFL matchups",
     )
     def rankings(
         request: Request,
         query: Annotated[RankingQuery, Query()],
-    ) -> RankingResponse:
+    ) -> list[GameSummary]:
         data = getattr(request.app.state, "season_data", None)
         if data is None:
             raise HTTPException(

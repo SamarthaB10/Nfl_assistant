@@ -70,12 +70,7 @@ class RankedGame(APIModel):
     reasons: list[str]
 
 
-class RankingResponse(APIModel):
-    season: Literal[2025] = 2025
-    week: int = Field(ge=1, le=18)
-    requested_top: int | None
-    total_matchups: int = Field(ge=0)
-    returned_matchups: int = Field(ge=0)
-    formula_version: Literal["record-watchability-v1"] = "record-watchability-v1"
-    data_source: Literal["nflverse"] = "nflverse"
-    games: list[RankedGame]
+class GameSummary(APIModel):
+    matchup: str
+    score: float = Field(ge=0, le=1)
+    reasons: list[str]
