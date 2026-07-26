@@ -38,7 +38,7 @@ The response contains only the information needed to display each game:
       "SEA": "13-3",
       "SF": "12-4"
     },
-    "score": 8.06,
+    "score": 8.39,
     "reasons": [
       "Both teams have winning records",
       "Divisional matchup",
@@ -61,8 +61,10 @@ maximum possible value.
 
 Pure matchup quality combines both teams' pregame records, offense percentile,
 defense percentile, point-differential percentile, and expected
-offense-versus-defense closeness. Context combines rivalry value with pregame
-division, playoff-cutoff, and top-seed leverage. Injuries are not part of v5.
+offense-versus-defense closeness. Pair strength receives `65%` of matchup
+quality and closeness receives `35%`. Context combines rivalry value with
+pregame division, playoff-cutoff, and top-seed leverage. Injuries are not part
+of v6.
 
 ## Verification
 

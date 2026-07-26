@@ -36,7 +36,8 @@ competitiveCloseness =
       / max(homeExpectedPoints, awayExpectedPoints, 1)
 
 pairStrength = sqrt(homeTeamStrength × awayTeamStrength)
-matchupQuality = pairStrength × competitiveCloseness
+matchupQuality =
+  pairStrength × (0.65 + 0.35 × competitiveCloseness)
 
 context =
   standingsLeverage + (1 - standingsLeverage) × rivalryValue

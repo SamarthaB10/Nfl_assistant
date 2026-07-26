@@ -70,6 +70,21 @@ def test_matchup_imbalance_penalizes_an_elite_team_against_a_weak_team() -> None
     assert imbalanced.value < balanced.value
 
 
+def test_matchup_quality_weights_pair_strength_65_and_closeness_35() -> None:
+    result = calculate_matchup_quality(
+        home_win_rate=0.80,
+        away_win_rate=0.70,
+        home_metrics=metrics(30, 18, 0.90, 0.80, 0.85),
+        away_metrics=metrics(21, 20, 0.65, 0.60, 0.60),
+    )
+    pair_strength = (result.home_team_strength * result.away_team_strength) ** 0.5
+
+    assert result.competitive_closeness < 1
+    assert result.value == pytest.approx(
+        pair_strength * (0.65 + 0.35 * result.competitive_closeness)
+    )
+
+
 def test_evenly_matched_bad_teams_do_not_receive_high_quality() -> None:
     result = calculate_matchup_quality(
         home_win_rate=0.25,

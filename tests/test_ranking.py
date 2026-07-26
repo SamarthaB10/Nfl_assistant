@@ -129,7 +129,7 @@ def test_two_good_teams_use_weaker_current_record_after_week_five() -> None:
     assert result.breakdown.matchup_quality > 0.60
     assert result.reasons == [
         "Both teams have winning records",
-        "Offense-defense profiles project a close game",
+        "Strong, competitive team matchup",
     ]
 
 
@@ -150,7 +150,7 @@ def test_divisional_value_saturates_instead_of_adding_directly() -> None:
     assert result.reasons == [
         "Both teams have winning records",
         "Divisional matchup",
-        "Offense-defense profiles project a close game",
+        "Strong, competitive team matchup",
     ]
 
 

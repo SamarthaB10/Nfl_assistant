@@ -1,4 +1,4 @@
-# Dynamic Watchability Formula v5
+# Dynamic Watchability Formula v6
 
 The API displays an absolute `1.00–10.00` watchability rating, not a win
 probability. The formula first calculates a normalized `0.00–1.00` value using
@@ -169,19 +169,24 @@ because it is multiplied by their team quality next.
 
 ```text
 pairStrength = sqrt(homeTeamStrength × awayTeamStrength)
-Q = pairStrength × C
+Q = pairStrength × (0.65 + 0.35 × C)
 ```
 
 ### Meaning
 
-The geometric mean requires both teams to contribute meaningful strength. The
-closeness multiplier then penalizes blowout risk.
+The geometric mean requires both teams to contribute meaningful strength.
+Pair strength supplies the base `65%` of pure matchup quality, while competitive
+closeness adjusts the remaining `35%`. A projected mismatch can therefore
+reduce, but not erase, the value created by two strong teams.
 
 ### How it is used
 
-`Q` supplies exactly `55%` of normalized watchability. This favors two strong,
-compatible teams over an elite team facing a weak opponent. Two evenly matched
-bad teams remain low because their `pairStrength` is low.
+`Q` supplies exactly `55%` of normalized watchability. Within the full
+normalized score, the pair-strength base accounts for `35.75%`
+(`55% × 65%`), the closeness-conditioned portion accounts for up to `19.25%`
+(`55% × 35%`), and context remains `45%`. This favors two strong teams while
+still penalizing blowout risk. Two evenly matched bad teams remain low because
+their `pairStrength` is low.
 
 ## 8. Rivalry value (`R`)
 
@@ -325,6 +330,6 @@ The response may explain:
 - one cached pregame headline.
 
 Headlines have exactly zero numeric impact. Injuries are intentionally excluded
-from v4 until starter status, availability timing, and replacement quality can
+from v6 until starter status, availability timing, and replacement quality can
 be modeled without double-counting information already reflected in team
 performance.

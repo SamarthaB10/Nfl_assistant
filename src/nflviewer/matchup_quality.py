@@ -3,6 +3,9 @@ from math import sqrt
 
 from nflviewer.data import TeamMetrics
 
+PAIR_STRENGTH_WEIGHT = 0.65
+COMPETITIVE_CLOSENESS_WEIGHT = 0.35
+
 
 @dataclass(frozen=True, slots=True)
 class MatchupQuality:
@@ -51,7 +54,10 @@ def calculate_matchup_quality(
         1 - abs(home_expected_points - away_expected_points) / expected_ceiling
     )
     pair_strength = sqrt(home_strength * away_strength)
-    value = _clamp(pair_strength * competitive_closeness)
+    value = _clamp(
+        pair_strength
+        * (PAIR_STRENGTH_WEIGHT + COMPETITIVE_CLOSENESS_WEIGHT * competitive_closeness)
+    )
 
     return MatchupQuality(
         home_team_strength=home_strength,
