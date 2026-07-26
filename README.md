@@ -25,6 +25,10 @@ The response contains only the information needed to display each game:
 [
   {
     "matchup": "Tampa Bay Buccaneers vs Seattle Seahawks",
+    "records": {
+      "TB": "3-1",
+      "SEA": "3-1"
+    },
     "score": 0.67,
     "reasons": ["Both teams have adjusted winning records"]
   }
