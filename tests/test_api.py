@@ -86,7 +86,9 @@ def season_data() -> SeasonData:
                 "team_name": team_name,
                 "team_conf": conference,
                 "team_division": division,
-                "team_logo_espn": None,
+                "team_logo_espn": (
+                    f"https://a.espncdn.com/i/teamlogos/nfl/500/{team_id.lower()}.png"
+                ),
             }
             for team_id, team_name, conference, division in [
                 ("BUF", "Buffalo Bills", "AFC", "AFC East"),
@@ -133,12 +135,20 @@ def test_rankings_returns_all_games_in_rank_order() -> None:
         {
             "matchup": "New England Patriots vs Buffalo Bills",
             "records": {"NE": "0-0", "BUF": "0-0"},
+            "logos": {
+                "NE": "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png",
+                "BUF": "https://a.espncdn.com/i/teamlogos/nfl/500/buf.png",
+            },
             "score": 3.73,
             "reasons": ["Divisional matchup"],
         },
         {
             "matchup": "New York Giants vs Dallas Cowboys",
             "records": {"NYG": "0-0", "DAL": "0-0"},
+            "logos": {
+                "NYG": "https://a.espncdn.com/i/teamlogos/nfl/500/nyg.png",
+                "DAL": "https://a.espncdn.com/i/teamlogos/nfl/500/dal.png",
+            },
             "score": 1.81,
             "reasons": ["Divisional matchup"],
         },
@@ -157,6 +167,10 @@ def test_rankings_applies_top_after_scoring_all_games() -> None:
         {
             "matchup": "New England Patriots vs Buffalo Bills",
             "records": {"NE": "0-0", "BUF": "0-0"},
+            "logos": {
+                "NE": "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png",
+                "BUF": "https://a.espncdn.com/i/teamlogos/nfl/500/buf.png",
+            },
             "score": 3.73,
             "reasons": ["Divisional matchup"],
         }
@@ -175,6 +189,10 @@ def test_rankings_returns_bottom_games_worst_first() -> None:
         {
             "matchup": "New York Giants vs Dallas Cowboys",
             "records": {"NYG": "0-0", "DAL": "0-0"},
+            "logos": {
+                "NYG": "https://a.espncdn.com/i/teamlogos/nfl/500/nyg.png",
+                "DAL": "https://a.espncdn.com/i/teamlogos/nfl/500/dal.png",
+            },
             "score": 1.81,
             "reasons": ["Divisional matchup"],
         }
@@ -224,6 +242,10 @@ def test_rankings_adds_cached_headline_without_changing_score(tmp_path) -> None:
 
     assert response.status_code == 200
     assert response.json()[0]["score"] == 3.73
+    assert response.json()[0]["logos"] == {
+        "NE": "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png",
+        "BUF": "https://a.espncdn.com/i/teamlogos/nfl/500/buf.png",
+    }
     assert response.json()[0]["reasons"] == [
         "Divisional matchup",
         "Headline: Patriots and Bills renew AFC East rivalry",

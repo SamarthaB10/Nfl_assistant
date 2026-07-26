@@ -76,6 +76,10 @@ def _ranking_response(
                     game.away_team.team_id: _display_record(game.away_team.current_record),
                     game.home_team.team_id: _display_record(game.home_team.current_record),
                 },
+                logos={
+                    game.away_team.team_id: game.away_team.logo_url,
+                    game.home_team.team_id: game.home_team.logo_url,
+                },
                 score=game.watchability_score,
                 reasons=reasons,
             )

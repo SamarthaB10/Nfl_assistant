@@ -13,7 +13,7 @@ The prototype answers a focused question:
 Swagger UI is the current user interface. A user supplies a week and can
 optionally request the top or bottom `x` games. The API returns a deliberately
 compact response containing only the matchup, each team's actual pregame
-record, the score, and human-readable reasons.
+record and logo, the rating, and human-readable reasons.
 
 This repository currently implements the general NFL-watcher experience. Team
 personalization and the Next.js/mobile interface are planned but are not part
@@ -114,6 +114,10 @@ Example response:
     "records": {
       "SEA": "13-3",
       "SF": "12-4"
+    },
+    "logos": {
+      "SEA": "https://a.espncdn.com/i/teamlogos/nfl/500/sea.png",
+      "SF": "https://a.espncdn.com/i/teamlogos/nfl/500/sf.png"
     },
     "score": 8.39,
     "reasons": [
