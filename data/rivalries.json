@@ -1,0 +1,41 @@
+{
+  "CONFERENCE_OR_INTERCONFERENCE": [
+    "BAL-NE",
+    "BAL-TEN",
+    "BUF-KC",
+    "BUF-TEN",
+    "DEN-NE",
+    "DEN-PIT",
+    "IND-NE",
+    "NE-PIT",
+    "CHI-NYG",
+    "DAL-GB",
+    "DAL-LAR",
+    "DAL-SF",
+    "GB-SF",
+    "GB-SEA",
+    "GB-TB",
+    "LAR-NO",
+    "LAR-MIN",
+    "NO-MIN",
+    "NE-NYG",
+    "PIT-DAL"
+  ],
+  "HISTORIC_OR_REGIONAL": [
+    "MIA-LV",
+    "PIT-TEN",
+    "LV-PIT",
+    "DEN-SEA",
+    "LV-SEA",
+    "ARI-CHI",
+    "DAL-MIN",
+    "NYG-GB",
+    "NYG-SF",
+    "NYG-NYJ",
+    "MIA-TB",
+    "DAL-HOU",
+    "PHI-PIT",
+    "LAR-LAC",
+    "WAS-BAL"
+  ]
+}
