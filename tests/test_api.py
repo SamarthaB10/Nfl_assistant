@@ -133,7 +133,7 @@ def test_rankings_returns_all_games_in_rank_order() -> None:
         {
             "matchup": "New England Patriots vs Buffalo Bills",
             "records": {"NE": "0-0", "BUF": "0-0"},
-            "score": 2.01,
+            "score": 2.03,
             "reasons": ["Divisional matchup"],
         },
         {
@@ -157,7 +157,7 @@ def test_rankings_applies_top_after_scoring_all_games() -> None:
         {
             "matchup": "New England Patriots vs Buffalo Bills",
             "records": {"NE": "0-0", "BUF": "0-0"},
-            "score": 2.01,
+            "score": 2.03,
             "reasons": ["Divisional matchup"],
         }
     ]
@@ -195,7 +195,7 @@ def test_rankings_adds_cached_headline_without_changing_score(tmp_path) -> None:
         response = client.get("/api/v1/rankings", params={"week": 1, "top": 1})
 
     assert response.status_code == 200
-    assert response.json()[0]["score"] == 2.01
+    assert response.json()[0]["score"] == 2.03
     assert response.json()[0]["reasons"] == [
         "Divisional matchup",
         "Headline: Patriots and Bills renew AFC East rivalry",

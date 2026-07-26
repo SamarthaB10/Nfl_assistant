@@ -54,6 +54,7 @@ class TeamMetrics:
     points_allowed_per_game: float
     offense_percentile: float
     defense_percentile: float
+    point_differential_percentile: float = 0.5
 
 
 @dataclass(frozen=True, slots=True)
@@ -282,6 +283,9 @@ class SeasonData:
 
         offense_values = [rates[0] for rates in scoring_rates.values()]
         defense_values = [rates[1] for rates in scoring_rates.values()]
+        differential_values = [
+            points_for - points_allowed for points_for, points_allowed in scoring_rates.values()
+        ]
         return {
             team_id: TeamMetrics(
                 points_for_per_game=rates[0],
@@ -291,6 +295,10 @@ class SeasonData:
                     rates[1],
                     defense_values,
                     higher_is_better=False,
+                ),
+                point_differential_percentile=_percentile(
+                    rates[0] - rates[1],
+                    differential_values,
                 ),
             )
             for team_id, rates in scoring_rates.items()

@@ -9,30 +9,38 @@ def metrics(
     points_allowed: float,
     offense: float,
     defense: float,
+    differential: float = 0.50,
 ) -> TeamMetrics:
     return TeamMetrics(
         points_for_per_game=points_for,
         points_allowed_per_game=points_allowed,
         offense_percentile=offense,
         defense_percentile=defense,
+        point_differential_percentile=differential,
     )
 
 
 def test_team_strength_equally_combines_record_offense_and_defense() -> None:
     result = team_strength(
         0.75,
-        metrics(points_for=27, points_allowed=17, offense=0.80, defense=0.90),
+        metrics(
+            points_for=27,
+            points_allowed=17,
+            offense=0.80,
+            defense=0.90,
+            differential=0.85,
+        ),
     )
 
-    assert result == pytest.approx((0.75 + 0.80 + 0.90) / 3)
+    assert result == pytest.approx((0.75 + 0.80 + 0.90 + 0.85) / 4)
 
 
 def test_compatible_strong_teams_produce_high_matchup_quality() -> None:
     result = calculate_matchup_quality(
         home_win_rate=0.80,
         away_win_rate=0.75,
-        home_metrics=metrics(28, 18, 0.90, 0.80),
-        away_metrics=metrics(27, 17, 0.80, 0.90),
+        home_metrics=metrics(28, 18, 0.90, 0.80, 0.85),
+        away_metrics=metrics(27, 17, 0.80, 0.90, 0.80),
     )
 
     assert result.home_expected_points == pytest.approx(22.5)

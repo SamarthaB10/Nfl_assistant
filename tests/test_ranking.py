@@ -41,12 +41,14 @@ def performance(
     points_allowed: float,
     offense: float,
     defense: float,
+    differential: float = 0.50,
 ) -> TeamMetrics:
     return TeamMetrics(
         points_for_per_game=points_for,
         points_allowed_per_game=points_allowed,
         offense_percentile=offense,
         defense_percentile=defense,
+        point_differential_percentile=differential,
     )
 
 
@@ -85,15 +87,15 @@ def test_two_bad_teams_receive_low_quality_even_when_evenly_matched() -> None:
     previous = {"CAR": record(8, 8), "TEN": record(8, 8)}
     current = {"CAR": record(2, 6), "TEN": record(2, 6)}
     team_metrics = {
-        "CAR": performance(14, 27, 0.10, 0.10),
-        "TEN": performance(14, 27, 0.10, 0.10),
+        "CAR": performance(14, 27, 0.10, 0.10, 0.10),
+        "TEN": performance(14, 27, 0.10, 0.10, 0.10),
     }
 
     result = score_matchup(game, previous, current, team_metrics=team_metrics)
 
     assert result.breakdown.record_quality == 0
     assert result.breakdown.competitive_closeness == 1
-    assert result.watchability_score == 1.33
+    assert result.watchability_score == 1.30
 
 
 def test_bad_divisional_matchup_only_receives_rivalry_value() -> None:
@@ -101,15 +103,15 @@ def test_bad_divisional_matchup_only_receives_rivalry_value() -> None:
     previous = {"NE": record(8, 8), "BUF": record(8, 8)}
     current = {"NE": record(2, 6), "BUF": record(2, 6)}
     team_metrics = {
-        "NE": performance(14, 27, 0.10, 0.10),
-        "BUF": performance(14, 27, 0.10, 0.10),
+        "NE": performance(14, 27, 0.10, 0.10, 0.10),
+        "BUF": performance(14, 27, 0.10, 0.10, 0.10),
     }
 
     result = score_matchup(game, previous, current, team_metrics=team_metrics)
 
     assert result.breakdown.record_quality == 0
     assert result.breakdown.context_value == 0.20
-    assert result.watchability_score == 1.69
+    assert result.watchability_score == 1.66
 
 
 def test_two_good_teams_use_weaker_current_record_after_week_five() -> None:
@@ -117,8 +119,8 @@ def test_two_good_teams_use_weaker_current_record_after_week_five() -> None:
     previous = {"A": record(8, 8), "B": record(8, 8)}
     current = {"A": record(5, 3), "B": record(6, 2)}
     team_metrics = {
-        "A": performance(24, 20, 0.65, 0.60),
-        "B": performance(26, 18, 0.75, 0.70),
+        "A": performance(24, 20, 0.65, 0.60, 0.65),
+        "B": performance(26, 18, 0.75, 0.70, 0.75),
     }
 
     result = score_matchup(game, previous, current, team_metrics=team_metrics)
@@ -136,8 +138,8 @@ def test_divisional_value_saturates_instead_of_adding_directly() -> None:
     previous = {"A": record(8, 8), "B": record(8, 8)}
     current = {"A": record(5, 3), "B": record(6, 2)}
     team_metrics = {
-        "A": performance(24, 20, 0.65, 0.60),
-        "B": performance(26, 18, 0.75, 0.70),
+        "A": performance(24, 20, 0.65, 0.60, 0.65),
+        "B": performance(26, 18, 0.75, 0.70, 0.75),
     }
 
     result = score_matchup(game, previous, current, team_metrics=team_metrics)

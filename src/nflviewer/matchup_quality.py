@@ -19,8 +19,16 @@ def _clamp(value: float) -> float:
 
 
 def team_strength(win_rate: float, metrics: TeamMetrics) -> float:
-    """Combine record, offense, and defense with equal transparent weight."""
-    return _clamp((win_rate + metrics.offense_percentile + metrics.defense_percentile) / 3)
+    """Combine record, scoring, defense, and point differential equally."""
+    return _clamp(
+        (
+            win_rate
+            + metrics.offense_percentile
+            + metrics.defense_percentile
+            + metrics.point_differential_percentile
+        )
+        / 4
+    )
 
 
 def calculate_matchup_quality(

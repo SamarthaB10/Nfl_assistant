@@ -167,8 +167,10 @@ def test_builds_weekly_scoring_metrics_with_early_season_prior() -> None:
     assert week_one["JAX"].points_allowed_per_game == pytest.approx(22.5)
     assert week_one["JAX"].offense_percentile == 0
     assert week_one["JAX"].defense_percentile == 0
+    assert week_one["JAX"].point_differential_percentile == 0
     assert week_one["LAR"].offense_percentile == 1
     assert week_one["LAR"].defense_percentile == 1
+    assert week_one["LAR"].point_differential_percentile == 1
     assert week_three["JAX"].points_for_per_game == pytest.approx(15.2)
     assert week_three["JAX"].points_allowed_per_game == pytest.approx(21.4)
 
