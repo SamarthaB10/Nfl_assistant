@@ -20,14 +20,32 @@ adjustedWinRate =
 
 ### Meaning
 
-The previous season provides a four-game prior so Week 1 has useful context.
-Current-season results progressively take over as games are played. A tie
-counts as half a win.
+The previous season provides a four-game prior so the opening weeks have useful
+context. A tie counts as half a win.
 
 ### How it is used
 
-The service calculates this value immediately before the selected week. A team
-is considered good only when `adjustedWinRate > 0.500`.
+The service uses this adjusted rate only during Weeks 1–5.
+
+## Current-season win rate
+
+### Formula
+
+```text
+currentWinRate =
+  (currentWins + 0.5 × currentTies) / currentGames
+```
+
+### Meaning
+
+Once five weeks have passed, the current season contains enough information to
+stand on its own.
+
+### How it is used
+
+During Weeks 6–18, the previous season is removed completely. A team is
+considered good only when its current-season win rate is strictly above
+`0.500`.
 
 ## Record quality
 
@@ -35,7 +53,7 @@ is considered good only when `adjustedWinRate > 0.500`.
 
 ```text
 recordQuality =
-  min(homeAdjustedWinRate, awayAdjustedWinRate)
+  min(homeScoringWinRate, awayScoringWinRate)
   when both teams are good
 
 recordQuality = 0 otherwise
@@ -49,7 +67,8 @@ teams receive no record boost merely because they are evenly matched.
 ### How it is used
 
 This is the primary watchability component. A matchup only receives it when
-both teams clear the strict good-team threshold.
+both teams clear the strict good-team threshold. `scoringWinRate` means the
+adjusted rate in Weeks 1–5 and the current-season rate in Weeks 6–18.
 
 ## Rivalry value
 

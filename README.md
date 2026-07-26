@@ -30,7 +30,9 @@ The response contains only the information needed to display each game:
       "SEA": "3-1"
     },
     "score": 0.67,
-    "reasons": ["Both teams have adjusted winning records"]
+    "reasons": [
+      "Both teams rate above .500 using early-season adjusted records"
+    ]
   }
 ]
 ```
