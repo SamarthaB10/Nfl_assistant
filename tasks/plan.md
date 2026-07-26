@@ -42,7 +42,7 @@ pregame-only data boundary.
 
 - [x] Update `ELOformula.md` and `README.md`.
 - [x] Run the full test, lint, formatting, and live API checks.
-- [ ] Push the feature branch.
+- [x] Push the feature branch.
 
 ## Risks and Mitigations
 
