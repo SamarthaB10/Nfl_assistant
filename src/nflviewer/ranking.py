@@ -2,6 +2,8 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
+from nflviewer.data import TeamMetrics
+from nflviewer.matchup_quality import calculate_matchup_quality
 from nflviewer.models import RankedGame, RecordSummary, ScoreBreakdown
 from nflviewer.records import build_team_rating
 from nflviewer.rivalries import (
@@ -11,6 +13,9 @@ from nflviewer.rivalries import (
     classify_rivalry,
 )
 from nflviewer.standings import TeamStanding, matchup_leverage
+
+MATCHUP_QUALITY_WEIGHT = 0.55
+CONTEXT_WEIGHT = 0.45
 
 
 @dataclass(frozen=True)
@@ -33,6 +38,7 @@ def score_matchup(
     current_records: Mapping[str, RecordSummary],
     *,
     standings: Mapping[str, TeamStanding] | None = None,
+    team_metrics: Mapping[str, TeamMetrics] | None = None,
 ) -> RankedGame:
     home = build_team_rating(
         team_id=matchup.home_team_id,
@@ -58,7 +64,6 @@ def score_matchup(
         matchup.away_team_id,
         is_divisional=matchup.is_divisional,
     )
-    base_score = record_quality + (1 - record_quality) * rivalry_value
     leverage = (
         matchup_leverage(
             matchup.home_team_id,
@@ -70,7 +75,28 @@ def score_matchup(
         else None
     )
     leverage_value = leverage.value if leverage else 0.0
-    raw_score = base_score + (1 - base_score) * leverage_value
+    neutral_metrics = TeamMetrics(
+        points_for_per_game=0,
+        points_allowed_per_game=0,
+        offense_percentile=0.5,
+        defense_percentile=0.5,
+    )
+    quality = calculate_matchup_quality(
+        home_win_rate=home.scoring_win_rate,
+        away_win_rate=away.scoring_win_rate,
+        home_metrics=(
+            team_metrics.get(matchup.home_team_id, neutral_metrics)
+            if team_metrics is not None
+            else neutral_metrics
+        ),
+        away_metrics=(
+            team_metrics.get(matchup.away_team_id, neutral_metrics)
+            if team_metrics is not None
+            else neutral_metrics
+        ),
+    )
+    context_value = leverage_value + (1 - leverage_value) * rivalry_value
+    raw_score = MATCHUP_QUALITY_WEIGHT * quality.value + CONTEXT_WEIGHT * context_value
     normalized_score = min(max(raw_score, 0.0), 1.0)
     display_score = round(1 + 4 * normalized_score, 2)
 
@@ -88,6 +114,10 @@ def score_matchup(
         reasons.append("Historic or regional rivalry")
     if leverage and leverage.reason and leverage.value > 0:
         reasons.append(leverage.reason)
+    if quality.value >= 0.65:
+        reasons.append("Strong, competitive team matchup")
+    elif quality.competitive_closeness >= 0.85:
+        reasons.append("Offense-defense profiles project a close game")
 
     return RankedGame(
         rank=1,
@@ -98,10 +128,15 @@ def score_matchup(
         watchability_score=display_score,
         breakdown=ScoreBreakdown(
             record_quality=record_quality,
+            home_team_strength=quality.home_team_strength,
+            away_team_strength=quality.away_team_strength,
+            competitive_closeness=quality.competitive_closeness,
+            matchup_quality=quality.value,
             rivalry_category=rivalry_category,
             rivalry_value=rivalry_value,
             leverage_value=leverage_value,
             leverage_reason=leverage.reason if leverage else None,
+            context_value=context_value,
             raw_score=raw_score,
             display_score=display_score,
         ),
@@ -115,6 +150,7 @@ def rank_matchups(
     current_records: Mapping[str, RecordSummary],
     *,
     standings: Mapping[str, TeamStanding] | None = None,
+    team_metrics: Mapping[str, TeamMetrics] | None = None,
     top: int | None = None,
 ) -> list[RankedGame]:
     if top is not None and top < 1:
@@ -126,12 +162,16 @@ def rank_matchups(
             previous_records,
             current_records,
             standings=standings,
+            team_metrics=team_metrics,
         )
         for matchup in matchups
     ]
     scored.sort(
         key=lambda game: (
             -game.breakdown.raw_score,
+            -game.breakdown.context_value,
+            -game.breakdown.matchup_quality,
+            -game.breakdown.competitive_closeness,
             -game.breakdown.record_quality,
             -game.breakdown.leverage_value,
             -game.breakdown.rivalry_value,
