@@ -157,6 +157,52 @@ def test_builds_standings_from_only_games_before_the_selected_week() -> None:
     assert week_three["LAR"].point_differential == 3
 
 
+def test_builds_weekly_scoring_metrics_with_early_season_prior() -> None:
+    data = SeasonData.from_frames(schedule_rows(), team_rows())
+
+    week_one = data.team_metrics_before_week(1)
+    week_three = data.team_metrics_before_week(3)
+
+    assert week_one["JAX"].points_for_per_game == pytest.approx(15.5)
+    assert week_one["JAX"].points_allowed_per_game == pytest.approx(22.5)
+    assert week_one["JAX"].offense_percentile == 0
+    assert week_one["JAX"].defense_percentile == 0
+    assert week_one["LAR"].offense_percentile == 1
+    assert week_one["LAR"].defense_percentile == 1
+    assert week_three["JAX"].points_for_per_game == pytest.approx(15.2)
+    assert week_three["JAX"].points_allowed_per_game == pytest.approx(21.4)
+
+
+def test_weekly_scoring_metrics_exclude_target_week_results() -> None:
+    schedules = schedule_rows().with_columns(
+        pl.when(pl.col("game_id") == "2025_03_JAC_LA")
+        .then(50)
+        .otherwise(pl.col("away_score"))
+        .alias("away_score"),
+        pl.when(pl.col("game_id") == "2025_03_JAC_LA")
+        .then(0)
+        .otherwise(pl.col("home_score"))
+        .alias("home_score"),
+    )
+    data = SeasonData.from_frames(schedules, team_rows())
+
+    metrics = data.team_metrics_before_week(3)
+
+    assert metrics["JAX"].points_for_per_game == pytest.approx(15.2)
+    assert metrics["LAR"].points_allowed_per_game == pytest.approx(15.2)
+
+
+def test_scoring_metrics_use_only_current_season_after_week_five() -> None:
+    data = SeasonData.from_frames(schedule_rows(), team_rows())
+
+    metrics = data.team_metrics_before_week(6)
+
+    assert metrics["JAX"].points_for_per_game == 14
+    assert metrics["JAX"].points_allowed_per_game == 17
+    assert metrics["LAR"].points_for_per_game == 17
+    assert metrics["LAR"].points_allowed_per_game == 14
+
+
 def test_missing_completed_game_does_not_create_a_record_or_bye() -> None:
     schedules = schedule_rows().with_columns(
         pl.when(pl.col("game_id") == "2025_01_LA_JAC")

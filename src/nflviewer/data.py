@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 
 import polars as pl
 
+from nflviewer.records import ADJUSTED_RATE_MAX_WEEK, PRIOR_GAMES
 from nflviewer.standings import TeamStanding, build_standings
 
 TARGET_SEASON = 2025
@@ -45,6 +46,21 @@ class Record:
     wins: int = 0
     losses: int = 0
     ties: int = 0
+
+
+@dataclass(frozen=True, slots=True)
+class TeamMetrics:
+    points_for_per_game: float
+    points_allowed_per_game: float
+    offense_percentile: float
+    defense_percentile: float
+
+
+@dataclass(frozen=True, slots=True)
+class _ScoringTotals:
+    games: int = 0
+    points_for: int = 0
+    points_allowed: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -236,6 +252,68 @@ class SeasonData:
             point_differentials,
         )
 
+    def team_metrics_before_week(self, week: int) -> dict[str, TeamMetrics]:
+        previous = self._scoring_totals(self._schedules.filter(pl.col("season") == PREVIOUS_SEASON))
+        current = self._scoring_totals(
+            self._schedules.filter((pl.col("season") == TARGET_SEASON) & (pl.col("week") < week))
+        )
+
+        scoring_rates: dict[str, tuple[float, float]] = {}
+        for team_id in self.teams:
+            current_team = current[team_id]
+            previous_team = previous[team_id]
+            if week <= ADJUSTED_RATE_MAX_WEEK and previous_team.games:
+                previous_for_rate = previous_team.points_for / previous_team.games
+                previous_allowed_rate = previous_team.points_allowed / previous_team.games
+                games = PRIOR_GAMES + current_team.games
+                points_for_rate = (
+                    PRIOR_GAMES * previous_for_rate + current_team.points_for
+                ) / games
+                points_allowed_rate = (
+                    PRIOR_GAMES * previous_allowed_rate + current_team.points_allowed
+                ) / games
+            elif current_team.games:
+                points_for_rate = current_team.points_for / current_team.games
+                points_allowed_rate = current_team.points_allowed / current_team.games
+            else:
+                points_for_rate = 0.0
+                points_allowed_rate = 0.0
+            scoring_rates[team_id] = (points_for_rate, points_allowed_rate)
+
+        offense_values = [rates[0] for rates in scoring_rates.values()]
+        defense_values = [rates[1] for rates in scoring_rates.values()]
+        return {
+            team_id: TeamMetrics(
+                points_for_per_game=rates[0],
+                points_allowed_per_game=rates[1],
+                offense_percentile=_percentile(rates[0], offense_values),
+                defense_percentile=_percentile(
+                    rates[1],
+                    defense_values,
+                    higher_is_better=False,
+                ),
+            )
+            for team_id, rates in scoring_rates.items()
+        }
+
+    def _scoring_totals(self, games: pl.DataFrame) -> dict[str, _ScoringTotals]:
+        totals = {
+            team_id: {"games": 0, "points_for": 0, "points_allowed": 0} for team_id in self.teams
+        }
+        completed = games.filter(
+            pl.col("away_score").is_not_null() & pl.col("home_score").is_not_null()
+        )
+        for game in completed.iter_rows(named=True):
+            away = totals[game["away_team"]]
+            home = totals[game["home_team"]]
+            away["games"] += 1
+            home["games"] += 1
+            away["points_for"] += game["away_score"]
+            away["points_allowed"] += game["home_score"]
+            home["points_for"] += game["home_score"]
+            home["points_allowed"] += game["away_score"]
+        return {team_id: _ScoringTotals(**values) for team_id, values in totals.items()}
+
     def _records_for(self, games: pl.DataFrame) -> dict[str, Record]:
         totals = {team_id: {"wins": 0, "losses": 0, "ties": 0} for team_id in self.teams}
         completed = games.filter(
@@ -254,6 +332,21 @@ class SeasonData:
                 away["ties"] += 1
                 home["ties"] += 1
         return {team_id: Record(**values) for team_id, values in totals.items()}
+
+
+def _percentile(
+    value: float,
+    values: list[float],
+    *,
+    higher_is_better: bool = True,
+) -> float:
+    if len(values) <= 1:
+        return 0.5
+    worse = sum(
+        candidate < value if higher_is_better else candidate > value for candidate in values
+    )
+    ties = sum(candidate == value for candidate in values) - 1
+    return (worse + 0.5 * ties) / (len(values) - 1)
 
 
 class Repository:
