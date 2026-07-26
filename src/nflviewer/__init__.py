@@ -1,2 +1,1 @@
 """NFL matchup watchability service."""
-

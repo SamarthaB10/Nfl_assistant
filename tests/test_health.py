@@ -13,4 +13,3 @@ def test_health_reports_formula_and_supported_season() -> None:
         "supportedSeason": 2025,
         "formulaVersion": "record-watchability-v1",
     }
-

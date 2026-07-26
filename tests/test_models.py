@@ -27,4 +27,3 @@ def test_ranking_query_rejects_unsupported_values(field: str, value: int) -> Non
 
     with pytest.raises(ValidationError):
         RankingQuery.model_validate(values)
-
