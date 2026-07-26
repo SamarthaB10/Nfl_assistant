@@ -1,34 +1,111 @@
 # NFL Viewer
 
-FastAPI backend that ranks 2025 NFL regular-season matchups using `55%` pure
-matchup quality and `45%` context and standings stakes. Relevant historical
-ESPN headlines are included as explanatory context. Swagger UI is the MVP
-interface.
+NFL Viewer is a FastAPI backend that ranks every 2025 NFL regular-season
+matchup by how valuable it should be to watch. It turns pregame team quality,
+projected competitiveness, rivalry context, and standings consequences into a
+transparent `1.00–10.00` watchability score.
 
-## Setup
+The prototype answers a focused question:
+
+> Given the NFL schedule for a particular week, which games are most—and
+> least—worth watching?
+
+Swagger UI is the current user interface. A user supplies a week and can
+optionally request the top or bottom `x` games. The API returns a deliberately
+compact response containing only the matchup, each team's actual pregame
+record, the score, and human-readable reasons.
+
+This repository currently implements the general NFL-watcher experience. Team
+personalization and the Next.js/mobile interface are planned but are not part
+of this backend prototype.
+
+## Current capabilities
+
+- Ranks all 2025 regular-season games for Weeks 1–18.
+- Returns either the complete weekly slate, the top `x`, or the bottom `x`
+  games.
+- Scores games on an absolute `1.00–10.00` scale with two-decimal precision.
+- Reconstructs records, scoring statistics, and standings strictly before the
+  selected week.
+- Uses a 2024 prior during Weeks 1–5, then switches entirely to 2025 data.
+- Measures team strength from record, offense, defense, and point differential.
+- Estimates matchup closeness from each offense against the opposing defense.
+- Adds divisional, curated rivalry, playoff-cutoff, division-race, and
+  conference top-seed context.
+- Includes one validated pregame ESPN headline when available.
+- Uses deterministic football-specific tiebreakers when displayed scores are
+  equal.
+- Performs no network calls in the ranking request path.
+
+## Quick start
+
+### Requirements
+
+- Python `3.12`
+- [`uv`](https://docs.astral.sh/uv/)
+
+### Install and run
 
 ```bash
-cd /Users/samarthab/NFLviewer
+git clone https://github.com/SamarthaB10/Nfl_assistant.git
+cd Nfl_assistant
 uv sync
-uv run python -m nflviewer.sync_data --force
-uv run python -m nflviewer.sync_headlines
+uv run python -m nflviewer.sync_data
 uv run fastapi dev
 ```
 
-The repository includes a validated 2025 headline cache, so running
-`sync_headlines` is optional. Use it only to rebuild that cache.
+The data sync downloads 2024 and 2025 schedule/team data through `nflreadpy`,
+validates it, and writes normalized Parquet files under `data/processed/`.
+Subsequent syncs use the local files unless `--force` is supplied.
 
-Open <http://127.0.0.1:8000/docs>, expand `GET /api/v1/rankings`, and enter:
+Open:
 
-- `season`: `2025`
-- `week`: an integer from `1` to `18`
-- `top`: optionally return the highest-rated `1` to `16` games
-- `bottom`: optionally return the lowest-rated `1` to `16` games, worst first
+- Swagger UI: <http://127.0.0.1:8000/docs>
+- Health endpoint: <http://127.0.0.1:8000/health>
 
-For example, `week=4&top=5` returns the five highest-rated Week 4 games.
-`week=4&bottom=5` returns the five lowest-rated games. `top` and `bottom`
-cannot be used together; omit both to return the complete slate.
-The response contains only the information needed to display each game:
+To replace the local nflverse cache:
+
+```bash
+uv run python -m nflviewer.sync_data --force
+```
+
+The validated 2025 headline cache is checked into the repository. Rebuilding
+it is optional and makes requests to ESPN's search endpoint:
+
+```bash
+uv run python -m nflviewer.sync_headlines
+```
+
+## API
+
+### `GET /api/v1/rankings`
+
+Ranks one week of the 2025 regular season.
+
+| Query field | Required | Validation | Meaning |
+| --- | --- | --- | --- |
+| `season` | No | Exactly `2025` | Supported season; defaults to `2025` |
+| `week` | Yes | Integer `1–18` | Week to rank |
+| `top` | No | Integer `1–16` | Return only the highest-rated games |
+| `bottom` | No | Integer `1–16` | Return only the lowest-rated games, worst first |
+
+`top` and `bottom` are mutually exclusive. If both are omitted, the complete
+slate is returned from highest to lowest.
+
+Examples:
+
+```bash
+# Complete Week 4 slate
+curl "http://127.0.0.1:8000/api/v1/rankings?season=2025&week=4"
+
+# Five best Week 4 games
+curl "http://127.0.0.1:8000/api/v1/rankings?season=2025&week=4&top=5"
+
+# Five least-watchable Week 4 games
+curl "http://127.0.0.1:8000/api/v1/rankings?season=2025&week=4&bottom=5"
+```
+
+Example response:
 
 ```json
 [
@@ -50,28 +127,562 @@ The response contains only the information needed to display each game:
 ]
 ```
 
-Scores use only information available before the selected game's week.
-Headlines are display-only reasons: they never change a score or ranking.
-The API reads both nflverse data and the headline JSON from local cache, so a
-ranking request does not call an external service.
+The displayed records are the actual 2025 records before that game. Early
+season prior values affect scoring only; they are never shown as the team's
+record.
 
-The watchability score uses a `1.00–10.00` scale and is rounded to two decimal
-places. A `1.00` game has no scoring boost; a `10.00` game reaches the model's
-maximum possible value.
+### `GET /health`
 
-Pure matchup quality combines both teams' pregame records, offense percentile,
-defense percentile, point-differential percentile, and expected
-offense-versus-defense closeness. Pair strength receives `65%` of matchup
-quality and closeness receives `35%`. Context combines rivalry value with
-pregame division, playoff-cutoff, and top-seed leverage. Injuries are not part
-of v6.
+Reports whether the season data loaded successfully and identifies the active
+formula:
 
-## Verification
-
-```bash
-uv run ruff check .
-uv run ruff format --check .
-uv run pytest
+```json
+{
+  "status": "ok",
+  "dataLoaded": true,
+  "supportedSeason": 2025,
+  "formulaVersion": "dynamic-watchability-v6"
+}
 ```
 
-The scoring model is documented in [ELOformula.md](ELOformula.md).
+The API returns:
+
+- `422` for invalid query fields, including an unsupported week or combining
+  `top` and `bottom`;
+- `503` from the rankings endpoint when the NFL data cache could not be loaded.
+
+## System architecture
+
+The prototype separates offline data collection from the low-latency request
+path.
+
+```mermaid
+flowchart LR
+    subgraph Sync["Offline / explicit synchronization"]
+        NV["nflverse data"] --> NR["nflreadpy"]
+        NR --> DV["Schema and integrity validation"]
+        DV --> PQ["Local Parquet cache"]
+        ESPN["ESPN search"] --> HF["Pregame headline filters"]
+        HF --> HJ["Headline JSON cache"]
+    end
+
+    subgraph Runtime["FastAPI runtime"]
+        PQ --> MEM["Validated SeasonData in memory"]
+        RQ["GET /api/v1/rankings"] --> PRE["Build preweek records, metrics, and standings"]
+        MEM --> PRE
+        PRE --> MQ["Calculate matchup quality"]
+        PRE --> CTX["Calculate rivalry and standings context"]
+        MQ --> SCORE["Compose and rank scores"]
+        CTX --> SCORE
+        SCORE --> SUMMARY["Compact GameSummary response"]
+        HJ --> SUMMARY
+    end
+```
+
+### Request lifecycle
+
+1. FastAPI loads the normalized Parquet cache once during application startup.
+2. A validated request supplies `week` and optional `top` or `bottom`.
+3. The service selects that week's matchups.
+4. It reconstructs 2025 records, point totals, and standings using only games
+   with `gameWeek < requestedWeek`.
+5. It creates league-relative offense, defense, and point-differential
+   percentiles.
+6. Each game receives a matchup-quality score and a context score.
+7. Games are sorted using unrounded values and deterministic secondary keys.
+8. `top` or `bottom` selection is applied after the entire slate is scored.
+9. A cached headline may be appended as an explanatory reason.
+10. Internal scoring details are reduced to the public `GameSummary` model.
+
+### Latency and caching
+
+Ranking requests do not download nflverse data, query ESPN, or call a database.
+The application loads local Parquet into memory at startup and calculates one
+weekly slate from that in-memory state. This keeps the MVP request path fast and
+deterministic without adding Redis or a database.
+
+Redis was intentionally not added to the prototype. A distributed cache becomes
+useful when the service runs across multiple instances, supports many seasons
+or personalized scoring, or receives enough traffic that recomputing the same
+week is material. At that point, an appropriate cache key would include at
+least:
+
+```text
+formulaVersion : season : week : viewerProfile : selection
+```
+
+Formula versioning is essential because cached scores from different scoring
+models must never be mixed.
+
+## Watchability formula v6
+
+The model produces a watchability rating, not a win probability, point spread,
+or predicted final score. All intermediate values are normalized to
+`0.00–1.00`.
+
+The two top-level benchmarks are:
+
+```text
+55% pure matchup quality
+45% rivalry and standings context
+```
+
+### Variables
+
+| Variable | Meaning | Range |
+| --- | --- | ---: |
+| `W_i` | Pregame scoring win rate for team `i` | `0.00–1.00` |
+| `O_i` | League-relative points-scored percentile | `0.00–1.00` |
+| `D_i` | League-relative defensive percentile | `0.00–1.00` |
+| `P_i` | League-relative point-differential percentile | `0.00–1.00` |
+| `T_i` | Team strength | `0.00–1.00` |
+| `C` | Expected competitive closeness | `0.00–1.00` |
+| `Q` | Pure matchup quality | `0.00–1.00` |
+| `R` | Rivalry value | `0.00–0.20` |
+| `L` | Standings leverage | `0.00–0.82` |
+| `X` | Saturated context value | `0.00–1.00` |
+| `N` | Normalized watchability | `0.00–1.00` |
+| `S` | Public watchability score | `1.00–10.00` |
+
+### 1. Pregame data boundary
+
+For requested Week `K`, only completed regular-season games satisfying this
+condition are used:
+
+```text
+gameWeek < K
+```
+
+The target game and all future games are excluded from records, scoring rates,
+point differential, and standings. This prevents historical-result leakage
+when the complete 2025 schedule cache is used to reconstruct an earlier week.
+
+### 2. Early-season record prior
+
+Week 1 has no current-season evidence, so treating every team as exactly equal
+would make its rankings nearly context-only. Weeks 1–5 therefore use a
+four-game-equivalent prior based on the team's final 2024 record.
+
+```text
+previousWinRate =
+  (previousWins + 0.5 × previousTies) / previousGames
+
+W_i =
+  (4 × previousWinRate + currentWins + 0.5 × currentTies)
+  / (4 + currentGames)
+```
+
+From Week 6 onward:
+
+```text
+W_i =
+  (currentWins + 0.5 × currentTies) / currentGames
+```
+
+A tie is treated as half a win. A team is considered to have a winning record
+for explanatory purposes only when `W_i > 0.50`.
+
+The same four-game prior is applied independently to points scored and points
+allowed during Weeks 1–5. It is fully removed starting in Week 6.
+
+### 3. League-relative team metrics
+
+For every team, the service calculates:
+
+```text
+pointsForPerGame
+pointsAllowedPerGame
+pointDifferentialPerGame =
+  pointsForPerGame - pointsAllowedPerGame
+```
+
+These rates are converted to percentiles within that week's league
+environment:
+
+- higher points scored is better;
+- fewer points allowed is better;
+- higher point differential is better.
+
+Ties receive a midpoint percentile:
+
+```text
+percentile =
+  (numberOfWorseTeams + 0.5 × numberOfOtherTiedTeams)
+  / (numberOfTeams - 1)
+```
+
+Percentiles avoid arbitrary fixed bands and automatically adjust to whether a
+particular season is high- or low-scoring.
+
+### 4. Team strength
+
+Each team receives equal weight across four understandable signals:
+
+```text
+T_i = (W_i + O_i + D_i + P_i) / 4
+```
+
+| Team-strength input | Weight within `T_i` |
+| --- | ---: |
+| Pregame win rate | `25%` |
+| Offense percentile | `25%` |
+| Defense percentile | `25%` |
+| Point-differential percentile | `25%` |
+
+The combination prevents a misleading record from being the only definition of
+quality. It also prevents strong underlying statistics from completely erasing
+poor game results.
+
+### 5. Offense-versus-defense projection
+
+The model estimates how the scoring profiles interact:
+
+```text
+homeExpectedPoints =
+  (homePointsForPerGame + awayPointsAllowedPerGame) / 2
+
+awayExpectedPoints =
+  (awayPointsForPerGame + homePointsAllowedPerGame) / 2
+```
+
+This is a compatibility signal only. There is no home-field bump and no Vegas
+line.
+
+### 6. Competitive closeness
+
+```text
+C =
+  1 - abs(homeExpectedPoints - awayExpectedPoints)
+      / max(homeExpectedPoints, awayExpectedPoints, 1)
+```
+
+`C` is clamped to `0.00–1.00`. Similar expected scoring profiles approach
+`1.00`; projected mismatches reduce the value.
+
+Closeness cannot make two weak teams a premium game because it only modifies
+the strength already contributed by the pair.
+
+### 7. Pure matchup quality
+
+First, the geometric mean requires both teams to contribute strength:
+
+```text
+pairStrength = sqrt(homeTeamStrength × awayTeamStrength)
+```
+
+The pair is then adjusted by closeness:
+
+```text
+Q = pairStrength × (0.65 + 0.35 × C)
+```
+
+The `65/35` structure makes team strength the primary signal while preserving a
+meaningful imbalance penalty:
+
+- `65%` of matchup quality is retained from pair strength regardless of
+  closeness;
+- the remaining `35%` depends on the offense-defense compatibility;
+- a strong projected matchup receives the full strength value when `C = 1`;
+- a mismatch can reduce, but cannot completely erase, value created by two
+  strong teams.
+
+Because `Q` is `55%` of the final normalized score, this produces the following
+structural allocation:
+
+| Final-score component | Maximum structural share |
+| --- | ---: |
+| Pair-strength base | `35.75%` (`55% × 65%`) |
+| Closeness-conditioned quality | `19.25%` (`55% × 35%`) |
+| Context and standings | `45.00%` |
+
+The individual record/offense/defense/differential inputs remain equal inside
+each team's nonlinear geometric pair-strength calculation, so they should not
+be interpreted as simple additive percentages of the final score.
+
+### 8. Rivalry value
+
+Only the strongest applicable rivalry category is used:
+
+| Category | `R` |
+| --- | ---: |
+| Same division | `0.20` |
+| Named conference or interconference rivalry | `0.12` |
+| Historic or regional rivalry | `0.06` |
+| No recognized rivalry | `0.00` |
+
+Categories do not stack. The nflverse divisional flag takes precedence over the
+curated rivalry map in `data/rivalries.json`.
+
+### 9. Standings leverage
+
+Standings are reconstructed before the requested week. Teams are ordered within
+their division and conference by:
+
+```text
+win rate, then point differential, then team ID
+```
+
+For each team, the model evaluates proximity to three boundaries:
+
+- division lead;
+- seventh-place conference playoff cutoff;
+- conference top seed.
+
+For each objective:
+
+```text
+remainingGames = max(1, 17 - gamesPlayed)
+
+proximity =
+  max(0, 1 - min(|marginAfterWin|, |marginAfterLoss|) / remainingGames)
+
+consequence =
+  1.0  if the result crosses the boundary or creates a two-win swing
+  0.5  otherwise
+
+objectiveImpact = min(1, proximity × consequence)
+```
+
+The strongest objective is retained for each team. Both teams' impacts are
+combined without simple addition:
+
+```text
+gameImpact =
+  1 - (1 - homeImpact) × (1 - awayImpact)
+
+seasonMaturity =
+  clamp((week - 1) / 17, 0, 1)
+
+L =
+  0.82 × seasonMaturity × gameImpact
+```
+
+The maturity term makes a similar standings gap more consequential late in the
+season than early in the season.
+
+This is a deterministic prototype approximation. It does not implement the
+NFL's complete head-to-head, division-record, conference-record,
+common-opponents, strength-of-victory, and strength-of-schedule tiebreaker
+sequence.
+
+### 10. Context saturation
+
+Rivalry fills only the context space not already occupied by standings
+leverage:
+
+```text
+X = L + (1 - L) × R
+```
+
+This saturation prevents independent context signals from stacking
+unboundedly. A late-season game with real division or playoff consequences can
+outrank a slightly stronger ordinary matchup, while rivalry alone cannot turn
+two poor teams into the best game of the week.
+
+### 11. Final watchability score
+
+```text
+N = 0.55 × Q + 0.45 × X
+
+S =
+  round(1 + 9 × clamp(N, 0, 1), 2)
+```
+
+| Normalized value `N` | Public score `S` |
+| ---: | ---: |
+| `0.00` | `1.00` |
+| `0.25` | `3.25` |
+| `0.50` | `5.50` |
+| `0.75` | `7.75` |
+| `1.00` | `10.00` |
+
+A score is an absolute model output, not a percentile within that week's slate.
+The API may serialize `8.50` as `8.5`; a frontend should format scores to two
+decimal places.
+
+### 12. Ranking tiebreakers
+
+Sorting uses the unrounded normalized score before the two-decimal display
+value. If games remain tied, the backend applies:
+
+```text
+1. Context value
+2. Pure matchup quality
+3. Competitive closeness
+4. Record quality
+5. Standings leverage
+6. Rivalry value
+7. Earlier kickoff
+8. Game ID
+```
+
+This means two games that both display `7.42` can still have a stable,
+football-relevant order.
+
+## Explanatory reasons and headlines
+
+The numeric calculation can generate reasons for:
+
+- both teams having winning records;
+- adjusted winning records during Weeks 1–5;
+- a divisional or curated rivalry;
+- direct division-race consequences;
+- playoff-cutoff implications;
+- conference top-seed implications;
+- strong combined quality;
+- a close offense-defense projection.
+
+Headline reasons are display-only. They have exactly zero effect on scores,
+ordering, or tiebreakers.
+
+The optional headline sync applies several safeguards:
+
+- only ESPN NFL URLs are accepted;
+- the article must be published during the 14 days before kickoff;
+- the title must mention both teams;
+- post-kickoff articles are excluded;
+- betting, odds, picks, and prediction content is excluded;
+- a preview URL is preferred, then the most recent valid result.
+
+These constraints prevent postgame result leakage into a pregame ranking.
+
+## Data validation and correctness boundaries
+
+Before nflverse data is accepted, the service verifies:
+
+- required schedule and team columns exist;
+- only 2024 and 2025 regular-season games are retained;
+- game IDs are unique;
+- a completed game has both scores, never exactly one;
+- all 32 teams have metadata;
+- legacy aliases such as `LA → LAR` and `JAC → JAX` are normalized;
+- kickoff timestamps are parsed in US Eastern time and represented as UTC in
+  the runtime matchup model.
+
+The application fails closed for ranking requests when the cache cannot be
+loaded. `/health` remains available and reports `"dataLoaded": false` for
+diagnosis.
+
+## Project structure
+
+```text
+.
+├── data/
+│   ├── headlines-2025.json       # Validated, display-only pregame headlines
+│   ├── rivalries.json            # Curated non-divisional rivalry categories
+│   └── processed/                # Generated nflverse Parquet cache
+├── src/nflviewer/
+│   ├── app.py                    # FastAPI lifecycle, routes, response shaping
+│   ├── data.py                   # nflverse validation, aggregation, caching
+│   ├── headlines.py              # Headline validation and read-only lookup
+│   ├── matchup_quality.py        # Team strength and matchup-quality formula
+│   ├── models.py                 # Pydantic query, internal, and API models
+│   ├── ranking.py                # 55/45 composition, reasons, sorting
+│   ├── records.py                # Win-rate and early-season prior logic
+│   ├── rivalries.py              # Rivalry classification and values
+│   ├── standings.py              # Standings reconstruction and leverage
+│   ├── sync_data.py              # nflverse synchronization CLI
+│   └── sync_headlines.py         # Optional ESPN headline backfill CLI
+├── tests/                        # Unit and API regression tests
+├── ELOformula.md                 # Dedicated formula reference
+└── pyproject.toml                # Dependencies and tool configuration
+```
+
+Despite the historical `ELOformula.md` filename, this version does not
+calculate Elo ratings.
+
+## Technology choices
+
+| Technology | Role | Why it fits the MVP |
+| --- | --- | --- |
+| Python 3.12 | Scoring and service runtime | Natural fit for data processing and nflverse tooling |
+| FastAPI | HTTP API and Swagger UI | Typed validation and an immediately usable prototype UI |
+| Pydantic | Query and response contracts | Rejects invalid weeks/selections at the API boundary |
+| Polars | Schedule/stat aggregation | Fast DataFrame operations over nflverse data |
+| nflreadpy | nflverse ingestion | Free access to schedules and team metadata for the prototype |
+| Parquet | Local normalized cache | Compact, typed, and fast to load without a database |
+| pytest | Regression tests | Covers data boundaries, formula behavior, and API output |
+| Ruff | Linting and formatting | One fast, deterministic Python quality tool |
+
+No paid NFL API, Vegas feed, database, Redis instance, or MCP server is required
+to run this version.
+
+## Development commands
+
+| Command | Purpose |
+| --- | --- |
+| `uv sync` | Install locked application and development dependencies |
+| `uv run python -m nflviewer.sync_data` | Create the local nflverse cache if missing |
+| `uv run python -m nflviewer.sync_data --force` | Replace the nflverse cache |
+| `uv run python -m nflviewer.sync_headlines` | Rebuild the optional headline cache |
+| `uv run fastapi dev` | Start the development server |
+| `uv run pytest` | Run the complete test suite |
+| `uv run ruff check .` | Run lint checks |
+| `uv run ruff format --check .` | Verify formatting |
+
+## Testing strategy
+
+The test suite covers:
+
+- nflverse schema and integrity validation;
+- cache creation and reload behavior;
+- preweek record, metric, and standings boundaries;
+- exclusion of target-week and future results;
+- early-season prior activation and removal;
+- percentile handling, including tied values;
+- rivalry categories and non-stacking behavior;
+- matchup-quality and final `55/45` composition;
+- weak-but-close and strong-but-imbalanced games;
+- standings leverage and late-season maturity;
+- deterministic score tiebreakers;
+- `top` and `bottom` selection;
+- Pydantic query validation;
+- compact API response shape;
+- headline filtering and postgame-leakage prevention;
+- graceful `503` behavior when data is unavailable.
+
+Run the complete quality gate:
+
+```bash
+uv run pytest
+uv run ruff check .
+uv run ruff format --check .
+```
+
+## Known limitations
+
+- Only the 2025 regular season is supported.
+- The API currently ranks for a general viewer; favorite-team personalization
+  is not implemented.
+- Injuries are excluded. Adding them safely requires confirmed starter status,
+  position-impact tiers, availability timing, and replacement quality.
+- Vegas lines are intentionally excluded.
+- Headlines explain context but do not numerically measure public interest.
+- Scoring statistics use season-to-date averages rather than opponent-adjusted
+  efficiency, EPA, success rate, or recent-form windows.
+- Standings use a deterministic approximation rather than the complete NFL
+  tiebreaker procedure.
+- Weekly results are calculated on demand and are not cached in Redis.
+- This repository contains the backend only; it does not yet include the
+  Next.js/TypeScript frontend.
+
+## Roadmap
+
+The next sensible increments are:
+
+1. Add a Next.js/TypeScript interface for selecting a week and viewing ranked
+   game cards.
+2. Add the first user preference: favorite team or general NFL watcher.
+3. Add a personalized layer that boosts games affecting the selected team's
+   division, conference, and playoff position without changing general quality.
+4. Add starter-only injury adjustments with position tiers and explicit
+   availability confidence.
+5. Replace approximate standings ordering with official NFL tiebreaker logic or
+   a playoff-probability simulation.
+6. Add opponent-adjusted efficiency and recent-form features after validating
+   them against historical outcomes.
+7. Add scheduled weekly synchronization and a versioned Redis cache only when
+   deployment scale justifies it.
+
+The complete scoring reference is available in
+[ELOformula.md](ELOformula.md).
