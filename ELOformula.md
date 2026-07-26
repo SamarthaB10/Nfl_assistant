@@ -1,82 +1,80 @@
-# Record Watchability Formula v1
+# Standings Watchability Formula v2
 
-The score is an absolute `0.00–1.00` index, not a probability. It uses only
-pregame records and rivalry context. Despite this file's original "ELO" name,
-the MVP does not calculate Elo ratings; that would add complexity beyond the
-prototype's scope.
+The score is an absolute `0.00–1.00` watchability index, not a probability.
+It uses only information available before the selected week. Despite this
+file's original "ELO" name, the MVP does not calculate Elo ratings.
 
-## Adjusted win rate
+## Variables
+
+| Variable | Meaning | Range |
+| --- | --- | ---: |
+| `Q` | Record quality of two good teams | `0.00–1.00` |
+| `R` | Strongest rivalry value | `0.00–0.20` |
+| `B` | Base value after record and rivalry saturation | `0.00–1.00` |
+| `I` | Estimated impact on a standings objective | `0.00–1.00` |
+| `M` | Season maturity | `0.00–1.00` |
+| `L` | Weekly standings leverage | `0.00–0.82` |
+| `S` | Final watchability score | `0.00–1.00` |
+
+## 1. Team scoring win rate
 
 ### Formula
+
+For Weeks 1–5:
 
 ```text
 previousWinRate =
   (previousWins + 0.5 × previousTies) / previousGames
 
-adjustedWinRate =
+teamWinRate =
   (4 × previousWinRate + currentWins + 0.5 × currentTies)
   / (4 + currentGames)
 ```
 
-### Meaning
-
-The previous season provides a four-game prior so the opening weeks have useful
-context. A tie counts as half a win.
-
-### How it is used
-
-The service uses this adjusted rate only during Weeks 1–5.
-
-## Current-season win rate
-
-### Formula
+For Weeks 6–18:
 
 ```text
-currentWinRate =
+teamWinRate =
   (currentWins + 0.5 × currentTies) / currentGames
 ```
 
 ### Meaning
 
-Once five weeks have passed, the current season contains enough information to
-stand on its own.
+The previous season acts as a four-game prior while the current season has
+little evidence. From Week 6 onward, only the current season is used. A tie
+counts as half a win.
 
 ### How it is used
 
-During Weeks 6–18, the previous season is removed completely. A team is
-considered good only when its current-season win rate is strictly above
-`0.500`.
+A team is good when its active `teamWinRate` is strictly greater than `0.500`.
+The API displays the real current-season record, never the adjusted value.
 
-## Record quality
+## 2. Record quality (`Q`)
 
 ### Formula
 
 ```text
-recordQuality =
-  min(homeScoringWinRate, awayScoringWinRate)
-  when both teams are good
-
-recordQuality = 0 otherwise
+Q = min(homeTeamWinRate, awayTeamWinRate)  when both teams are good
+Q = 0                                      otherwise
 ```
 
 ### Meaning
 
-The weaker good team controls the matchup's record value. Two equally bad
-teams receive no record boost merely because they are evenly matched.
+The weaker good team controls the matchup's record value. Two evenly matched
+bad teams receive no record-quality boost.
 
 ### How it is used
 
-This is the primary watchability component. A matchup only receives it when
-both teams clear the strict good-team threshold. `scoringWinRate` means the
-adjusted rate in Weeks 1–5 and the current-season rate in Weeks 6–18.
+This gives games such as `10-2 vs 11-1` substantial value while keeping
+`2-6 vs 2-6` at zero unless another factor makes the game important.
 
-## Rivalry value
+## 3. Rivalry value (`R`)
 
 ### Formula
 
-Use the strongest applicable category without stacking:
+Use only the strongest applicable category:
 
-| Category | Value |
+| Category | `R` |
 | --- | ---: |
 | Same division | `0.20` |
 | Named conference/interconference rivalry | `0.12` |
@@ -85,37 +83,155 @@ Use the strongest applicable category without stacking:
 
 ### Meaning
 
-Rivalries create Week 1 value before current records exist. Divisional games
-receive the largest boost because they carry recurring standings context.
+Rivalries create value before reliable current-season records exist.
+Divisional games receive the largest amount because they also recur in the
+standings race.
 
 ### How it is used
 
-The schedule's divisional flag is checked first. Otherwise, the service looks
-for the team pair in the curated rivalry dataset. Only one boost applies.
+The nflverse divisional flag is checked first. Otherwise, the service checks
+the curated rivalry file. Categories do not stack.
 
-## Final value
+## 4. Base value (`B`)
 
 ### Formula
 
 ```text
-rawScore = recordQuality + (1 - recordQuality) × rivalryValue
-displayScore = round(clamp(rawScore, 0, 1), 2)
+B = Q + (1 - Q) × R
 ```
 
 ### Meaning
 
-The rivalry term fills some of the score not already supplied by record
-quality. This saturation prevents two strong teams from receiving an
-unbounded additive bonus.
+Rivalry value fills some of the space not already supplied by record quality,
+instead of acting as an unbounded additive bonus.
 
 ### How it is used
 
-Sorting uses the unrounded score, then record quality, rivalry value, kickoff,
-and game ID. The `top` parameter is applied only after every game is scored and
-sorted.
+This is the complete Week 1 formula. Weekly standings leverage begins in
+Week 2 and grows as playoff consequences become clearer.
+
+## 5. Pregame weekly standings
+
+### Formula
+
+For a requested Week `W`, standings use only completed 2025 regular-season
+games where:
+
+```text
+gameWeek < W
+```
+
+Teams are ordered within their division and conference by:
+
+```text
+win rate, then point differential, then team ID
+```
+
+### Meaning
+
+The standings are a deterministic MVP approximation of the table immediately
+before the selected week. Point differential is a stable tie fallback; the
+prototype does not reproduce the NFL's complete multi-step tiebreaker rules.
+
+### How it is used
+
+Each team is compared with the boundary team for three objectives:
+
+- division lead;
+- seventh-place conference playoff cutoff;
+- conference top seed.
+
+The model evaluates how the team's margin relative to that boundary differs
+between a win and a loss. Direct games against the boundary team receive the
+largest possible swing.
+
+## 6. Standings leverage (`L`)
+
+### Formula
+
+For each team and objective:
+
+```text
+remainingGames = max(1, 17 - gamesPlayed)
+
+proximity =
+  max(0, 1 - min(|marginAfterWin|, |marginAfterLoss|) / remainingGames)
+
+consequence =
+  1.0  when the result crosses the boundary or creates a two-win swing
+  0.5  otherwise
+
+objectiveImpact = min(1, proximity × consequence)
+```
+
+Use the strongest objective for each team, then combine both teams:
+
+```text
+I = 1 - (1 - homeImpact) × (1 - awayImpact)
+M = clamp((week - 1) / 17, 0, 1)
+L = 0.82 × M × I
+```
+
+### Meaning
+
+`I` increases when the result can move either team across a meaningful
+standings boundary. `M` prevents early-season standings from looking as
+decisive as late-season races. The `0.82` ceiling preserves room for the base
+game quality and keeps the result bounded.
+
+### How it is used
+
+The strongest applicable reason is displayed as division race, playoff cutoff,
+or conference top-seed implications. A direct late-season division race can
+meaningfully lift an otherwise ordinary game.
+
+## 7. Final score (`S`)
+
+### Formula
+
+```text
+S_raw = B + (1 - B) × L
+S = round(clamp(S_raw, 0, 1), 2)
+```
+
+### Meaning
+
+Standings leverage fills some of the score not already supplied by team
+quality and rivalry. Every layer saturates, so the final value cannot exceed
+`1.00`.
+
+### How it is used
+
+Sorting uses the unrounded score, then record quality, leverage, rivalry,
+kickoff, and game ID. `top` is applied only after every game is scored.
+
+## 8. Headline reasons
+
+### Formula
+
+```text
+headlineScoreImpact = 0
+```
+
+### Meaning
+
+A relevant ESPN pregame headline explains the narrative around a game but is
+not reliable enough to change the numeric MVP score.
+
+### How it is used
+
+The checked-in cache contains at most one headline per game. A headline must:
+
+- be published during the 14 days before kickoff;
+- mention both teams;
+- link to ESPN's NFL coverage;
+- not be betting, odds, picks, or prediction content.
+
+The API appends it as `Headline: …`. Missing headlines are neutral. Ranking
+requests never call ESPN.
 
 ## Data boundary
 
-A Week `W` score uses only completed regular-season games with `week < W`.
-Target-week and future results are excluded even when the historical dataset
-already contains them. Week 1 uses the final 2024 regular-season record.
+Target-week and future results are excluded even though the historical dataset
+contains them. Week 1 uses the final 2024 regular-season record. No Vegas line,
+future result, or postgame headline is part of the score.

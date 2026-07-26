@@ -1,7 +1,8 @@
 # NFL Viewer
 
-FastAPI backend that ranks 2025 NFL regular-season matchups by record quality
-and rivalry context. Swagger UI is the MVP interface.
+FastAPI backend that ranks 2025 NFL regular-season matchups by record quality,
+rivalry context, and pregame standings leverage. Relevant historical ESPN
+headlines are included as explanatory context. Swagger UI is the MVP interface.
 
 ## Setup
 
@@ -9,8 +10,12 @@ and rivalry context. Swagger UI is the MVP interface.
 cd /Users/samarthab/NFLviewer
 uv sync
 uv run python -m nflviewer.sync_data --force
+uv run python -m nflviewer.sync_headlines
 uv run fastapi dev
 ```
+
+The repository includes a validated 2025 headline cache, so running
+`sync_headlines` is optional. Use it only to rebuild that cache.
 
 Open <http://127.0.0.1:8000/docs>, expand `GET /api/v1/rankings`, and enter:
 
@@ -24,18 +29,26 @@ The response contains only the information needed to display each game:
 ```json
 [
   {
-    "matchup": "Tampa Bay Buccaneers vs Seattle Seahawks",
+    "matchup": "Seattle Seahawks vs San Francisco 49ers",
     "records": {
-      "TB": "3-1",
-      "SEA": "3-1"
+      "SEA": "13-3",
+      "SF": "12-4"
     },
-    "score": 0.67,
+    "score": 0.96,
     "reasons": [
-      "Both teams rate above .500 using early-season adjusted records"
+      "Both teams have winning records",
+      "Divisional matchup",
+      "Direct division race matchup",
+      "Headline: 49ers host the Seahawks in the season finale with the division title and top NFC seed on the line"
     ]
   }
 ]
 ```
+
+Scores use only information available before the selected game's week.
+Headlines are display-only reasons: they never change a score or ranking.
+The API reads both nflverse data and the headline JSON from local cache, so a
+ranking request does not call an external service.
 
 ## Verification
 

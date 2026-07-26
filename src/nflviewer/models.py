@@ -16,7 +16,7 @@ class HealthResponse(APIModel):
     status: Literal["ok"] = "ok"
     data_loaded: bool
     supported_season: Literal[2025] = 2025
-    formula_version: Literal["record-watchability-v1"] = "record-watchability-v1"
+    formula_version: Literal["standings-watchability-v2"] = "standings-watchability-v2"
 
 
 class RankingQuery(BaseModel):
