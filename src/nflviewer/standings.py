@@ -71,9 +71,7 @@ def build_standings(
             (team_id for team_id, team in teams.items() if team.conference == conference),
             key=sort_key,
         )
-        conference_ranks.update(
-            {team_id: rank for rank, team_id in enumerate(members, start=1)}
-        )
+        conference_ranks.update({team_id: rank for rank, team_id in enumerate(members, start=1)})
 
     divisions = {team.division for team in teams.values()}
     for division in divisions:
@@ -214,9 +212,8 @@ def matchup_leverage(
     value = MAX_LEVERAGE * maturity * game_impact
 
     objectives = {home_objective, away_objective}
-    direct_division_race = (
-        "division" in objectives
-        and (home_boundary == away_team_id or away_boundary == home_team_id)
+    direct_division_race = "division" in objectives and (
+        home_boundary == away_team_id or away_boundary == home_team_id
     )
     if direct_division_race:
         reason = "Direct division race matchup"

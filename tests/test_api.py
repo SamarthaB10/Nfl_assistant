@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from nflviewer.app import create_app
 from nflviewer.data import SeasonData
+from nflviewer.headlines import HeadlineRepository
 
 
 def season_data() -> SeasonData:
@@ -107,7 +108,12 @@ class StubRepository:
 
 
 def client_for(loader: Callable[[], SeasonData]) -> AbstractContextManager[TestClient]:
-    return TestClient(create_app(StubRepository(loader)))
+    return TestClient(
+        create_app(
+            StubRepository(loader),
+            headline_repository=HeadlineRepository(),
+        )
+    )
 
 
 def test_health_reports_loaded_data() -> None:
@@ -163,6 +169,37 @@ def test_rankings_show_each_current_record_before_the_selected_week() -> None:
 
     assert response.status_code == 200
     assert response.json()[0]["records"] == {"BUF": "1-0", "DAL": "1-0"}
+
+
+def test_rankings_adds_cached_headline_without_changing_score(tmp_path) -> None:
+    path = tmp_path / "headlines.json"
+    path.write_text(
+        """
+        [
+          {
+            "gameId": "2025_01_NE_BUF",
+            "headline": "Patriots and Bills renew AFC East rivalry",
+            "publishedAt": "2025-09-05T12:00:00Z",
+            "url": "https://www.espn.com/nfl/story/_/id/1/example"
+          }
+        ]
+        """,
+        encoding="utf-8",
+    )
+    application = create_app(
+        StubRepository(season_data),
+        headline_repository=HeadlineRepository(path),
+    )
+
+    with TestClient(application) as client:
+        response = client.get("/api/v1/rankings", params={"week": 1, "top": 1})
+
+    assert response.status_code == 200
+    assert response.json()[0]["score"] == 0.2
+    assert response.json()[0]["reasons"] == [
+        "Divisional matchup",
+        "Headline: Patriots and Bills renew AFC East rivalry",
+    ]
 
 
 def test_rankings_validates_query_fields() -> None:

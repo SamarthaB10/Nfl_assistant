@@ -1,12 +1,14 @@
 import logging
 from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Annotated, Protocol
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 
 from nflviewer.data import Record, Repository, SeasonData
+from nflviewer.headlines import HeadlineRepository
 from nflviewer.models import GameSummary, HealthResponse, RankingQuery, RecordSummary
 from nflviewer.ranking import MatchupInput, rank_matchups
 
@@ -31,7 +33,11 @@ def _display_record(record: RecordSummary) -> str:
     return "-".join(str(value) for value in record_parts)
 
 
-def _ranking_response(data: SeasonData, query: RankingQuery) -> list[GameSummary]:
+def _ranking_response(
+    data: SeasonData,
+    query: RankingQuery,
+    headline_repository: HeadlineRepository,
+) -> list[GameSummary]:
     matchups = data.matchups_for_week(query.week)
     inputs = [
         MatchupInput(
@@ -55,22 +61,33 @@ def _ranking_response(data: SeasonData, query: RankingQuery) -> list[GameSummary
         standings=data.current_standings_before_week(query.week),
         top=query.top,
     )
-    return [
-        GameSummary(
-            matchup=f"{game.away_team.team_name} vs {game.home_team.team_name}",
-            records={
-                game.away_team.team_id: _display_record(game.away_team.current_record),
-                game.home_team.team_id: _display_record(game.home_team.current_record),
-            },
-            score=game.watchability_score,
-            reasons=game.reasons,
+    summaries: list[GameSummary] = []
+    for game in games:
+        reasons = list(game.reasons)
+        headline_reason = headline_repository.reason_for(game.game_id)
+        if headline_reason:
+            reasons.append(headline_reason)
+        summaries.append(
+            GameSummary(
+                matchup=f"{game.away_team.team_name} vs {game.home_team.team_name}",
+                records={
+                    game.away_team.team_id: _display_record(game.away_team.current_record),
+                    game.home_team.team_id: _display_record(game.home_team.current_record),
+                },
+                score=game.watchability_score,
+                reasons=reasons,
+            )
         )
-        for game in games
-    ]
+    return summaries
 
 
-def create_app(repository: DataRepository | None = None) -> FastAPI:
+def create_app(
+    repository: DataRepository | None = None,
+    *,
+    headline_repository: HeadlineRepository | None = None,
+) -> FastAPI:
     data_repository = repository or Repository()
+    headlines = headline_repository or HeadlineRepository(Path("data/headlines-2025.json"))
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -112,7 +129,7 @@ def create_app(repository: DataRepository | None = None) -> FastAPI:
                 status_code=503,
                 detail="NFL data is unavailable. Run the data sync command and retry.",
             )
-        return _ranking_response(data, query)
+        return _ranking_response(data, query, headlines)
 
     return application
 
