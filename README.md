@@ -22,9 +22,12 @@ Open <http://127.0.0.1:8000/docs>, expand `GET /api/v1/rankings`, and enter:
 
 - `season`: `2025`
 - `week`: an integer from `1` to `18`
-- `top`: an optional integer from `1` to `16`; omit it for every game
+- `top`: optionally return the highest-rated `1` to `16` games
+- `bottom`: optionally return the lowest-rated `1` to `16` games, worst first
 
 For example, `week=4&top=5` returns the five highest-rated Week 4 games.
+`week=4&bottom=5` returns the five lowest-rated games. `top` and `bottom`
+cannot be used together; omit both to return the complete slate.
 The response contains only the information needed to display each game:
 
 ```json

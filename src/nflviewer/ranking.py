@@ -152,9 +152,14 @@ def rank_matchups(
     standings: Mapping[str, TeamStanding] | None = None,
     team_metrics: Mapping[str, TeamMetrics] | None = None,
     top: int | None = None,
+    bottom: int | None = None,
 ) -> list[RankedGame]:
     if top is not None and top < 1:
         raise ValueError("top must be at least 1")
+    if bottom is not None and bottom < 1:
+        raise ValueError("bottom must be at least 1")
+    if top is not None and bottom is not None:
+        raise ValueError("top and bottom are mutually exclusive")
 
     scored = [
         score_matchup(
@@ -180,4 +185,8 @@ def rank_matchups(
         )
     )
     ranked = [game.model_copy(update={"rank": rank}) for rank, game in enumerate(scored, 1)]
-    return ranked if top is None else ranked[:top]
+    if top is not None:
+        return ranked[:top]
+    if bottom is not None:
+        return list(reversed(ranked[-bottom:]))
+    return ranked

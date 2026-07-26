@@ -163,6 +163,34 @@ def test_rankings_applies_top_after_scoring_all_games() -> None:
     ]
 
 
+def test_rankings_returns_bottom_games_worst_first() -> None:
+    with client_for(season_data) as client:
+        response = client.get(
+            "/api/v1/rankings",
+            params={"season": 2025, "week": 1, "bottom": 1},
+        )
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "matchup": "New York Giants vs Dallas Cowboys",
+            "records": {"NYG": "0-0", "DAL": "0-0"},
+            "score": 1.36,
+            "reasons": ["Divisional matchup"],
+        }
+    ]
+
+
+def test_rankings_rejects_top_and_bottom_together() -> None:
+    with client_for(season_data) as client:
+        response = client.get(
+            "/api/v1/rankings",
+            params={"week": 1, "top": 1, "bottom": 1},
+        )
+
+    assert response.status_code == 422
+
+
 def test_rankings_show_each_current_record_before_the_selected_week() -> None:
     with client_for(season_data) as client:
         response = client.get("/api/v1/rankings", params={"week": 2})

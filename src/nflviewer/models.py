@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import ClassVar, Literal
+from typing import ClassVar, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic.alias_generators import to_camel
 
 
@@ -24,7 +24,24 @@ class RankingQuery(BaseModel):
 
     season: int = Field(default=2025, ge=2025, le=2025)
     week: int = Field(ge=1, le=18)
-    top: int | None = Field(default=None, ge=1, le=16)
+    top: int | None = Field(
+        default=None,
+        ge=1,
+        le=16,
+        description="Return only the highest-rated games. Cannot be combined with bottom.",
+    )
+    bottom: int | None = Field(
+        default=None,
+        ge=1,
+        le=16,
+        description="Return only the lowest-rated games, worst first. Cannot be combined with top.",
+    )
+
+    @model_validator(mode="after")
+    def validate_selection(self) -> Self:
+        if self.top is not None and self.bottom is not None:
+            raise ValueError("top and bottom are mutually exclusive")
+        return self
 
 
 class RecordSummary(APIModel):

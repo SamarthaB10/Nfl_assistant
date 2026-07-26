@@ -313,6 +313,36 @@ def test_ranking_uses_raw_score_and_applies_top_after_sorting() -> None:
     assert [game.rank for game in top_two] == [1, 2]
 
 
+def test_bottom_returns_lowest_scored_games_worst_first() -> None:
+    games = [
+        matchup("low", "CAR", "TEN", kickoff_hour=17),
+        matchup("high", "BUF", "KC", kickoff_hour=20),
+        matchup("middle", "A", "B", kickoff_hour=19),
+    ]
+    previous = {
+        "CAR": record(3, 13),
+        "TEN": record(4, 12),
+        "BUF": record(13, 3),
+        "KC": record(14, 2),
+        "A": record(10, 6),
+        "B": record(10, 6),
+    }
+    current = {team: record(0, 0) for team in previous}
+
+    bottom_two = rank_matchups(games, previous, current, bottom=2)
+
+    assert [game.game_id for game in bottom_two] == ["low", "middle"]
+
+
+def test_ranking_rejects_top_and_bottom_together() -> None:
+    games = [matchup("only", "A", "B")]
+    previous = {"A": record(8, 8), "B": record(8, 8)}
+    current = {"A": record(0, 0), "B": record(0, 0)}
+
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        rank_matchups(games, previous, current, top=1, bottom=1)
+
+
 def test_sorting_is_deterministic_for_equal_scores() -> None:
     games = [
         matchup("later-a", "A", "B", kickoff_hour=20),

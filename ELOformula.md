@@ -301,7 +301,19 @@ Games are sorted using the following attributes:
 Therefore, games with the same displayed score are still ordered using more
 precise and football-relevant information.
 
-## 13. Reasons, headlines, and injuries
+## 13. Top and bottom selection
+
+The API applies selection only after every matchup is scored and sorted:
+
+```text
+top=x     returns the x highest-rated games
+bottom=x  returns the x lowest-rated games, worst first
+```
+
+The parameters are mutually exclusive. Omitting both returns the complete
+slate in highest-to-lowest order.
+
+## 14. Reasons, headlines, and injuries
 
 The response may explain:
 

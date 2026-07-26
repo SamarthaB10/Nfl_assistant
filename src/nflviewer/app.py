@@ -61,6 +61,7 @@ def _ranking_response(
         standings=data.current_standings_before_week(query.week),
         team_metrics=data.team_metrics_before_week(query.week),
         top=query.top,
+        bottom=query.bottom,
     )
     summaries: list[GameSummary] = []
     for game in games:
