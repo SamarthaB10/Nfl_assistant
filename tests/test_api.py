@@ -122,7 +122,10 @@ def test_rankings_returns_all_games_in_rank_order() -> None:
 
 def test_rankings_applies_top_after_scoring_all_games() -> None:
     with client_for(season_data) as client:
-        response = client.get("/api/v1/rankings", params={"week": 1, "top": 1})
+        response = client.get(
+            "/api/v1/rankings",
+            params={"season": 2025, "week": 1, "top": 1},
+        )
 
     assert response.status_code == 200
     assert response.json()["totalMatchups"] == 2

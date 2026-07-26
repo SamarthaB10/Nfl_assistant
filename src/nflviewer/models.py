@@ -22,7 +22,7 @@ class HealthResponse(APIModel):
 class RankingQuery(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    season: Literal[2025] = 2025
+    season: int = Field(default=2025, ge=2025, le=2025)
     week: int = Field(ge=1, le=18)
     top: int | None = Field(default=None, ge=1, le=16)
 
