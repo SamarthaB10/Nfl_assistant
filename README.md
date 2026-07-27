@@ -1,6 +1,6 @@
-# NFL Viewer
+# LeagueWatch
 
-NFL Viewer is a Next.js and FastAPI application that ranks every 2025 NFL
+LeagueWatch is a Next.js and FastAPI application that ranks every 2025 NFL
 regular-season matchup by how valuable it should be to watch. It turns pregame
 team quality, projected competitiveness, rivalry context, and standings
 consequences into a transparent `1.00–10.00` watchability score.
@@ -13,7 +13,7 @@ The prototype answers a focused question:
 The responsive web interface lets a user choose a week and request every game,
 the top `x`, or the bottom `x`. Each result presents team records and logos
 beside the watchability rating. Opening a matchup reveals its ranking reasons,
-validated pregame headline, and an optional curated player spotlight.
+validated pregame headline, and two curated player spotlights—one per team.
 
 The FastAPI response stays deliberately compact: matchup, actual pregame
 records, logo URLs, rating, and human-readable reasons. This repository
@@ -35,7 +35,9 @@ personalization remains future work.
   conference top-seed context.
 - Includes one validated pregame ESPN headline when available.
 - Provides a mobile-first matchup interface with expandable insights.
-- Shows team logos and curated player spotlights when assets are available.
+- Shows team logos and one curated player spotlight for each team.
+- Explains ratings of `3.20` or lower with specific quality, blowout-risk, and
+  low-stakes reasons.
 - Uses deterministic football-specific tiebreakers when displayed scores are
   equal.
 - Performs no network calls in the ranking request path.
@@ -553,6 +555,12 @@ The numeric calculation can generate reasons for:
 - strong combined quality;
 - a close offense-defense projection.
 
+For a displayed score of `3.20` or lower, the model instead adds at least one
+negative explanation. The applicable reasons identify below-average strength
+for both teams, elevated blowout risk, or limited rivalry and standings stakes.
+If no individual diagnostic crosses its threshold, the response explains that
+combined quality and context remain below the weekly standard.
+
 Headline reasons are display-only. They have exactly zero effect on scores,
 ordering, or tiebreakers.
 
@@ -706,8 +714,8 @@ npm run build
 - Standings use a deterministic approximation rather than the complete NFL
   tiebreaker procedure.
 - Weekly results are calculated on demand and are not cached in Redis.
-- Player spotlights are a small curated team mapping rather than a dynamic
-  roster feed.
+- Player spotlights cover all 32 teams but remain a static one-player-per-team
+  mapping rather than a dynamic weekly roster feed.
 - Team logos and player headshots are loaded from ESPN-hosted URLs for this
   prototype. A production release must confirm media usage rights and provide
   a licensed or owned asset pipeline.

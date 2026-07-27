@@ -329,6 +329,17 @@ The response may explain:
 - offense-defense closeness;
 - one cached pregame headline.
 
+When `S <= 3.20`, the response adds at least one negative diagnostic without
+changing the score. It identifies whichever factors apply:
+
+- both teams fall below `0.40` in overall team strength;
+- competitive closeness falls below `0.55`, indicating elevated blowout risk;
+- context falls below `0.15`, indicating limited rivalry or standings stakes;
+- otherwise, combined quality and context remain below the weekly standard.
+
+The low-score layer suppresses the positive closeness explanation so an evenly
+matched game between weak teams is not described as compelling.
+
 Headlines have exactly zero numeric impact. Injuries are intentionally excluded
 from v6 until starter status, availability timing, and replacement quality can
 be modeled without double-counting information already reflected in team
