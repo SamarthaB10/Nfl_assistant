@@ -16,6 +16,34 @@ const topGame = {
     "Direct division race matchup",
     "Headline: 49ers host the Seahawks with the division title on the line",
   ],
+  playersToWatch: [
+    {
+      playerId: "00-001",
+      teamId: "SEA",
+      name: "Jaxon Smith-Njigba",
+      position: "WR",
+      imageUrl: "https://example.test/jsn.png",
+      profileUrl: "https://example.test/jsn",
+      details: [
+        "1,793 receiving yards this season",
+        "10 receiving TDs this season",
+        "Ranked 1st among WRs in receiving yards",
+      ],
+    },
+    {
+      playerId: "00-002",
+      teamId: "SF",
+      name: "Christian McCaffrey",
+      position: "RB",
+      imageUrl: "https://example.test/mccaffrey.png",
+      profileUrl: "https://example.test/mccaffrey",
+      details: [
+        "1,202 rushing yards this season",
+        "13 total TDs this season",
+        "Ranked 4th among RBs in rushing yards",
+      ],
+    },
+  ],
 };
 
 afterEach(() => {
@@ -75,6 +103,10 @@ describe("RankingsWorkspace", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("img", { name: "Christian McCaffrey" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("1,793 receiving yards this season")).toBeInTheDocument();
+    expect(
+      screen.getByText("Ranked 4th among RBs in rushing yards"),
     ).toBeInTheDocument();
     expect(screen.getAllByRole("link")).toHaveLength(2);
   });

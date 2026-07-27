@@ -6,6 +6,16 @@ export interface RankingsRequest {
   count: number;
 }
 
+export interface PlayerSpotlight {
+  playerId: string;
+  teamId: string;
+  name: string;
+  position: string;
+  imageUrl: string;
+  profileUrl: string;
+  details: string[];
+}
+
 export interface GameSummary {
   matchup: string;
   records: Record<string, string>;
@@ -13,6 +23,7 @@ export interface GameSummary {
   score: number;
   reasons: string[];
   unavailablePlayerIds?: string[];
+  playersToWatch?: PlayerSpotlight[];
 }
 
 export function buildRankingsSearch({

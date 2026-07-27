@@ -94,6 +94,16 @@ class RankedGame(APIModel):
     reasons: list[str]
 
 
+class PlayerSpotlight(APIModel):
+    player_id: str
+    team_id: str
+    name: str
+    position: str
+    image_url: str
+    profile_url: str
+    details: list[str] = Field(min_length=2, max_length=3)
+
+
 class GameSummary(APIModel):
     matchup: str
     records: dict[str, str]
@@ -101,3 +111,4 @@ class GameSummary(APIModel):
     score: float = Field(ge=1, le=10)
     reasons: list[str]
     unavailable_player_ids: list[str] = Field(default_factory=list)
+    players_to_watch: list[PlayerSpotlight] = Field(default_factory=list)

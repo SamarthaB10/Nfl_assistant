@@ -115,24 +115,33 @@ def weekly_roster_rows() -> pl.DataFrame:
                 "week": 16,
                 "team": "NYG",
                 "espn_id": 4595348,
+                "gsis_id": "malik",
                 "status": "RES",
                 "full_name": "Malik Nabers",
+                "position": "WR",
+                "headshot_url": "https://example.test/malik.png",
             },
             {
                 "season": 2025,
                 "week": 16,
                 "team": "NYG",
                 "espn_id": 4689114,
+                "gsis_id": "dart",
                 "status": "ACT",
                 "full_name": "Jaxson Dart",
+                "position": "QB",
+                "headshot_url": "https://example.test/dart.png",
             },
             {
                 "season": 2025,
                 "week": 16,
                 "team": "DAL",
                 "espn_id": 9999999,
+                "gsis_id": "other",
                 "status": "RES",
                 "full_name": "Other matchup player",
+                "position": "WR",
+                "headshot_url": "https://example.test/other.png",
             },
         ]
     )
@@ -316,6 +325,9 @@ def test_parquet_round_trip_uses_local_cache(tmp_path: Path) -> None:
     restored = SeasonData.from_cache(schedule_path, team_path, weekly_roster_path)
 
     assert set(pl.read_parquet(weekly_roster_path).columns) == {
+        "full_name",
+        "gsis_id",
+        "position",
         "season",
         "week",
         "team",
@@ -342,6 +354,7 @@ def test_repository_refreshes_and_then_loads_local_parquet(tmp_path: Path) -> No
 
 def test_repository_refreshes_weekly_rosters_for_target_season(tmp_path: Path) -> None:
     requested_seasons: list[list[int]] = []
+    requested_player_stats: list[tuple[list[int], str]] = []
     repository = Repository(tmp_path, require_32_teams=False)
 
     repository.refresh(
@@ -350,11 +363,37 @@ def test_repository_refreshes_weekly_rosters_for_target_season(tmp_path: Path) -
         weekly_roster_loader=lambda seasons: (
             requested_seasons.append(seasons) or weekly_roster_rows()
         ),
+        player_stat_loader=lambda seasons, summary_level: (
+            requested_player_stats.append((seasons, summary_level))
+            or pl.DataFrame(
+                [
+                    {
+                        "player_id": "dart",
+                        "player_display_name": "Jaxson Dart",
+                        "position": "QB",
+                        "headshot_url": "https://example.test/dart.png",
+                        "season": 2025,
+                        "week": 15,
+                        "season_type": "REG",
+                        "team": "NYG",
+                        "passing_yards": 275,
+                        "passing_tds": 2,
+                        "rushing_yards": 20,
+                        "rushing_tds": 0,
+                        "receiving_yards": 0,
+                        "receiving_tds": 0,
+                        "fantasy_points_ppr": 19.0,
+                    }
+                ]
+            )
+        ),
     )
     loaded = repository.load()
 
     assert requested_seasons == [[2025]]
+    assert requested_player_stats == [([2024, 2025], "week")]
     assert loaded.unavailable_player_ids_for_matchup(16, "NYG", "PHI") == ["4595348"]
+    assert loaded.player_spotlights_before_week(16, ["NYG"])["NYG"].name == "Jaxson Dart"
 
 
 def test_repository_requires_32_teams_by_default(tmp_path: Path) -> None:

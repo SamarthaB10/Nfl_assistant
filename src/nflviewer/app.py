@@ -63,6 +63,10 @@ def _ranking_response(
         top=query.top,
         bottom=query.bottom,
     )
+    player_spotlights = data.player_spotlights_before_week(
+        query.week,
+        list(data.teams),
+    )
     summaries: list[GameSummary] = []
     for game in games:
         reasons = list(game.reasons)
@@ -87,6 +91,11 @@ def _ranking_response(
                     game.away_team.team_id,
                     game.home_team.team_id,
                 ),
+                players_to_watch=[
+                    player_spotlights[team_id]
+                    for team_id in (game.away_team.team_id, game.home_team.team_id)
+                    if team_id in player_spotlights
+                ],
             )
         )
     return summaries

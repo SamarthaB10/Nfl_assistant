@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useId, useState } from "react";
 
 import { selectFeaturedPlayers } from "@/lib/featured-players";
-import type { GameSummary } from "@/lib/rankings";
+import type { GameSummary, PlayerSpotlight } from "@/lib/rankings";
 
 interface GameCardProps {
   game: GameSummary;
@@ -23,10 +23,21 @@ export function GameCard({ game, rank }: GameCardProps) {
   }));
   const headline = game.reasons.find((reason) => reason.startsWith("Headline:"));
   const reasons = game.reasons.filter((reason) => !reason.startsWith("Headline:"));
-  const players = selectFeaturedPlayers(
-    teams.map((team) => team.id),
-    game.unavailablePlayerIds,
-  );
+  const players: PlayerSpotlight[] =
+    game.playersToWatch && game.playersToWatch.length > 0
+      ? game.playersToWatch
+      : selectFeaturedPlayers(
+          teams.map((team) => team.id),
+          game.unavailablePlayerIds,
+        ).map((player) => ({
+          playerId: player.id,
+          teamId: player.teamId,
+          name: player.name,
+          position: player.position,
+          imageUrl: player.imageUrl,
+          profileUrl: player.profileUrl,
+          details: [],
+        }));
 
   return (
     <li className={`game-card${open ? " is-open" : ""}`}>
@@ -129,6 +140,13 @@ export function GameCard({ game, rank }: GameCardProps) {
                       <small>
                         {player.teamId} · {player.position}
                       </small>
+                      {player.details.length > 0 && (
+                        <ul className="player-facts">
+                          {player.details.map((detail) => (
+                            <li key={detail}>{detail}</li>
+                          ))}
+                        </ul>
+                      )}
                     </span>
                   </a>
                 ))}

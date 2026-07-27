@@ -168,6 +168,7 @@ def test_rankings_returns_all_games_in_rank_order() -> None:
             "score": 3.73,
             "reasons": ["Divisional matchup"],
             "unavailablePlayerIds": [],
+            "playersToWatch": [],
         },
         {
             "matchup": "New York Giants vs Dallas Cowboys",
@@ -182,6 +183,7 @@ def test_rankings_returns_all_games_in_rank_order() -> None:
                 "Team profiles indicate elevated blowout risk",
             ],
             "unavailablePlayerIds": [],
+            "playersToWatch": [],
         },
     ]
 
@@ -205,6 +207,7 @@ def test_rankings_applies_top_after_scoring_all_games() -> None:
             "score": 3.73,
             "reasons": ["Divisional matchup"],
             "unavailablePlayerIds": [],
+            "playersToWatch": [],
         }
     ]
 
@@ -231,6 +234,7 @@ def test_rankings_returns_bottom_games_worst_first() -> None:
                 "Team profiles indicate elevated blowout risk",
             ],
             "unavailablePlayerIds": [],
+            "playersToWatch": [],
         }
     ]
 

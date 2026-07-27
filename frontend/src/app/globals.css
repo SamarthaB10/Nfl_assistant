@@ -613,8 +613,10 @@ a {
 
 .player img {
   display: block;
-  width: 100%;
+  width: 112%;
+  max-width: none;
   height: auto;
+  margin-inline: -6%;
   object-fit: contain;
   object-position: bottom center;
   transition: transform 180ms ease;
@@ -643,6 +645,34 @@ a {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.player-facts {
+  display: grid;
+  gap: 5px;
+  margin: 12px 0 0;
+  padding: 0;
+  color: var(--muted-strong);
+  font-family: var(--font-display), sans-serif;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  list-style: none;
+}
+
+.player-facts li {
+  position: relative;
+  padding-left: 10px;
+}
+
+.player-facts li::before {
+  position: absolute;
+  top: 0.42em;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  background: var(--red);
+  content: "";
+  transform: rotate(45deg);
 }
 
 .results-skeleton {

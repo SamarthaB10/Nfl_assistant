@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from nflviewer.models import GameSummary, RankingQuery
+from nflviewer.models import GameSummary, PlayerSpotlight, RankingQuery
 
 
 def test_ranking_query_defaults_to_all_2025_games() -> None:
@@ -49,3 +49,34 @@ def test_game_summary_accepts_ten_point_watchability_score() -> None:
     assert game.logos == {}
     assert game.unavailable_player_ids == []
     assert game.model_dump(by_alias=True)["unavailablePlayerIds"] == []
+    assert game.players_to_watch == []
+
+
+def test_player_spotlight_serializes_to_camel_case() -> None:
+    player = PlayerSpotlight(
+        player_id="00-001",
+        team_id="MIN",
+        name="Justin Jefferson",
+        position="WR",
+        image_url="https://example.test/jefferson.png",
+        profile_url="https://example.test/jefferson",
+        details=[
+            "1,200 receiving yards this season",
+            "10 receiving TDs this season",
+            "Ranked 1st among WRs in receiving yards",
+        ],
+    )
+
+    assert player.model_dump(by_alias=True) == {
+        "playerId": "00-001",
+        "teamId": "MIN",
+        "name": "Justin Jefferson",
+        "position": "WR",
+        "imageUrl": "https://example.test/jefferson.png",
+        "profileUrl": "https://example.test/jefferson",
+        "details": [
+            "1,200 receiving yards this season",
+            "10 receiving TDs this season",
+            "Ranked 1st among WRs in receiving yards",
+        ],
+    }

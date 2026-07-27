@@ -13,12 +13,13 @@ The prototype answers a focused question:
 The responsive web interface lets a user choose a week and request every game,
 the top `x`, or the bottom `x`. Each result presents team records and logos
 beside the watchability rating. Opening a matchup reveals its ranking reasons,
-validated pregame headline, and two curated player spotlights—one per team.
+validated pregame headline, and two active player spotlights—one per team—with
+pregame season totals, league-position context, and recent performance.
 
-The FastAPI response stays deliberately compact: matchup, actual pregame
-records, logo URLs, rating, and human-readable reasons. This repository
-currently implements the general NFL-watcher experience; favorite-team
-personalization remains future work.
+The FastAPI response stays focused: matchup, actual pregame records, logo URLs,
+rating, human-readable reasons, and the two player spotlights needed by the
+interface. This repository currently implements the general NFL-watcher
+experience; favorite-team personalization remains future work.
 
 ## Current capabilities
 
@@ -35,7 +36,8 @@ personalization remains future work.
   conference top-seed context.
 - Includes one validated pregame ESPN headline when available.
 - Provides a mobile-first matchup interface with expandable insights.
-- Shows team logos and one curated player spotlight for each team.
+- Dynamically selects one active offensive player per team and explains each
+  selection with two or three statistics available before that game.
 - Explains ratings of `3.20` or lower with specific quality, blowout-risk, and
   low-stakes reasons.
 - Uses deterministic football-specific tiebreakers when displayed scores are
@@ -68,9 +70,10 @@ npm install
 npm run dev
 ```
 
-The data sync downloads 2024 and 2025 schedule/team data through `nflreadpy`,
-validates it, and writes normalized Parquet files under `data/processed/`.
-Subsequent syncs use the local files unless `--force` is supplied.
+The data sync downloads 2024 and 2025 schedule, team, weekly roster, and player
+statistics through `nflreadpy`, validates them, and writes normalized Parquet
+files under `data/processed/`. Subsequent syncs use the local files unless
+`--force` is supplied.
 
 Open:
 
@@ -160,10 +163,29 @@ record.
 
 The explicit data sync loads 2025 weekly rosters with
 `nflreadpy.load_rosters_weekly([2025])` and caches them at
-`data/processed/rosters-weekly-2025.parquet`. For the requested week, each game
-includes `unavailablePlayerIds`: rostered player IDs whose weekly status is not
-`ACT`. When a player has a weekly roster row, the frontend treats only `ACT` as
-eligible for a curated player card; null and non-`ACT` statuses suppress it.
+`data/processed/rosters-weekly-2025-v2.parquet`. It also loads weekly 2024 and
+2025 player statistics with
+`nflreadpy.load_player_stats([2024, 2025], summary_level="week")` and caches
+them at `data/processed/player-stats-2024-2025.parquet`.
+
+For the requested week, each game includes one `playersToWatch` entry per team.
+Candidates must have an `ACT` weekly roster status and play quarterback,
+running back, fullback, wide receiver, or tight end. Selection favors the
+active player with the strongest pregame production. Each entry includes:
+
+- two season-to-date production totals appropriate to the position;
+- a top-five rank among same-position peers when applicable; otherwise
+- a prior-week production fact when the player appeared in the previous week.
+
+Weeks 2–18 use only 2025 regular-season statistics from before the selected
+week. Week 1 uses 2024 production as context while still requiring the player
+to be active on the 2025 Week 1 roster. Selected-week and future statistics are
+never included.
+
+Each game also includes `unavailablePlayerIds`: rostered player IDs whose
+weekly status is not `ACT`. The frontend keeps a curated player map only as a
+backward-compatible fallback for API responses created before dynamic
+spotlights were added.
 
 This is roster-availability filtering, not a complete historical injury report.
 The official nflverse injuries pipeline stops after 2024, so 2025 statuses come
@@ -634,6 +656,7 @@ diagnosis.
 │   ├── ranking.py                # 55/45 composition, reasons, sorting
 │   ├── records.py                # Win-rate and early-season prior logic
 │   ├── rivalries.py              # Rivalry classification and values
+│   ├── spotlights.py             # Active player selection and pregame facts
 │   ├── standings.py              # Standings reconstruction and leverage
 │   ├── sync_data.py              # nflverse synchronization CLI
 │   └── sync_headlines.py         # Optional ESPN headline backfill CLI
@@ -701,7 +724,8 @@ The test suite covers:
 - Pydantic query validation;
 - compact API response shape;
 - headline filtering and postgame-leakage prevention;
-- graceful `503` behavior when data is unavailable.
+- active player selection, pregame stat boundaries, and peer rankings;
+- graceful `503` behavior when data is unavailable;
 - frontend query construction and FastAPI proxy behavior;
 - initial, top, and bottom matchup loading;
 - team-logo rendering, detail expansion, headlines, and player spotlights;
@@ -736,9 +760,8 @@ npm run build
 - Standings use a deterministic approximation rather than the complete NFL
   tiebreaker procedure.
 - Weekly results are calculated on demand and are not cached in Redis.
-- Player spotlights remain a curated candidate mapping that renders at most one
-  player per team; the weekly roster feed suppresses candidates who are not
-  `ACT`.
+- Player spotlights currently cover offensive skill positions only. Their
+  statistics explain who to watch but do not affect the watchability score.
 - Team logos and player headshots are loaded from ESPN-hosted URLs for this
   prototype. A production release must confirm media usage rights and provide
   a licensed or owned asset pipeline.
@@ -756,7 +779,7 @@ The next sensible increments are:
    a playoff-probability simulation.
 5. Add opponent-adjusted efficiency and recent-form features after validating
    them against historical outcomes.
-6. Replace the curated player mapping with dynamically selected roster players.
+6. Add defensive-player spotlights and richer opponent-relative player context.
 7. Add scheduled weekly synchronization and a versioned Redis cache only when
    deployment scale justifies it.
 
