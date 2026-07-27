@@ -775,7 +775,41 @@ npm run build
 
 ## Roadmap
 
-The next sensible increments are:
+### Near-term platform backlog
+
+These items are recorded for ideation before implementation; no provider or
+infrastructure decision has been made yet.
+
+1. **Authentication**
+   - Determine what requires an account, beginning with saved favorite teams
+     and viewer preferences.
+   - Compare social providers, email magic links, and traditional credentials.
+   - Decide the session model, account-linking behavior, and guest-to-account
+     migration before selecting an authentication library.
+2. **Persistent data pipeline**
+   - Add a scheduled, idempotent nflverse ingestion job rather than treating
+     upstream downloads as an application concern.
+   - Store normalized schedules, weekly team statistics, standings inputs,
+     rosters, and data-version metadata in a database.
+   - Preserve historical weekly snapshots so rankings remain reproducible when
+     upstream datasets change.
+3. **Application caching**
+   - Cache fully ranked weekly slates and derive top/bottom selections from the
+     cached result.
+   - Include season, week, formula version, data version, and viewer profile in
+     cache keys.
+   - Define invalidation around completed data syncs and formula releases before
+     introducing Redis or another distributed cache.
+
+The current request path already makes no nflverse network calls: it reads
+locally synchronized Parquet data into memory at startup. The database pipeline
+would make that synchronization durable and operationally managed; the caching
+layer would avoid repeated scoring and database reads after that pipeline
+exists.
+
+### Product and scoring backlog
+
+The next product and model increments are:
 
 1. Add the first user preference: favorite team or general NFL watcher.
 2. Add a personalized layer that boosts games affecting the selected team's
@@ -787,8 +821,6 @@ The next sensible increments are:
 5. Add opponent-adjusted efficiency and recent-form features after validating
    them against historical outcomes.
 6. Add defensive-player spotlights and richer opponent-relative player context.
-7. Add scheduled weekly synchronization and a versioned Redis cache only when
-   deployment scale justifies it.
 
 The complete scoring reference is available in
 [ELOformula.md](ELOformula.md).
