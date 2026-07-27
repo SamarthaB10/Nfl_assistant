@@ -36,6 +36,40 @@ class MatchupInput:
     is_divisional: bool
 
 
+def _record_profile(win_rate: float) -> str:
+    if win_rate >= 0.75:
+        return "elite record"
+    if win_rate >= 0.625:
+        return "strong record"
+    if win_rate > 0.50:
+        return "winning record"
+    if win_rate == 0.50:
+        return ".500 record"
+    return "losing record"
+
+
+def _unit_profile(percentile: float, unit: str) -> str:
+    if percentile >= 0.80:
+        return f"top-tier {unit}"
+    if percentile >= 0.60:
+        return f"above-average {unit}"
+    if percentile >= 0.40:
+        return f"middle-of-the-pack {unit}"
+    return f"below-average {unit}"
+
+
+def _team_profile_reason(
+    team_name: str,
+    win_rate: float,
+    metrics: TeamMetrics,
+) -> str:
+    return (
+        f"{team_name} profile: {_record_profile(win_rate)}, "
+        f"{_unit_profile(metrics.offense_percentile, 'offense')}, "
+        f"{_unit_profile(metrics.defense_percentile, 'defense')}"
+    )
+
+
 def score_matchup(
     matchup: MatchupInput,
     previous_records: Mapping[str, RecordSummary],
@@ -85,19 +119,21 @@ def score_matchup(
         offense_percentile=0.5,
         defense_percentile=0.5,
     )
+    home_metrics = (
+        team_metrics.get(matchup.home_team_id, neutral_metrics)
+        if team_metrics is not None
+        else neutral_metrics
+    )
+    away_metrics = (
+        team_metrics.get(matchup.away_team_id, neutral_metrics)
+        if team_metrics is not None
+        else neutral_metrics
+    )
     quality = calculate_matchup_quality(
         home_win_rate=home.scoring_win_rate,
         away_win_rate=away.scoring_win_rate,
-        home_metrics=(
-            team_metrics.get(matchup.home_team_id, neutral_metrics)
-            if team_metrics is not None
-            else neutral_metrics
-        ),
-        away_metrics=(
-            team_metrics.get(matchup.away_team_id, neutral_metrics)
-            if team_metrics is not None
-            else neutral_metrics
-        ),
+        home_metrics=home_metrics,
+        away_metrics=away_metrics,
     )
     context_value = leverage_value + (1 - leverage_value) * rivalry_value
     raw_score = MATCHUP_QUALITY_WEIGHT * quality.value + CONTEXT_WEIGHT * context_value
@@ -121,8 +157,16 @@ def score_matchup(
     if quality.value >= 0.65:
         reasons.extend(
             [
-                (f"{matchup.away_team_name} strength index: {quality.away_team_strength:.2f}/1.00"),
-                (f"{matchup.home_team_name} strength index: {quality.home_team_strength:.2f}/1.00"),
+                _team_profile_reason(
+                    matchup.away_team_name,
+                    away.scoring_win_rate,
+                    away_metrics,
+                ),
+                _team_profile_reason(
+                    matchup.home_team_name,
+                    home.scoring_win_rate,
+                    home_metrics,
+                ),
                 (f"Projected matchup closeness: {quality.competitive_closeness:.2f}/1.00"),
             ]
         )

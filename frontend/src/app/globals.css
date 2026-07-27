@@ -589,21 +589,28 @@ a {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+  margin-top: 20px;
 }
 
 .player {
   display: grid;
-  grid-template-rows: auto auto;
-  align-items: end;
+  align-content: start;
   min-width: 0;
   background: transparent;
 }
 
-.player img {
+.player-portrait {
+  display: grid;
+  height: 180px;
+  overflow: hidden;
+  place-items: end center;
+}
+
+.player-portrait img {
   display: block;
   width: 112%;
   max-width: none;
-  height: auto;
+  height: 100%;
   margin-inline: -6%;
   object-fit: contain;
   object-position: bottom center;
@@ -614,7 +621,7 @@ a {
   transform: scale(1.025);
 }
 
-.player > span {
+.player-copy {
   display: grid;
   gap: 2px;
   padding: 10px 4px 0;
@@ -637,27 +644,27 @@ a {
 
 .player-facts {
   display: grid;
-  gap: 5px;
+  gap: 8px;
   margin: 12px 0 0;
   padding: 0;
   color: var(--muted-strong);
   font-family: var(--font-display), sans-serif;
-  font-size: 0.72rem;
-  line-height: 1.2;
+  font-size: 0.88rem;
+  line-height: 1.28;
   list-style: none;
 }
 
 .player-facts li {
   position: relative;
-  padding-left: 10px;
+  padding-left: 14px;
 }
 
 .player-facts li::before {
   position: absolute;
-  top: 0.42em;
+  top: 0.43em;
   left: 0;
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
   background: var(--red);
   content: "";
   transform: rotate(45deg);
@@ -819,6 +826,10 @@ a {
   .game-details {
     grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
     padding: 32px 74px;
+  }
+
+  .player-portrait {
+    height: 220px;
   }
 
   .site-footer {

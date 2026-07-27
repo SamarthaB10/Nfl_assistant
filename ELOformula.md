@@ -325,8 +325,8 @@ The response may explain:
 - winning records;
 - rivalry or divisional status;
 - standings implications;
-- each team's `0.00–1.00` strength index when matchup quality is at least
-  `0.65`;
+- each team's plain-language record, offense, and defense profile when matchup
+  quality is at least `0.65`;
 - the corresponding `0.00–1.00` projected matchup closeness;
 - offense-defense closeness for other competitive games;
 - one cached pregame headline.
@@ -341,6 +341,17 @@ changing the score. It identifies whichever factors apply:
 
 The low-score layer suppresses the positive closeness explanation so an evenly
 matched game between weak teams is not described as compelling.
+
+The user-facing team profile translates existing formula inputs without
+changing the score:
+
+- record: `elite` at `>= 0.750`, `strong` at `>= 0.625`, `winning` above
+  `0.500`, `.500` at exactly `0.500`, otherwise `losing`;
+- offense and defense: `top-tier` at `>= 0.80`, `above-average` at `>= 0.60`,
+  `middle-of-the-pack` at `>= 0.40`, otherwise `below-average`.
+
+The numeric team-strength values remain available internally in the score
+breakdown but are no longer exposed as unexplained user-facing reasons.
 
 Headlines have exactly zero numeric impact. Injuries are intentionally excluded
 from v6 until starter status, availability timing, and replacement quality can

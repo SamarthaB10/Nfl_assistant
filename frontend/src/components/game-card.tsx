@@ -130,14 +130,16 @@ export function GameCard({ game, rank }: GameCardProps) {
                     rel="noreferrer"
                     target="_blank"
                   >
-                    <Image
-                      alt={player.name}
-                      height={220}
-                      loading="eager"
-                      src={player.imageUrl}
-                      width={220}
-                    />
-                    <span>
+                    <span className="player-portrait">
+                      <Image
+                        alt={player.name}
+                        height={220}
+                        loading="eager"
+                        src={player.imageUrl}
+                        width={220}
+                      />
+                    </span>
+                    <span className="player-copy">
                       <strong>{player.name}</strong>
                       <small>
                         {player.teamId} · {player.position}

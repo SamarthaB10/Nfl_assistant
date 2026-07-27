@@ -146,8 +146,8 @@ Example response:
       "Both teams have winning records",
       "Divisional matchup",
       "Direct division race matchup",
-      "Seattle Seahawks strength index: 0.94/1.00",
-      "San Francisco 49ers strength index: 0.74/1.00",
+      "Seattle Seahawks profile: elite record, top-tier offense, top-tier defense",
+      "San Francisco 49ers profile: elite record, above-average offense, above-average defense",
       "Projected matchup closeness: 0.87/1.00",
       "Headline: 49ers host the Seahawks in the season finale with the division title and top NFC seed on the line"
     ]
@@ -592,8 +592,8 @@ The numeric calculation can generate reasons for:
 - direct division-race consequences;
 - playoff-cutoff implications;
 - conference top-seed implications;
-- each team's `0.00–1.00` strength index when combined matchup quality is
-  strong;
+- a plain-language record, offense, and defense profile for each team when
+  combined matchup quality is strong;
 - the corresponding `0.00–1.00` projected matchup closeness;
 - a close offense-defense projection for other competitive games.
 
@@ -605,6 +605,12 @@ combined quality and context remain below the weekly standard.
 
 Headline reasons are display-only. They have exactly zero effect on scores,
 ordering, or tiebreakers.
+
+Team-profile descriptions translate the same pregame inputs used by the
+formula into league-relative labels. Record labels range from losing through
+elite; offense and defense labels range from below average through top tier.
+These labels replace the internal `0.00–1.00` strength values in user-facing
+reasons without changing any score.
 
 The optional headline sync applies several safeguards:
 

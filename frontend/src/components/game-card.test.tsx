@@ -92,6 +92,7 @@ describe("GameCard", () => {
 
     expect(screen.getByRole("img", { name: "Ladd McConkey" })).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Bo Nix" })).toBeInTheDocument();
+    expect(document.querySelectorAll(".player-portrait")).toHaveLength(2);
     expect(screen.getByText("1,108 receiving yards this season")).toBeInTheDocument();
     expect(
       screen.getByText("Ranked 4th among QBs in passing yards"),

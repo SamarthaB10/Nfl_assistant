@@ -148,8 +148,8 @@ def test_two_good_teams_use_weaker_current_record_after_week_five() -> None:
     assert result.breakdown.matchup_quality > 0.60
     assert result.reasons == [
         "Both teams have winning records",
-        "Indianapolis Colts strength index: 0.63/1.00",
-        "Houston Texans strength index: 0.74/1.00",
+        ("Indianapolis Colts profile: strong record, above-average offense, above-average defense"),
+        ("Houston Texans profile: elite record, above-average offense, above-average defense"),
         "Projected matchup closeness: 0.91/1.00",
     ]
 
@@ -171,8 +171,8 @@ def test_divisional_value_saturates_instead_of_adding_directly() -> None:
     assert result.reasons == [
         "Both teams have winning records",
         "Divisional matchup",
-        "B strength index: 0.74/1.00",
-        "A strength index: 0.63/1.00",
+        "B profile: elite record, above-average offense, above-average defense",
+        "A profile: strong record, above-average offense, above-average defense",
         "Projected matchup closeness: 0.91/1.00",
     ]
 
