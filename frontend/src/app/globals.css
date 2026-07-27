@@ -11,6 +11,7 @@
   --red-dark: #b70f20;
   --green: #72d68b;
   --rating-green: #007200;
+  --rating-mid: #e12c2c;
   --radius: 12px;
 }
 
@@ -442,6 +443,10 @@ a {
 
 .rating-block.is-high-rating {
   --rating-color: var(--rating-green);
+}
+
+.rating-block.is-mid-rating {
+  --rating-color: var(--rating-mid);
 }
 
 .rating-block > span:first-child {

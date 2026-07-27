@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { GameCard } from "./game-card";
 
 describe("GameCard", () => {
-  it("marks only ratings above 6.7 as high-value games", () => {
+  it("assigns rating colors at the 7.0 and 5.5 boundaries", () => {
     render(
       <ul>
         <GameCard
@@ -12,7 +12,7 @@ describe("GameCard", () => {
             matchup: "Buffalo Bills vs Kansas City Chiefs",
             records: { BUF: "8-2", KC: "9-1" },
             logos: { BUF: null, KC: null },
-            score: 6.71,
+            score: 7,
             reasons: [],
           }}
           rank={1}
@@ -22,10 +22,20 @@ describe("GameCard", () => {
             matchup: "Chicago Bears vs Detroit Lions",
             records: { CHI: "5-5", DET: "7-3" },
             logos: { CHI: null, DET: null },
-            score: 6.7,
+            score: 5.5,
             reasons: [],
           }}
           rank={2}
+        />
+        <GameCard
+          game={{
+            matchup: "Carolina Panthers vs Tennessee Titans",
+            records: { CAR: "3-7", TEN: "2-8" },
+            logos: { CAR: null, TEN: null },
+            score: 5.49,
+            reasons: [],
+          }}
+          rank={3}
         />
       </ul>,
     );
@@ -39,7 +49,26 @@ describe("GameCard", () => {
       screen
         .getByLabelText("Chicago Bears vs Detroit Lions watchability score")
         .closest(".rating-block"),
+    ).toHaveClass("is-mid-rating");
+    expect(
+      screen
+        .getByLabelText("Chicago Bears vs Detroit Lions watchability score")
+        .closest(".rating-block"),
     ).not.toHaveClass("is-high-rating");
+    expect(
+      screen
+        .getByLabelText(
+          "Carolina Panthers vs Tennessee Titans watchability score",
+        )
+        .closest(".rating-block"),
+    ).not.toHaveClass("is-high-rating");
+    expect(
+      screen
+        .getByLabelText(
+          "Carolina Panthers vs Tennessee Titans watchability score",
+        )
+        .closest(".rating-block"),
+    ).not.toHaveClass("is-mid-rating");
   });
 
   it("renders two dynamic players with season and peer details", () => {

@@ -23,6 +23,12 @@ export function GameCard({ game, rank }: GameCardProps) {
   }));
   const headline = game.reasons.find((reason) => reason.startsWith("Headline:"));
   const reasons = game.reasons.filter((reason) => !reason.startsWith("Headline:"));
+  let ratingClass = "";
+  if (game.score >= 7) {
+    ratingClass = " is-high-rating";
+  } else if (game.score >= 5.5) {
+    ratingClass = " is-mid-rating";
+  }
   const players: PlayerSpotlight[] =
     game.playersToWatch && game.playersToWatch.length > 0
       ? game.playersToWatch
@@ -79,9 +85,7 @@ export function GameCard({ game, rank }: GameCardProps) {
           ))}
         </span>
 
-        <span
-          className={`rating-block${game.score > 6.7 ? " is-high-rating" : ""}`}
-        >
+        <span className={`rating-block${ratingClass}`}>
           <span>Watch rating</span>
           <strong>{game.score.toFixed(2)}</strong>
           <span>out of 10</span>
