@@ -173,9 +173,10 @@ Candidates must have an `ACT` weekly roster status and play quarterback,
 running back, fullback, wide receiver, or tight end. Selection favors the
 active player with the strongest pregame production. Each entry includes:
 
-- two season-to-date production totals appropriate to the position;
-- a top-five rank among same-position peers when applicable; otherwise
-- a prior-week production fact when the player appeared in the previous week.
+- a season-to-date yardage total appropriate to the position;
+- a touchdown fact that includes both a top-five peer rank and the touchdown
+  count when applicable; and
+- a top-five yardage rank or prior-week production fact when available.
 
 Weeks 2–18 use only 2025 regular-season statistics from before the selected
 week. Week 1 uses 2024 production as context while still requiring the player

@@ -38,9 +38,24 @@ def _player_details(
     primary_value = int(player[primary_field] or 0)
     secondary_value = int(player[secondary_field] or 0)
     season_label = "this season" if source_season == TARGET_SEASON else "in 2024"
+    secondary_rank = 1 + sum(
+        int(peer[secondary_field] or 0) > secondary_value for peer in peer_rows
+    )
+    touchdown_count = f"{secondary_value:,} {'TD' if secondary_value == 1 else 'TDs'}"
+    if secondary_value > 0 and secondary_rank <= 5:
+        secondary_detail = (
+            f"#{secondary_rank} among {position}s in {secondary_label} "
+            f"{season_label} — {touchdown_count}"
+        )
+    else:
+        secondary_detail = (
+            f"{secondary_value:,} "
+            f"{secondary_label.removesuffix('s') if secondary_value == 1 else secondary_label} "
+            f"{season_label}"
+        )
     details = [
         f"{primary_value:,} {primary_label} {season_label}",
-        f"{secondary_value:,} {secondary_label} {season_label}",
+        secondary_detail,
     ]
 
     rank = 1 + sum(int(peer[primary_field] or 0) > primary_value for peer in peer_rows)

@@ -150,13 +150,13 @@ def test_selects_one_active_player_per_team_without_future_week_stats() -> None:
     assert spotlights["LAC"].name == "Active Receiver"
     assert spotlights["LAC"].details == [
         "300 receiving yards this season",
-        "2 receiving TDs this season",
+        "#1 among WRs in receiving TDs this season — 2 TDs",
         "Ranked 3rd among WRs in receiving yards",
     ]
     assert spotlights["DEN"].name == "Active Quarterback"
     assert spotlights["DEN"].details == [
         "750 passing yards this season",
-        "6 passing TDs this season",
+        "#2 among QBs in passing TDs this season — 6 TDs",
         "Ranked 2nd among QBs in passing yards",
     ]
 
@@ -172,7 +172,7 @@ def test_uses_last_week_detail_when_player_is_outside_top_five() -> None:
                 week,
                 fantasy_points=20,
                 receiving_yards=yards,
-                receiving_tds=1 if week < 3 else 0,
+                receiving_tds=1 if week == 1 else 0,
             )
             for week, yards in ((1, 100), (2, 120), (3, 80))
         ]
@@ -185,8 +185,12 @@ def test_uses_last_week_detail_when_player_is_outside_top_five() -> None:
                 3,
                 fantasy_points=10,
                 receiving_yards=yards,
+                receiving_tds=tds,
             )
-            for index, yards in enumerate((700, 650, 600, 550, 500), 1)
+            for index, (yards, tds) in enumerate(
+                ((700, 10), (650, 9), (600, 8), (550, 7), (500, 6)),
+                1,
+            )
         ]
     )
 
@@ -199,6 +203,6 @@ def test_uses_last_week_detail_when_player_is_outside_top_five() -> None:
 
     assert spotlight.details == [
         "300 receiving yards this season",
-        "2 receiving TDs this season",
+        "1 receiving TD this season",
         "80 receiving yards last week",
     ]
