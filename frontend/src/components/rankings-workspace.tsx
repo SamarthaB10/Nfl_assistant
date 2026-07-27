@@ -65,11 +65,6 @@ export function RankingsWorkspace() {
   return (
     <main className="workspace">
       <header className="hero">
-        <div className="hero-status">
-          <span>2025 regular season</span>
-          <span aria-hidden="true">·</span>
-          <span>Live model v6</span>
-        </div>
         <h1>
           Know what’s <span>worth watching.</span>
         </h1>

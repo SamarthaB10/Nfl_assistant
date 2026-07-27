@@ -124,19 +124,21 @@ a {
 }
 
 .hero {
+  display: flex;
+  min-height: clamp(360px, 58vw, 500px);
+  flex-direction: column;
+  justify-content: center;
   padding: 42px 18px 28px;
   border-bottom: 1px solid var(--line);
-}
-
-.hero-status {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
-  color: var(--red);
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
+  background:
+    linear-gradient(
+      90deg,
+      rgb(5 5 5 / 94%) 0%,
+      rgb(5 5 5 / 84%) 43%,
+      rgb(5 5 5 / 38%) 100%
+    ),
+    linear-gradient(0deg, rgb(5 5 5 / 68%) 0%, transparent 52%),
+    url("/leaguewatch-hero.jpg") center / cover no-repeat;
 }
 
 .hero h1 {
@@ -736,7 +738,7 @@ a {
 
 .site-footer {
   display: grid;
-  gap: 6px;
+  gap: 20px;
   padding: 22px 18px 34px;
   border-top: 1px solid var(--line);
   color: var(--muted);
@@ -747,12 +749,65 @@ a {
   text-transform: uppercase;
 }
 
-.site-footer p {
+.footer-meta {
+  display: grid;
+  gap: 5px;
+}
+
+.footer-meta p {
   margin: 0;
 }
 
-.site-footer p:first-child {
+.footer-meta p:first-child {
+  color: var(--ink);
+}
+
+.footer-meta p:nth-child(2) {
   color: var(--muted-strong);
+}
+
+.rating-legend {
+  display: grid;
+  gap: 8px;
+}
+
+.rating-legend__title {
+  color: var(--muted-strong);
+}
+
+.rating-legend ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.rating-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.rating-legend__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--red);
+}
+
+.rating-legend__dot--high {
+  background: var(--rating-green);
+}
+
+.rating-legend__dot--mid {
+  background: var(--rating-mid);
+}
+
+.rating-legend__dot--low {
+  background: var(--red);
 }
 
 @media (min-width: 640px) {
@@ -840,6 +895,14 @@ a {
   .site-footer {
     grid-template-columns: 1fr auto;
     padding: 26px 28px 42px;
+  }
+
+  .rating-legend {
+    justify-items: end;
+  }
+
+  .rating-legend ul {
+    justify-content: flex-end;
   }
 }
 

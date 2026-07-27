@@ -62,6 +62,7 @@ describe("RankingsWorkspace", () => {
         name: "Know what’s worth watching.",
       }),
     ).toBeInTheDocument();
+    expect(screen.queryByText("Live model v6")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Loading matchups")).toBeInTheDocument();
     expect(
       await screen.findByText("Seattle Seahawks vs San Francisco 49ers"),
