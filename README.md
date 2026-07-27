@@ -786,14 +786,20 @@ infrastructure decision has been made yet.
    - Compare social providers, email magic links, and traditional credentials.
    - Decide the session model, account-linking behavior, and guest-to-account
      migration before selecting an authentication library.
-2. **Persistent data pipeline**
+2. **Database-backed user profiles**
+   - Store one profile per authenticated user, with a display name, avatar,
+     favorite teams or general-watcher status, and saved interface preferences.
+   - Define profile visibility, authorization, account deletion, and
+     provider-account linking before finalizing the schema.
+   - Keep private account data separate from public-facing profile fields.
+3. **Persistent data pipeline**
    - Add a scheduled, idempotent nflverse ingestion job rather than treating
      upstream downloads as an application concern.
    - Store normalized schedules, weekly team statistics, standings inputs,
      rosters, and data-version metadata in a database.
    - Preserve historical weekly snapshots so rankings remain reproducible when
      upstream datasets change.
-3. **Application caching**
+4. **Application caching**
    - Cache fully ranked weekly slates and derive top/bottom selections from the
      cached result.
    - Include season, week, formula version, data version, and viewer profile in
@@ -811,16 +817,25 @@ exists.
 
 The next product and model increments are:
 
-1. Add the first user preference: favorite team or general NFL watcher.
-2. Add a personalized layer that boosts games affecting the selected team's
+1. Add a dedicated home page that introduces LeagueWatch, surfaces the current
+   week's best games, and provides a clear path into the full rankings.
+2. Add a curated YouTube video section to the home page.
+   - Decide between manually managed links and YouTube Data API discovery.
+   - Define which video categories belong in the product, how frequently links
+     are refreshed, and whether videos open externally or use
+     privacy-enhanced embeds.
+   - Display source/channel attribution and never treat video popularity as a
+     watchability-score input without a separate scoring decision.
+3. Add the first user preference: favorite team or general NFL watcher.
+4. Add a personalized layer that boosts games affecting the selected team's
    division, conference, and playoff position without changing general quality.
-3. Add starter-only injury adjustments with position tiers and explicit
+5. Add starter-only injury adjustments with position tiers and explicit
    availability confidence.
-4. Replace approximate standings ordering with official NFL tiebreaker logic or
+6. Replace approximate standings ordering with official NFL tiebreaker logic or
    a playoff-probability simulation.
-5. Add opponent-adjusted efficiency and recent-form features after validating
+7. Add opponent-adjusted efficiency and recent-form features after validating
    them against historical outcomes.
-6. Add defensive-player spotlights and richer opponent-relative player context.
+8. Add defensive-player spotlights and richer opponent-relative player context.
 
 The complete scoring reference is available in
 [ELOformula.md](ELOformula.md).
