@@ -36,7 +36,7 @@ export async function GET(request: Request): Promise<Response> {
     });
   } catch {
     return Response.json(
-      { detail: "Unable to reach the NFL Viewer API." },
+      { detail: "Unable to reach the LeagueWatch API." },
       { status: 502 },
     );
   }

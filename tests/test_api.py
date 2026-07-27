@@ -126,6 +126,14 @@ def test_health_reports_loaded_data() -> None:
     assert response.json()["dataLoaded"] is True
 
 
+def test_openapi_uses_leaguewatch_product_name() -> None:
+    with client_for(season_data) as client:
+        response = client.get("/openapi.json")
+
+    assert response.status_code == 200
+    assert response.json()["info"]["title"] == "LeagueWatch API"
+
+
 def test_rankings_returns_all_games_in_rank_order() -> None:
     with client_for(season_data) as client:
         response = client.get("/api/v1/rankings", params={"week": 1})

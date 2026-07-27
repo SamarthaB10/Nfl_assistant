@@ -105,7 +105,7 @@ def create_app(
         yield
 
     application = FastAPI(
-        title="NFL Viewer API",
+        title="LeagueWatch API",
         description="Rank 2025 NFL regular-season matchups by watchability.",
         version="0.1.0",
         lifespan=lifespan,

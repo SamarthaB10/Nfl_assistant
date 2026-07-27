@@ -76,6 +76,7 @@ describe("RankingsWorkspace", () => {
     expect(
       screen.getByRole("img", { name: "Christian McCaffrey" }),
     ).toBeInTheDocument();
+    expect(screen.getAllByRole("link")).toHaveLength(2);
   });
 
   it("requests the bottom count selected by the user", async () => {
@@ -124,7 +125,7 @@ describe("RankingsWorkspace", () => {
       "fetch",
       vi.fn().mockResolvedValue(
         Response.json(
-          { detail: "Unable to reach the NFL Viewer API." },
+          { detail: "Unable to reach the LeagueWatch API." },
           { status: 502 },
         ),
       ),
@@ -133,7 +134,7 @@ describe("RankingsWorkspace", () => {
     render(<RankingsWorkspace />);
 
     expect(
-      await screen.findByText("Unable to reach the NFL Viewer API."),
+      await screen.findByText("Unable to reach the LeagueWatch API."),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Rank matchups" }),

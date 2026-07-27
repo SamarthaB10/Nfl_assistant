@@ -16,7 +16,7 @@ const body = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "NFL Viewer | Matchups worth watching",
+  title: "LeagueWatch | Matchups worth watching",
   description:
     "Rank every 2025 NFL matchup by team quality, rivalry, and playoff stakes.",
 };
@@ -36,12 +36,12 @@ export default function RootLayout({
       <body className={`${display.variable} ${body.variable}`}>
         <div className="site-shell">
           <header className="site-header">
-            <Link className="brand" href="/" aria-label="NFL Viewer home">
+            <Link className="brand" href="/" aria-label="LeagueWatch home">
               <span className="brand-mark" aria-hidden="true">
-                V
+                L
               </span>
               <span>
-                NFL <strong>VIEWER</strong>
+                LEAGUE<strong>WATCH</strong>
               </span>
             </Link>
             <div className="model-status">
