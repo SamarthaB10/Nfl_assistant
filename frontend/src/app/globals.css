@@ -600,26 +600,23 @@ a {
 .player-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 16px;
 }
 
 .player {
   display: grid;
   grid-template-rows: auto auto;
+  align-items: end;
   min-width: 0;
-  overflow: hidden;
-  border: 1px solid var(--line-strong);
-  border-radius: 8px;
-  background: #080809;
+  background: transparent;
 }
 
 .player img {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 1;
-  object-fit: cover;
-  object-position: top center;
+  object-fit: contain;
+  object-position: bottom center;
   transition: transform 180ms ease;
 }
 
@@ -630,9 +627,8 @@ a {
 .player > span {
   display: grid;
   gap: 2px;
-  padding: 11px 12px 12px;
-  border-top: 1px solid var(--line);
-  background: #080809;
+  padding: 10px 4px 0;
+  background: transparent;
 }
 
 .player strong {
