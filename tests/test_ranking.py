@@ -96,6 +96,10 @@ def test_two_bad_teams_receive_low_quality_even_when_evenly_matched() -> None:
     assert result.breakdown.record_quality == 0
     assert result.breakdown.competitive_closeness == 1
     assert result.watchability_score == 1.68
+    assert result.reasons == [
+        "Both teams rate below average in overall team quality",
+        "Limited rivalry or standings stakes",
+    ]
 
 
 def test_bad_divisional_matchup_only_receives_rivalry_value() -> None:
@@ -112,6 +116,10 @@ def test_bad_divisional_matchup_only_receives_rivalry_value() -> None:
     assert result.breakdown.record_quality == 0
     assert result.breakdown.context_value == 0.20
     assert result.watchability_score == 2.49
+    assert result.reasons == [
+        "Divisional matchup",
+        "Both teams rate below average in overall team quality",
+    ]
 
 
 def test_two_good_teams_use_weaker_current_record_after_week_five() -> None:

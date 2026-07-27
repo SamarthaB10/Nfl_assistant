@@ -150,7 +150,10 @@ def test_rankings_returns_all_games_in_rank_order() -> None:
                 "DAL": "https://a.espncdn.com/i/teamlogos/nfl/500/dal.png",
             },
             "score": 1.81,
-            "reasons": ["Divisional matchup"],
+            "reasons": [
+                "Divisional matchup",
+                "Team profiles indicate elevated blowout risk",
+            ],
         },
     ]
 
@@ -194,7 +197,10 @@ def test_rankings_returns_bottom_games_worst_first() -> None:
                 "DAL": "https://a.espncdn.com/i/teamlogos/nfl/500/dal.png",
             },
             "score": 1.81,
-            "reasons": ["Divisional matchup"],
+            "reasons": [
+                "Divisional matchup",
+                "Team profiles indicate elevated blowout risk",
+            ],
         }
     ]
 

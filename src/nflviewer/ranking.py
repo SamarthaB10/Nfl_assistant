@@ -16,6 +16,10 @@ from nflviewer.standings import TeamStanding, matchup_leverage
 
 MATCHUP_QUALITY_WEIGHT = 0.55
 CONTEXT_WEIGHT = 0.45
+LOW_WATCHABILITY_THRESHOLD = 3.20
+BELOW_AVERAGE_STRENGTH = 0.40
+LOW_CONTEXT_THRESHOLD = 0.15
+BLOWOUT_RISK_CLOSENESS = 0.55
 
 
 @dataclass(frozen=True)
@@ -116,8 +120,24 @@ def score_matchup(
         reasons.append(leverage.reason)
     if quality.value >= 0.65:
         reasons.append("Strong, competitive team matchup")
-    elif quality.competitive_closeness >= 0.85:
+    elif display_score > LOW_WATCHABILITY_THRESHOLD and quality.competitive_closeness >= 0.85:
         reasons.append("Offense-defense profiles project a close game")
+    if display_score <= LOW_WATCHABILITY_THRESHOLD:
+        low_reasons: list[str] = []
+        if (
+            quality.home_team_strength < BELOW_AVERAGE_STRENGTH
+            and quality.away_team_strength < BELOW_AVERAGE_STRENGTH
+        ):
+            low_reasons.append("Both teams rate below average in overall team quality")
+        if quality.competitive_closeness < BLOWOUT_RISK_CLOSENESS:
+            low_reasons.append("Team profiles indicate elevated blowout risk")
+        if context_value < LOW_CONTEXT_THRESHOLD:
+            low_reasons.append("Limited rivalry or standings stakes")
+        if not low_reasons:
+            low_reasons.append(
+                "Combined team quality and game stakes rate below the weekly standard"
+            )
+        reasons.extend(low_reasons)
 
     return RankedGame(
         rank=1,
