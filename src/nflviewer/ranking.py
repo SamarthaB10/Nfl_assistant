@@ -119,7 +119,13 @@ def score_matchup(
     if leverage and leverage.reason and leverage.value > 0:
         reasons.append(leverage.reason)
     if quality.value >= 0.65:
-        reasons.append("Strong, competitive team matchup")
+        reasons.extend(
+            [
+                (f"{matchup.away_team_name} strength index: {quality.away_team_strength:.2f}/1.00"),
+                (f"{matchup.home_team_name} strength index: {quality.home_team_strength:.2f}/1.00"),
+                (f"Projected matchup closeness: {quality.competitive_closeness:.2f}/1.00"),
+            ]
+        )
     elif display_score > LOW_WATCHABILITY_THRESHOLD and quality.competitive_closeness >= 0.85:
         reasons.append("Offense-defense profiles project a close game")
     if display_score <= LOW_WATCHABILITY_THRESHOLD:

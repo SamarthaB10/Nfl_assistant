@@ -123,12 +123,23 @@ def test_bad_divisional_matchup_only_receives_rivalry_value() -> None:
 
 
 def test_two_good_teams_use_weaker_current_record_after_week_five() -> None:
-    game = matchup("good", "A", "B", week=9)
-    previous = {"A": record(8, 8), "B": record(8, 8)}
-    current = {"A": record(5, 3), "B": record(6, 2)}
+    game = MatchupInput(
+        game_id="good",
+        week=9,
+        kickoff=datetime(2025, 9, 7, 18, tzinfo=UTC),
+        home_team_id="HOU",
+        home_team_name="Houston Texans",
+        home_logo_url=None,
+        away_team_id="IND",
+        away_team_name="Indianapolis Colts",
+        away_logo_url=None,
+        is_divisional=False,
+    )
+    previous = {"HOU": record(8, 8), "IND": record(8, 8)}
+    current = {"HOU": record(6, 2), "IND": record(5, 3)}
     team_metrics = {
-        "A": performance(24, 20, 0.65, 0.60, 0.65),
-        "B": performance(26, 18, 0.75, 0.70, 0.75),
+        "HOU": performance(26, 18, 0.75, 0.70, 0.75),
+        "IND": performance(24, 20, 0.65, 0.60, 0.65),
     }
 
     result = score_matchup(game, previous, current, team_metrics=team_metrics)
@@ -137,7 +148,9 @@ def test_two_good_teams_use_weaker_current_record_after_week_five() -> None:
     assert result.breakdown.matchup_quality > 0.60
     assert result.reasons == [
         "Both teams have winning records",
-        "Strong, competitive team matchup",
+        "Indianapolis Colts strength index: 0.63/1.00",
+        "Houston Texans strength index: 0.74/1.00",
+        "Projected matchup closeness: 0.91/1.00",
     ]
 
 
@@ -158,7 +171,9 @@ def test_divisional_value_saturates_instead_of_adding_directly() -> None:
     assert result.reasons == [
         "Both teams have winning records",
         "Divisional matchup",
-        "Strong, competitive team matchup",
+        "B strength index: 0.74/1.00",
+        "A strength index: 0.63/1.00",
+        "Projected matchup closeness: 0.91/1.00",
     ]
 
 

@@ -325,8 +325,10 @@ The response may explain:
 - winning records;
 - rivalry or divisional status;
 - standings implications;
-- strong competitive quality;
-- offense-defense closeness;
+- each team's `0.00–1.00` strength index when matchup quality is at least
+  `0.65`;
+- the corresponding `0.00–1.00` projected matchup closeness;
+- offense-defense closeness for other competitive games;
 - one cached pregame headline.
 
 When `S <= 3.20`, the response adds at least one negative diagnostic without

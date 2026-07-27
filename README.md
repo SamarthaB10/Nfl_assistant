@@ -143,7 +143,9 @@ Example response:
       "Both teams have winning records",
       "Divisional matchup",
       "Direct division race matchup",
-      "Strong, competitive team matchup",
+      "Seattle Seahawks strength index: 0.94/1.00",
+      "San Francisco 49ers strength index: 0.74/1.00",
+      "Projected matchup closeness: 0.87/1.00",
       "Headline: 49ers host the Seahawks in the season finale with the division title and top NFC seed on the line"
     ]
   }
@@ -568,8 +570,10 @@ The numeric calculation can generate reasons for:
 - direct division-race consequences;
 - playoff-cutoff implications;
 - conference top-seed implications;
-- strong combined quality;
-- a close offense-defense projection.
+- each team's `0.00–1.00` strength index when combined matchup quality is
+  strong;
+- the corresponding `0.00–1.00` projected matchup closeness;
+- a close offense-defense projection for other competitive games.
 
 For a displayed score of `3.20` or lower, the model instead adds at least one
 negative explanation. The applicable reasons identify below-average strength
