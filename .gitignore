@@ -8,3 +8,4 @@ data/processed/
 frontend/.next/
 frontend/coverage/
 frontend/node_modules/
+frontend/*.tsbuildinfo

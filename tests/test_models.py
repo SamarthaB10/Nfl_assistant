@@ -46,3 +46,4 @@ def test_game_summary_accepts_ten_point_watchability_score() -> None:
     )
 
     assert game.score == 10
+    assert game.logos == {}

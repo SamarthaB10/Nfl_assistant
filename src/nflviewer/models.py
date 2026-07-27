@@ -97,6 +97,6 @@ class RankedGame(APIModel):
 class GameSummary(APIModel):
     matchup: str
     records: dict[str, str]
-    logos: dict[str, str | None]
+    logos: dict[str, str | None] = Field(default_factory=dict)
     score: float = Field(ge=1, le=10)
     reasons: list[str]
