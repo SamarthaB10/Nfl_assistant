@@ -10,6 +10,7 @@
   --red: #f12738;
   --red-dark: #b70f20;
   --green: #72d68b;
+  --rating-green: #007200;
   --radius: 12px;
 }
 
@@ -115,25 +116,6 @@ a {
   font-weight: 800;
   line-height: 1;
   transform: skew(-8deg);
-}
-
-.model-status {
-  display: none;
-  align-items: center;
-  gap: 7px;
-  color: var(--muted);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.model-status > span {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 0 3px rgb(114 214 139 / 12%);
 }
 
 .workspace {
@@ -449,11 +431,17 @@ a {
 }
 
 .rating-block {
+  --rating-color: var(--red);
+
   display: flex;
   min-width: 0;
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
+}
+
+.rating-block.is-high-rating {
+  --rating-color: var(--rating-green);
 }
 
 .rating-block > span:first-child {
@@ -466,7 +454,7 @@ a {
 }
 
 .rating-block strong {
-  color: var(--red);
+  color: var(--rating-color);
   font-family: var(--font-display), sans-serif;
   font-size: 2.7rem;
   font-weight: 800;
@@ -487,7 +475,7 @@ a {
   border: 0;
   border-radius: 0;
   background: var(--line);
-  color: var(--red);
+  color: var(--rating-color);
 }
 
 .rating-block progress::-webkit-progress-bar {
@@ -495,11 +483,11 @@ a {
 }
 
 .rating-block progress::-webkit-progress-value {
-  background: var(--red);
+  background: var(--rating-color);
 }
 
 .rating-block progress::-moz-progress-bar {
-  background: var(--red);
+  background: var(--rating-color);
 }
 
 .expand-mark {
@@ -769,10 +757,6 @@ a {
     grid-template-columns: 0.6fr 1.6fr 1fr 1.15fr;
     align-items: end;
     padding: 20px 28px;
-  }
-
-  .model-status {
-    display: flex;
   }
 
   .mode-field {

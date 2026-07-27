@@ -79,7 +79,9 @@ export function GameCard({ game, rank }: GameCardProps) {
           ))}
         </span>
 
-        <span className="rating-block">
+        <span
+          className={`rating-block${game.score > 6.7 ? " is-high-rating" : ""}`}
+        >
           <span>Watch rating</span>
           <strong>{game.score.toFixed(2)}</strong>
           <span>out of 10</span>

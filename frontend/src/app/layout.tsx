@@ -44,10 +44,6 @@ export default function RootLayout({
                 LEAGUE<strong>WATCH</strong>
               </span>
             </Link>
-            <div className="model-status">
-              <span aria-hidden="true" />
-              2025 model
-            </div>
           </header>
           {children}
           <footer className="site-footer">

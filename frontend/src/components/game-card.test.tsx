@@ -4,6 +4,44 @@ import { describe, expect, it } from "vitest";
 import { GameCard } from "./game-card";
 
 describe("GameCard", () => {
+  it("marks only ratings above 6.7 as high-value games", () => {
+    render(
+      <ul>
+        <GameCard
+          game={{
+            matchup: "Buffalo Bills vs Kansas City Chiefs",
+            records: { BUF: "8-2", KC: "9-1" },
+            logos: { BUF: null, KC: null },
+            score: 6.71,
+            reasons: [],
+          }}
+          rank={1}
+        />
+        <GameCard
+          game={{
+            matchup: "Chicago Bears vs Detroit Lions",
+            records: { CHI: "5-5", DET: "7-3" },
+            logos: { CHI: null, DET: null },
+            score: 6.7,
+            reasons: [],
+          }}
+          rank={2}
+        />
+      </ul>,
+    );
+
+    expect(
+      screen
+        .getByLabelText("Buffalo Bills vs Kansas City Chiefs watchability score")
+        .closest(".rating-block"),
+    ).toHaveClass("is-high-rating");
+    expect(
+      screen
+        .getByLabelText("Chicago Bears vs Detroit Lions watchability score")
+        .closest(".rating-block"),
+    ).not.toHaveClass("is-high-rating");
+  });
+
   it("renders two dynamic players with season and peer details", () => {
     render(
       <GameCard
