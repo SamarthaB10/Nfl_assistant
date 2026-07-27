@@ -9,10 +9,38 @@
   --line-strong: #353539;
   --red: #f12738;
   --red-dark: #b70f20;
+  --rating-low: #f12738;
   --green: #72d68b;
   --rating-green: #007200;
   --rating-mid: #6798c0;
+  --header-background: rgb(5 5 5 / 94%);
+  --control-background: #080809;
+  --hover-background: #0a0a0b;
+  --skeleton-background: #0b0b0c;
+  --skeleton-highlight: #151517;
+  --hero-overlay: 5 5 5;
   --radius: 12px;
+}
+
+html[data-theme="light"] {
+  --ink: #282a42;
+  --muted: #696c87;
+  --muted-strong: #484b6a;
+  --canvas: #fff;
+  --surface: #f5f5f8;
+  --surface-raised: #eeeef3;
+  --line: #e2e3ea;
+  --line-strong: #c9cad7;
+  --red: #484b6a;
+  --red-dark: #363950;
+  --header-background: rgb(255 255 255 / 94%);
+  --control-background: #fff;
+  --hover-background: #f5f5f8;
+  --skeleton-background: #f0f0f4;
+  --skeleton-highlight: #e3e4eb;
+  --hero-overlay: 255 255 255;
+
+  color-scheme: light;
 }
 
 * {
@@ -86,7 +114,7 @@ a {
   min-height: 64px;
   padding: 0 18px;
   border-bottom: 1px solid var(--line);
-  background: rgb(5 5 5 / 94%);
+  background: var(--header-background);
   backdrop-filter: blur(16px);
 }
 
@@ -119,6 +147,40 @@ a {
   transform: skew(-8deg);
 }
 
+.theme-toggle {
+  display: inline-flex;
+  height: 34px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface-raised);
+  color: var(--ink);
+  cursor: pointer;
+  font-family: var(--font-display), sans-serif;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.theme-toggle:hover {
+  background: var(--hover-background);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}
+
+.theme-toggle__indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--red);
+}
+
 .workspace {
   display: block;
 }
@@ -133,11 +195,15 @@ a {
   background:
     linear-gradient(
       90deg,
-      rgb(5 5 5 / 94%) 0%,
-      rgb(5 5 5 / 84%) 43%,
-      rgb(5 5 5 / 38%) 100%
+      rgb(var(--hero-overlay) / 94%) 0%,
+      rgb(var(--hero-overlay) / 84%) 43%,
+      rgb(var(--hero-overlay) / 38%) 100%
     ),
-    linear-gradient(0deg, rgb(5 5 5 / 68%) 0%, transparent 52%),
+    linear-gradient(
+      0deg,
+      rgb(var(--hero-overlay) / 68%) 0%,
+      transparent 52%
+    ),
     url("/leaguewatch-hero.jpg") center / cover no-repeat;
 }
 
@@ -204,7 +270,7 @@ a {
   border: 1px solid var(--line-strong);
   border-radius: 8px;
   outline: none;
-  background: #080809;
+  background: var(--control-background);
   color: var(--ink);
   font-family: var(--font-display), sans-serif;
   font-size: 1.2rem;
@@ -228,7 +294,7 @@ a {
   padding: 3px;
   border: 1px solid var(--line-strong);
   border-radius: 8px;
-  background: #080809;
+  background: var(--control-background);
 }
 
 .mode-switch button {
@@ -366,7 +432,7 @@ a {
 }
 
 .game-summary:hover {
-  background: #0a0a0b;
+  background: var(--hover-background);
 }
 
 .game-rank {
@@ -434,7 +500,7 @@ a {
 }
 
 .rating-block {
-  --rating-color: var(--red);
+  --rating-color: var(--rating-low);
 
   display: flex;
   min-width: 0;
@@ -569,7 +635,7 @@ a {
   margin: 22px 0 0;
   padding: 16px;
   border-left: 3px solid var(--red);
-  background: #080809;
+  background: var(--control-background);
 }
 
 .headline span {
@@ -687,13 +753,13 @@ a {
   display: block;
   height: 166px;
   border: 1px solid var(--line);
-  background: #0b0b0c;
+  background: var(--skeleton-background);
   animation: pulse 1.15s ease-in-out infinite alternate;
 }
 
 @keyframes pulse {
   to {
-    background: #151517;
+    background: var(--skeleton-highlight);
   }
 }
 
@@ -807,7 +873,7 @@ a {
 }
 
 .rating-legend__dot--low {
-  background: var(--red);
+  background: var(--rating-low);
 }
 
 @media (min-width: 640px) {

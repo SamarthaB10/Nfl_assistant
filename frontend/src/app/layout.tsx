@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Barlow_Condensed, Inter } from "next/font/google";
 import Link from "next/link";
 
+import { ThemeToggle } from "@/components/theme-toggle";
+
 import "./globals.css";
 
 const display = Barlow_Condensed({
@@ -22,9 +24,21 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  colorScheme: "dark",
+  colorScheme: "dark light",
   themeColor: "#050505",
 };
+
+const themeInitializer = `
+  (function () {
+    try {
+      var savedTheme = window.localStorage.getItem("leaguewatch-theme");
+      document.documentElement.dataset.theme =
+        savedTheme === "light" ? "light" : "dark";
+    } catch (error) {
+      document.documentElement.dataset.theme = "dark";
+    }
+  })();
+`;
 
 export default function RootLayout({
   children,
@@ -32,7 +46,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html data-theme="dark" lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitializer }} />
+      </head>
       <body className={`${display.variable} ${body.variable}`}>
         <div className="site-shell">
           <header className="site-header">
@@ -44,6 +61,7 @@ export default function RootLayout({
                 LEAGUE<strong>WATCH</strong>
               </span>
             </Link>
+            <ThemeToggle />
           </header>
           {children}
           <footer className="site-footer">
