@@ -1,23 +1,24 @@
 # NFL Viewer
 
-NFL Viewer is a FastAPI backend that ranks every 2025 NFL regular-season
-matchup by how valuable it should be to watch. It turns pregame team quality,
-projected competitiveness, rivalry context, and standings consequences into a
-transparent `1.00–10.00` watchability score.
+NFL Viewer is a Next.js and FastAPI application that ranks every 2025 NFL
+regular-season matchup by how valuable it should be to watch. It turns pregame
+team quality, projected competitiveness, rivalry context, and standings
+consequences into a transparent `1.00–10.00` watchability score.
 
 The prototype answers a focused question:
 
 > Given the NFL schedule for a particular week, which games are most—and
 > least—worth watching?
 
-Swagger UI is the current user interface. A user supplies a week and can
-optionally request the top or bottom `x` games. The API returns a deliberately
-compact response containing only the matchup, each team's actual pregame
-record and logo, the rating, and human-readable reasons.
+The responsive web interface lets a user choose a week and request every game,
+the top `x`, or the bottom `x`. Each result presents team records and logos
+beside the watchability rating. Opening a matchup reveals its ranking reasons,
+validated pregame headline, and an optional curated player spotlight.
 
-This repository currently implements the general NFL-watcher experience. Team
-personalization and the Next.js/mobile interface are planned but are not part
-of this backend prototype.
+The FastAPI response stays deliberately compact: matchup, actual pregame
+records, logo URLs, rating, and human-readable reasons. This repository
+currently implements the general NFL-watcher experience; favorite-team
+personalization remains future work.
 
 ## Current capabilities
 
@@ -33,6 +34,8 @@ of this backend prototype.
 - Adds divisional, curated rivalry, playoff-cutoff, division-race, and
   conference top-seed context.
 - Includes one validated pregame ESPN headline when available.
+- Provides a mobile-first matchup interface with expandable insights.
+- Shows team logos and curated player spotlights when assets are available.
 - Uses deterministic football-specific tiebreakers when displayed scores are
   equal.
 - Performs no network calls in the ranking request path.
@@ -42,6 +45,7 @@ of this backend prototype.
 ### Requirements
 
 - Python `3.12`
+- Node.js `20.9` or newer
 - [`uv`](https://docs.astral.sh/uv/)
 
 ### Install and run
@@ -54,14 +58,27 @@ uv run python -m nflviewer.sync_data
 uv run fastapi dev
 ```
 
+In a second terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
 The data sync downloads 2024 and 2025 schedule/team data through `nflreadpy`,
 validates it, and writes normalized Parquet files under `data/processed/`.
 Subsequent syncs use the local files unless `--force` is supplied.
 
 Open:
 
+- Web app: <http://localhost:3000>
 - Swagger UI: <http://127.0.0.1:8000/docs>
 - Health endpoint: <http://127.0.0.1:8000/health>
+
+The frontend proxies `/api/rankings` to FastAPI so the browser does not need a
+separate CORS configuration. Set `NFL_API_BASE_URL` before starting Next.js
+only when FastAPI is not available at `http://127.0.0.1:8000`.
 
 To replace the local nflverse cache:
 
@@ -575,6 +592,11 @@ diagnosis.
 │   ├── headlines-2025.json       # Validated, display-only pregame headlines
 │   ├── rivalries.json            # Curated non-divisional rivalry categories
 │   └── processed/                # Generated nflverse Parquet cache
+├── frontend/
+│   ├── src/app/                  # Next.js page shell, API proxy, and styles
+│   ├── src/components/           # Ranking controls and expandable game cards
+│   ├── src/lib/                  # Typed API client and player spotlights
+│   └── package.json              # Frontend dependencies and quality commands
 ├── src/nflviewer/
 │   ├── app.py                    # FastAPI lifecycle, routes, response shaping
 │   ├── data.py                   # nflverse validation, aggregation, caching
@@ -605,7 +627,10 @@ calculate Elo ratings.
 | Polars | Schedule/stat aggregation | Fast DataFrame operations over nflverse data |
 | nflreadpy | nflverse ingestion | Free access to schedules and team metadata for the prototype |
 | Parquet | Local normalized cache | Compact, typed, and fast to load without a database |
+| Next.js 16 | Responsive web interface and API proxy | One typed application for the UI and server-side FastAPI proxy |
+| React 19 + TypeScript | Interactive matchup cards | Accessible stateful controls with checked API contracts |
 | pytest | Regression tests | Covers data boundaries, formula behavior, and API output |
+| Vitest + Testing Library | Frontend regression tests | Covers initial loading, selection, errors, and expandable details |
 | Ruff | Linting and formatting | One fast, deterministic Python quality tool |
 
 No paid NFL API, Vegas feed, database, Redis instance, or MCP server is required
@@ -623,6 +648,11 @@ to run this version.
 | `uv run pytest` | Run the complete test suite |
 | `uv run ruff check .` | Run lint checks |
 | `uv run ruff format --check .` | Verify formatting |
+| `cd frontend && npm run dev` | Start the Next.js development server |
+| `cd frontend && npm test` | Run frontend unit/component tests |
+| `cd frontend && npm run typecheck` | Check TypeScript without emitting files |
+| `cd frontend && npm run lint` | Run Next.js ESLint rules |
+| `cd frontend && npm run build` | Produce a production frontend build |
 
 ## Testing strategy
 
@@ -644,6 +674,10 @@ The test suite covers:
 - compact API response shape;
 - headline filtering and postgame-leakage prevention;
 - graceful `503` behavior when data is unavailable.
+- frontend query construction and FastAPI proxy behavior;
+- initial, top, and bottom matchup loading;
+- team-logo rendering, detail expansion, headlines, and player spotlights;
+- frontend error handling without removing the ranking controls.
 
 Run the complete quality gate:
 
@@ -651,6 +685,11 @@ Run the complete quality gate:
 uv run pytest
 uv run ruff check .
 uv run ruff format --check .
+cd frontend
+npm test
+npm run typecheck
+npm run lint
+npm run build
 ```
 
 ## Known limitations
@@ -667,24 +706,26 @@ uv run ruff format --check .
 - Standings use a deterministic approximation rather than the complete NFL
   tiebreaker procedure.
 - Weekly results are calculated on demand and are not cached in Redis.
-- This repository contains the backend only; it does not yet include the
-  Next.js/TypeScript frontend.
+- Player spotlights are a small curated team mapping rather than a dynamic
+  roster feed.
+- Team logos and player headshots are loaded from ESPN-hosted URLs for this
+  prototype. A production release must confirm media usage rights and provide
+  a licensed or owned asset pipeline.
 
 ## Roadmap
 
 The next sensible increments are:
 
-1. Add a Next.js/TypeScript interface for selecting a week and viewing ranked
-   game cards.
-2. Add the first user preference: favorite team or general NFL watcher.
-3. Add a personalized layer that boosts games affecting the selected team's
+1. Add the first user preference: favorite team or general NFL watcher.
+2. Add a personalized layer that boosts games affecting the selected team's
    division, conference, and playoff position without changing general quality.
-4. Add starter-only injury adjustments with position tiers and explicit
+3. Add starter-only injury adjustments with position tiers and explicit
    availability confidence.
-5. Replace approximate standings ordering with official NFL tiebreaker logic or
+4. Replace approximate standings ordering with official NFL tiebreaker logic or
    a playoff-probability simulation.
-6. Add opponent-adjusted efficiency and recent-form features after validating
+5. Add opponent-adjusted efficiency and recent-form features after validating
    them against historical outcomes.
+6. Replace the curated player mapping with roster-aware featured-player data.
 7. Add scheduled weekly synchronization and a versioned Redis cache only when
    deployment scale justifies it.
 
