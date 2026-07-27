@@ -107,6 +107,37 @@ def team_rows() -> pl.DataFrame:
     )
 
 
+def weekly_roster_rows() -> pl.DataFrame:
+    return pl.DataFrame(
+        [
+            {
+                "season": 2025,
+                "week": 16,
+                "team": "NYG",
+                "espn_id": 4595348,
+                "status": "RES",
+                "full_name": "Malik Nabers",
+            },
+            {
+                "season": 2025,
+                "week": 16,
+                "team": "NYG",
+                "espn_id": 4689114,
+                "status": "ACT",
+                "full_name": "Jaxson Dart",
+            },
+            {
+                "season": 2025,
+                "week": 16,
+                "team": "DAL",
+                "espn_id": 9999999,
+                "status": "RES",
+                "full_name": "Other matchup player",
+            },
+        ]
+    )
+
+
 def test_normalizes_known_nflverse_team_aliases() -> None:
     assert normalize_team_id("LA") == "LAR"
     assert normalize_team_id("JAC") == "JAX"
@@ -124,6 +155,33 @@ def test_builds_target_week_matchups_and_filters_postseason() -> None:
     assert matchups[0].home_team_id == "LAR"
     assert matchups[0].away_score is None
     assert set(data.teams) == {"JAX", "LAR"}
+
+
+def test_returns_non_active_espn_ids_for_matchup_teams_and_week() -> None:
+    data = SeasonData.from_frames(
+        schedule_rows(),
+        team_rows(),
+        weekly_rosters=weekly_roster_rows(),
+    )
+
+    unavailable = data.unavailable_player_ids_for_matchup(16, "NYG", "PHI")
+
+    assert unavailable == ["4595348"]
+
+
+def test_treats_missing_weekly_roster_status_as_non_active() -> None:
+    weekly_rosters = weekly_roster_rows().with_columns(
+        pl.when(pl.col("espn_id") == 4595348).then(None).otherwise(pl.col("status")).alias("status")
+    )
+    data = SeasonData.from_frames(
+        schedule_rows(),
+        team_rows(),
+        weekly_rosters=weekly_rosters,
+    )
+
+    unavailable = data.unavailable_player_ids_for_matchup(16, "NYG", "PHI")
+
+    assert unavailable == ["4595348"]
 
 
 def test_calculates_previous_and_preweek_records_without_future_leakage() -> None:
@@ -245,15 +303,28 @@ def test_rejects_duplicate_game_ids() -> None:
 
 
 def test_parquet_round_trip_uses_local_cache(tmp_path: Path) -> None:
-    data = SeasonData.from_frames(schedule_rows(), team_rows())
+    data = SeasonData.from_frames(
+        schedule_rows(),
+        team_rows(),
+        weekly_rosters=weekly_roster_rows(),
+    )
     schedule_path = tmp_path / "schedules-2024-2025.parquet"
     team_path = tmp_path / "teams-2025.parquet"
+    weekly_roster_path = tmp_path / "rosters-weekly-2025.parquet"
 
-    data.write_cache(schedule_path, team_path)
-    restored = SeasonData.from_cache(schedule_path, team_path)
+    data.write_cache(schedule_path, team_path, weekly_roster_path)
+    restored = SeasonData.from_cache(schedule_path, team_path, weekly_roster_path)
 
+    assert set(pl.read_parquet(weekly_roster_path).columns) == {
+        "season",
+        "week",
+        "team",
+        "espn_id",
+        "status",
+    }
     assert restored.matchups_for_week(3) == data.matchups_for_week(3)
     assert restored.previous_records() == data.previous_records()
+    assert restored.unavailable_player_ids_for_matchup(16, "NYG", "PHI") == ["4595348"]
 
 
 def test_repository_refreshes_and_then_loads_local_parquet(tmp_path: Path) -> None:
@@ -267,6 +338,23 @@ def test_repository_refreshes_and_then_loads_local_parquet(tmp_path: Path) -> No
 
     assert repository.is_cached
     assert refreshed.matchups_for_week(3) == loaded.matchups_for_week(3)
+
+
+def test_repository_refreshes_weekly_rosters_for_target_season(tmp_path: Path) -> None:
+    requested_seasons: list[list[int]] = []
+    repository = Repository(tmp_path, require_32_teams=False)
+
+    repository.refresh(
+        schedule_loader=lambda _: schedule_rows(),
+        team_loader=team_rows,
+        weekly_roster_loader=lambda seasons: (
+            requested_seasons.append(seasons) or weekly_roster_rows()
+        ),
+    )
+    loaded = repository.load()
+
+    assert requested_seasons == [[2025]]
+    assert loaded.unavailable_player_ids_for_matchup(16, "NYG", "PHI") == ["4595348"]
 
 
 def test_repository_requires_32_teams_by_default(tmp_path: Path) -> None:

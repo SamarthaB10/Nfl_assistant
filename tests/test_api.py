@@ -98,7 +98,25 @@ def season_data() -> SeasonData:
             ]
         ]
     )
-    return SeasonData.from_frames(schedules, teams)
+    weekly_rosters = pl.DataFrame(
+        [
+            {
+                "season": 2025,
+                "week": 2,
+                "team": "BUF",
+                "espn_id": 1234567,
+                "status": "RES",
+            },
+            {
+                "season": 2025,
+                "week": 2,
+                "team": "DAL",
+                "espn_id": 7654321,
+                "status": "ACT",
+            },
+        ]
+    )
+    return SeasonData.from_frames(schedules, teams, weekly_rosters=weekly_rosters)
 
 
 class StubRepository:
@@ -149,6 +167,7 @@ def test_rankings_returns_all_games_in_rank_order() -> None:
             },
             "score": 3.73,
             "reasons": ["Divisional matchup"],
+            "unavailablePlayerIds": [],
         },
         {
             "matchup": "New York Giants vs Dallas Cowboys",
@@ -162,6 +181,7 @@ def test_rankings_returns_all_games_in_rank_order() -> None:
                 "Divisional matchup",
                 "Team profiles indicate elevated blowout risk",
             ],
+            "unavailablePlayerIds": [],
         },
     ]
 
@@ -184,6 +204,7 @@ def test_rankings_applies_top_after_scoring_all_games() -> None:
             },
             "score": 3.73,
             "reasons": ["Divisional matchup"],
+            "unavailablePlayerIds": [],
         }
     ]
 
@@ -209,6 +230,7 @@ def test_rankings_returns_bottom_games_worst_first() -> None:
                 "Divisional matchup",
                 "Team profiles indicate elevated blowout risk",
             ],
+            "unavailablePlayerIds": [],
         }
     ]
 
@@ -229,6 +251,7 @@ def test_rankings_show_each_current_record_before_the_selected_week() -> None:
 
     assert response.status_code == 200
     assert response.json()[0]["records"] == {"BUF": "1-0", "DAL": "1-0"}
+    assert response.json()[0]["unavailablePlayerIds"] == ["1234567"]
 
 
 def test_rankings_adds_cached_headline_without_changing_score(tmp_path) -> None:

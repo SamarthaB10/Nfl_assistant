@@ -47,3 +47,5 @@ def test_game_summary_accepts_ten_point_watchability_score() -> None:
 
     assert game.score == 10
     assert game.logos == {}
+    assert game.unavailable_player_ids == []
+    assert game.model_dump(by_alias=True)["unavailablePlayerIds"] == []

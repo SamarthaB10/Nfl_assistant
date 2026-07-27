@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useId, useState } from "react";
 
-import { FEATURED_PLAYERS } from "@/lib/featured-players";
+import { selectFeaturedPlayers } from "@/lib/featured-players";
 import type { GameSummary } from "@/lib/rankings";
 
 interface GameCardProps {
@@ -23,10 +23,10 @@ export function GameCard({ game, rank }: GameCardProps) {
   }));
   const headline = game.reasons.find((reason) => reason.startsWith("Headline:"));
   const reasons = game.reasons.filter((reason) => !reason.startsWith("Headline:"));
-  const players = teams.flatMap((team) => {
-    const player = FEATURED_PLAYERS[team.id];
-    return player ? [{ ...player, teamId: team.id }] : [];
-  });
+  const players = selectFeaturedPlayers(
+    teams.map((team) => team.id),
+    game.unavailablePlayerIds,
+  );
 
   return (
     <li className={`game-card${open ? " is-open" : ""}`}>

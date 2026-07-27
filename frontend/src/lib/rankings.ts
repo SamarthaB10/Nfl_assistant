@@ -12,6 +12,7 @@ export interface GameSummary {
   logos: Record<string, string | null>;
   score: number;
   reasons: string[];
+  unavailablePlayerIds?: string[];
 }
 
 export function buildRankingsSearch({

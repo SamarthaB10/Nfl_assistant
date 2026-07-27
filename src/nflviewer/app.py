@@ -82,6 +82,11 @@ def _ranking_response(
                 },
                 score=game.watchability_score,
                 reasons=reasons,
+                unavailable_player_ids=data.unavailable_player_ids_for_matchup(
+                    query.week,
+                    game.away_team.team_id,
+                    game.home_team.team_id,
+                ),
             )
         )
     return summaries

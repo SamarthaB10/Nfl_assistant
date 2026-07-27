@@ -35,6 +35,13 @@ TEAM_COLUMNS = {
     "team_division",
     "team_logo_espn",
 }
+WEEKLY_ROSTER_COLUMNS = {
+    "season",
+    "week",
+    "team",
+    "espn_id",
+    "status",
+}
 
 
 class DataValidationError(ValueError):
@@ -108,6 +115,18 @@ def _kickoff(gameday: str, gametime: str) -> datetime:
     return local.astimezone(UTC)
 
 
+def _empty_weekly_rosters() -> pl.DataFrame:
+    return pl.DataFrame(
+        schema={
+            "espn_id": pl.String,
+            "season": pl.Int64,
+            "status": pl.String,
+            "team": pl.String,
+            "week": pl.Int64,
+        }
+    )
+
+
 class SeasonData:
     """Validated, normalized 2024/2025 nflverse data held in memory."""
 
@@ -115,10 +134,12 @@ class SeasonData:
         self,
         schedules: pl.DataFrame,
         team_frame: pl.DataFrame,
+        weekly_rosters: pl.DataFrame,
         teams: dict[str, Team],
     ) -> None:
         self._schedules = schedules
         self._team_frame = team_frame
+        self._weekly_rosters = weekly_rosters
         self.teams = teams
 
     @classmethod
@@ -127,10 +148,13 @@ class SeasonData:
         schedules: pl.DataFrame,
         teams: pl.DataFrame,
         *,
+        weekly_rosters: pl.DataFrame | None = None,
         require_32_teams: bool = False,
     ) -> SeasonData:
         _require_columns(schedules, SCHEDULE_COLUMNS, "Schedule")
         _require_columns(teams, TEAM_COLUMNS, "Team")
+        if weekly_rosters is not None:
+            _require_columns(weekly_rosters, WEEKLY_ROSTER_COLUMNS, "Weekly roster")
 
         regular = schedules.filter(
             (pl.col("game_type") == "REG")
@@ -184,13 +208,27 @@ class SeasonData:
         filtered_team_frame = team_frame.filter(pl.col("team_abbr").is_in(current_ids)).unique(
             subset=["team_abbr"], keep="last"
         )
-        return cls(regular, filtered_team_frame, metadata)
+        normalized_weekly_rosters = _empty_weekly_rosters()
+        if weekly_rosters is not None:
+            normalized_weekly_rosters = (
+                weekly_rosters.select(sorted(WEEKLY_ROSTER_COLUMNS))
+                .with_columns(
+                    pl.col("espn_id").cast(pl.String, strict=False),
+                    pl.col("season").cast(pl.Int64, strict=False),
+                    pl.col("status").cast(pl.String, strict=False).str.to_uppercase(),
+                    pl.col("team").cast(pl.String, strict=False).replace(TEAM_ALIASES),
+                    pl.col("week").cast(pl.Int64, strict=False),
+                )
+                .filter(pl.col("season") == TARGET_SEASON)
+            )
+        return cls(regular, filtered_team_frame, normalized_weekly_rosters, metadata)
 
     @classmethod
     def from_cache(
         cls,
         schedule_path: Path,
         team_path: Path,
+        weekly_roster_path: Path | None = None,
         *,
         require_32_teams: bool = False,
     ) -> SeasonData:
@@ -199,14 +237,27 @@ class SeasonData:
         return cls.from_frames(
             pl.read_parquet(schedule_path),
             pl.read_parquet(team_path),
+            weekly_rosters=(
+                pl.read_parquet(weekly_roster_path)
+                if weekly_roster_path is not None and weekly_roster_path.exists()
+                else None
+            ),
             require_32_teams=require_32_teams,
         )
 
-    def write_cache(self, schedule_path: Path, team_path: Path) -> None:
+    def write_cache(
+        self,
+        schedule_path: Path,
+        team_path: Path,
+        weekly_roster_path: Path | None = None,
+    ) -> None:
         schedule_path.parent.mkdir(parents=True, exist_ok=True)
         team_path.parent.mkdir(parents=True, exist_ok=True)
         self._schedules.write_parquet(schedule_path)
         self._team_frame.write_parquet(team_path)
+        if weekly_roster_path is not None:
+            weekly_roster_path.parent.mkdir(parents=True, exist_ok=True)
+            self._weekly_rosters.write_parquet(weekly_roster_path)
 
     def matchups_for_week(self, week: int) -> list[Matchup]:
         rows = self._schedules.filter(
@@ -226,6 +277,22 @@ class SeasonData:
             )
             for row in rows.iter_rows(named=True)
         ]
+
+    def unavailable_player_ids_for_matchup(
+        self,
+        week: int,
+        away_team_id: str,
+        home_team_id: str,
+    ) -> list[str]:
+        unavailable = self._weekly_rosters.filter(
+            (pl.col("week") == week)
+            & pl.col("team").is_in(
+                [normalize_team_id(away_team_id), normalize_team_id(home_team_id)]
+            )
+            & (pl.col("status").fill_null("") != "ACT")
+            & pl.col("espn_id").is_not_null()
+        )
+        return sorted(set(unavailable["espn_id"].to_list()))
 
     def previous_records(self) -> dict[str, Record]:
         return self._records_for(self._schedules.filter(pl.col("season") == PREVIOUS_SEASON))
@@ -369,16 +436,22 @@ class Repository:
         self.cache_dir = cache_dir
         self.schedule_path = cache_dir / "schedules-2024-2025.parquet"
         self.team_path = cache_dir / "teams-2025.parquet"
+        self.weekly_roster_path = cache_dir / "rosters-weekly-2025.parquet"
         self.require_32_teams = require_32_teams
 
     @property
     def is_cached(self) -> bool:
-        return self.schedule_path.exists() and self.team_path.exists()
+        return (
+            self.schedule_path.exists()
+            and self.team_path.exists()
+            and self.weekly_roster_path.exists()
+        )
 
     def load(self) -> SeasonData:
         return SeasonData.from_cache(
             self.schedule_path,
             self.team_path,
+            self.weekly_roster_path,
             require_32_teams=self.require_32_teams,
         )
 
@@ -392,17 +465,24 @@ class Repository:
         *,
         schedule_loader: Callable[[list[int]], pl.DataFrame] | None = None,
         team_loader: Callable[[], pl.DataFrame] | None = None,
+        weekly_roster_loader: Callable[[list[int]], pl.DataFrame] | None = None,
     ) -> SeasonData:
+        use_production_loaders = schedule_loader is None and team_loader is None
         if schedule_loader is None or team_loader is None:
             import nflreadpy as nfl
 
             schedule_loader = schedule_loader or nfl.load_schedules
             team_loader = team_loader or nfl.load_teams
+            if use_production_loaders:
+                weekly_roster_loader = weekly_roster_loader or nfl.load_rosters_weekly
 
         data = SeasonData.from_frames(
             schedule_loader([PREVIOUS_SEASON, TARGET_SEASON]),
             team_loader(),
+            weekly_rosters=(
+                weekly_roster_loader([TARGET_SEASON]) if weekly_roster_loader is not None else None
+            ),
             require_32_teams=self.require_32_teams,
         )
-        data.write_cache(self.schedule_path, self.team_path)
+        data.write_cache(self.schedule_path, self.team_path, self.weekly_roster_path)
         return data

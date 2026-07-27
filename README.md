@@ -154,6 +154,22 @@ The displayed records are the actual 2025 records before that game. Early
 season prior values affect scoring only; they are never shown as the team's
 record.
 
+### Weekly player availability
+
+The explicit data sync loads 2025 weekly rosters with
+`nflreadpy.load_rosters_weekly([2025])` and caches them at
+`data/processed/rosters-weekly-2025.parquet`. For the requested week, each game
+includes `unavailablePlayerIds`: rostered player IDs whose weekly status is not
+`ACT`. When a player has a weekly roster row, the frontend treats only `ACT` as
+eligible for a curated player card; null and non-`ACT` statuses suppress it.
+
+This is roster-availability filtering, not a complete historical injury report.
+The official nflverse injuries pipeline stops after 2024, so 2025 statuses come
+from weekly rosters and can identify designations such as `RES`, `PUP`, and
+`INA`, but not the full Questionable/Doubtful/Out reporting history. A missing
+weekly roster row is unknown and does not disqualify the player, so it is not
+evidence that the player was active.
+
 ### `GET /health`
 
 Reports whether the season data loaded successfully and identifies the active
@@ -705,8 +721,10 @@ npm run build
 - Only the 2025 regular season is supported.
 - The API currently ranks for a general viewer; favorite-team personalization
   is not implemented.
-- Injuries are excluded. Adding them safely requires confirmed starter status,
-  position-impact tiers, availability timing, and replacement quality.
+- Injuries do not affect watchability scores. Player cards use weekly roster
+  availability, but adding injury-based scoring safely still requires confirmed
+  starter status, position-impact tiers, availability timing, and replacement
+  quality.
 - Vegas lines are intentionally excluded.
 - Headlines explain context but do not numerically measure public interest.
 - Scoring statistics use season-to-date averages rather than opponent-adjusted
@@ -714,8 +732,9 @@ npm run build
 - Standings use a deterministic approximation rather than the complete NFL
   tiebreaker procedure.
 - Weekly results are calculated on demand and are not cached in Redis.
-- Player spotlights cover all 32 teams but remain a static one-player-per-team
-  mapping rather than a dynamic weekly roster feed.
+- Player spotlights remain a curated candidate mapping that renders at most one
+  player per team; the weekly roster feed suppresses candidates who are not
+  `ACT`.
 - Team logos and player headshots are loaded from ESPN-hosted URLs for this
   prototype. A production release must confirm media usage rights and provide
   a licensed or owned asset pipeline.
@@ -733,7 +752,7 @@ The next sensible increments are:
    a playoff-probability simulation.
 5. Add opponent-adjusted efficiency and recent-form features after validating
    them against historical outcomes.
-6. Replace the curated player mapping with roster-aware featured-player data.
+6. Replace the curated player mapping with dynamically selected roster players.
 7. Add scheduled weekly synchronization and a versioned Redis cache only when
    deployment scale justifies it.
 

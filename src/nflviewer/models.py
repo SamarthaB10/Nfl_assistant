@@ -100,3 +100,4 @@ class GameSummary(APIModel):
     logos: dict[str, str | None] = Field(default_factory=dict)
     score: float = Field(ge=1, le=10)
     reasons: list[str]
+    unavailable_player_ids: list[str] = Field(default_factory=list)
