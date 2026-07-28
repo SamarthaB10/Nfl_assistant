@@ -891,14 +891,24 @@ npm audit --audit-level=high
 Authentication and the first database-backed public profile are now
 implemented. The remaining platform work is:
 
-1. **Persistent NFL data pipeline**
+1. **Email ownership verification**
+   - Send a short-lived, one-time verification code to the submitted email
+     address before treating an account as verified.
+   - Store only a hash of the code, enforce expiration and attempt limits, and
+     add resend cooldowns plus rate limits for both email and IP address.
+   - Keep verification state in PostgreSQL and define which account and
+     personalization features remain unavailable until verification succeeds.
+   - Select an email provider and production sender domain before
+     implementation. Verification proves control of a mailbox; it does not
+     guarantee that an address is permanent or non-disposable.
+2. **Persistent NFL data pipeline**
    - Add a scheduled, idempotent nflverse ingestion job rather than treating
      upstream downloads as an application concern.
    - Store normalized schedules, weekly team statistics, standings inputs,
      rosters, and data-version metadata in a database.
    - Preserve historical weekly snapshots so rankings remain reproducible when
      upstream datasets change.
-2. **Application caching**
+3. **Application caching**
    - Cache fully ranked weekly slates and derive top/bottom selections from the
      cached result.
    - Include season, week, formula version, data version, and viewer profile in
@@ -925,9 +935,25 @@ The next product and model increments are:
      privacy-enhanced embeds.
    - Display source/channel attribution and never treat video popularity as a
      watchability-score input without a separate scoring decision.
-3. Add the first user preference: favorite team or general NFL watcher.
-4. Add a personalized layer that boosts games affecting the selected team's
-   division, conference, and playoff position without changing general quality.
+3. Add the first user preference: favorite team or general NFL watcher, stored
+   per account with an explicit neutral/default state.
+4. Add a serious, explainable personalization layer on top of the universal
+   matchup score.
+   - Preserve the general-viewer score as the stable quality baseline rather
+     than maintaining a separate opaque formula per user.
+   - Add user-context value for the favorite team's games, divisional and
+     conference consequences, rivalry relevance, playoff leverage, and outcomes
+     that materially affect the selected team's standing.
+   - Keep team quality, competitiveness, injury penalties, and league-wide
+     can't-miss games active so personalization cannot promote a poor game only
+     because it is adjacent to the user's team.
+   - Return personalized explanations that identify which preference changed a
+     ranking, and version both the base formula and personalization formula.
+   - Include preference and personalization versions in cache keys; invalidate
+     personalized results when the user changes teams or the model changes.
+   - Validate that general-watcher accounts receive the same ordering as
+     anonymous users and test personalized rankings against historical weekly
+     standings scenarios before release.
 5. Add starter-only injury adjustments with position tiers and explicit
    availability confidence.
 6. Replace approximate standings ordering with official NFL tiebreaker logic or
