@@ -2,10 +2,13 @@ import "server-only";
 
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { betterAuth } from "better-auth";
+import { APIError } from "better-auth/api";
 import { username } from "better-auth/plugins";
 
 import { db } from "@/db";
 import { authSchema } from "@/db/schema";
+
+import { signupIdentitySchema } from "./profile-validation";
 
 const appUrl = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
 
@@ -39,6 +42,37 @@ export const auth = betterAuth({
       "/sign-up/email": {
         window: 60 * 10,
         max: 5,
+      },
+    },
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (newUser) => {
+          const accountCandidate = newUser as typeof newUser & {
+            username?: unknown;
+          };
+          const parsed = signupIdentitySchema.safeParse({
+            email: accountCandidate.email,
+            username: accountCandidate.username,
+            displayName: accountCandidate.name,
+          });
+
+          if (!parsed.success) {
+            throw new APIError("BAD_REQUEST", {
+              message: "Invalid account details.",
+            });
+          }
+
+          return {
+            data: {
+              ...newUser,
+              email: parsed.data.email,
+              name: parsed.data.displayName,
+              username: parsed.data.username,
+            },
+          };
+        },
       },
     },
   },

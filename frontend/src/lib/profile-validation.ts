@@ -12,10 +12,13 @@ export const publicUsernameSchema = z
     "Use only lowercase letters, numbers, and underscores.",
   );
 
-export const signupSchema = z.object({
+export const signupIdentitySchema = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
   username: publicUsernameSchema,
   displayName,
+});
+
+export const signupSchema = signupIdentitySchema.extend({
   password: z.string().min(8).max(128),
 });
 
