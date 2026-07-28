@@ -44,16 +44,16 @@ contract unchanged.
 
 ### Phase 3: Public profile and owner editing
 
-- [ ] Add public profile data access with a strict field allowlist.
-- [ ] Add `/u/[username]` and `/settings/profile`.
-- [ ] Add ownership checks and tested display-name/About updates.
-- [ ] Build and verify the mobile-first dark/light profile UI.
+- [x] Add public profile data access with a strict field allowlist.
+- [x] Add `/u/[username]` and `/settings/profile`.
+- [x] Add ownership checks and tested display-name/About updates.
+- [x] Build the mobile-first dark/light profile UI.
 
 ### Checkpoint: Profile
 
-- [ ] Profile unit, component, and authorization tests pass.
+- [x] Profile unit, component, and authorization tests pass.
 - [ ] Browser verification passes at mobile and desktop widths.
-- [ ] Commit the public-profile slice.
+- [x] Commit the public-profile slice.
 
 ### Phase 4: Final verification and documentation
 

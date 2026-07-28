@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-labelledby="title">
+  <title id="title">LeagueWatch default profile avatar</title>
+  <rect width="320" height="320" fill="#0b0b0c"/>
+  <path d="M0 260 320 88v232H0Z" fill="#f12738"/>
+  <path d="M34 34h252v252H34Z" fill="none" stroke="#353539" stroke-width="4"/>
+  <text x="160" y="220" fill="#f3f3f1" font-family="Arial Narrow,Arial,sans-serif" font-size="184" font-weight="900" text-anchor="middle">L</text>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 440" role="img" aria-labelledby="title">
+  <title id="title">LeagueWatch default profile header</title>
+  <rect width="1200" height="440" fill="#080809"/>
+  <g fill="none" stroke="#252528" stroke-width="2">
+    <path d="M0 74h1200M0 146h1200M0 220h1200M0 294h1200M0 366h1200"/>
+    <path d="M120 0v440M240 0v440M360 0v440M480 0v440M600 0v440M720 0v440M840 0v440M960 0v440M1080 0v440"/>
+  </g>
+  <path d="M0 386 1200 42v156L0 440Z" fill="#f12738"/>
+  <text x="64" y="138" fill="#f3f3f1" font-family="Arial Narrow,Arial,sans-serif" font-size="92" font-weight="900" letter-spacing="6">LEAGUEWATCH</text>
+  <text x="68" y="188" fill="#96979c" font-family="Arial,sans-serif" font-size="24" font-weight="700" letter-spacing="8">KNOW WHAT&apos;S WORTH WATCHING</text>
+</svg>

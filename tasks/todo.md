@@ -14,14 +14,14 @@
   - Files: `frontend/src/lib/auth*`, `frontend/src/app/api/auth/`,
     login/signup components and pages, site header.
 
-- [ ] Task 3: Implement public profile reads
+- [x] Task 3: Implement public profile reads
   - Acceptance: `/u/[username]` is public, responsive, and exposes only the
     approved public fields with default images.
   - Verify: DTO tests, component tests, not-found behavior, mobile browser pass.
   - Files: `frontend/src/lib/profiles.ts`, `frontend/src/app/u/`,
     `frontend/src/components/profile/`.
 
-- [ ] Task 4: Implement owner profile editing
+- [x] Task 4: Implement owner profile editing
   - Acceptance: the signed-in owner can update display name and About; anonymous
     users and other accounts cannot.
   - Verify: authorization and form tests plus browser verification.

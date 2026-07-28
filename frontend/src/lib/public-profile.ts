@@ -1,17 +1,13 @@
 export const DEFAULT_AVATAR_URL = "/profile-default-avatar.svg";
 export const DEFAULT_HEADER_URL = "/profile-default-header.svg";
 
-type UserProfileRecord = {
-  id: string;
-  email: string;
-  emailVerified: boolean;
+type PublicProfileSource = {
   name: string;
   username: string;
   about: string | null;
   imageObjectKey: string | null;
   headerObjectKey: string | null;
   createdAt: Date;
-  updatedAt: Date;
 };
 
 export type PublicProfile = {
@@ -23,7 +19,9 @@ export type PublicProfile = {
   joinedAt: string;
 };
 
-export function toPublicProfile(user: UserProfileRecord): PublicProfile {
+export function toPublicProfile<T extends PublicProfileSource>(
+  user: T,
+): PublicProfile {
   return {
     username: user.username,
     displayName: user.name,

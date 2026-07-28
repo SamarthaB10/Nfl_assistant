@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const displayName = z.string().trim().min(1).max(50);
-const username = z
+export const publicUsernameSchema = z
   .string()
   .trim()
   .toLowerCase()
@@ -14,7 +14,7 @@ const username = z
 
 export const signupSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
-  username,
+  username: publicUsernameSchema,
   displayName,
   password: z.string().min(8).max(128),
 });
