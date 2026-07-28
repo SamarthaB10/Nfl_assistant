@@ -36,6 +36,10 @@ experience; favorite-team personalization remains future work.
   conference top-seed context.
 - Includes one validated pregame ESPN headline when available.
 - Provides a mobile-first matchup interface with expandable insights.
+- Supports email/password signup and login with database-backed sessions.
+- Gives each account a unique public handle and mobile-first public profile.
+- Lets profile owners edit their display name and About text without exposing
+  their private email address.
 - Dynamically selects one active offensive player per team and explains each
   selection with two or three statistics available before that game.
 - Explains ratings of `3.20` or lower with specific quality, blowout-risk, and
@@ -50,6 +54,7 @@ experience; favorite-team personalization remains future work.
 
 - Python `3.12`
 - Node.js `20.9` or newer
+- Docker with Compose for local PostgreSQL
 - [`uv`](https://docs.astral.sh/uv/)
 
 ### Install and run
@@ -59,6 +64,12 @@ git clone https://github.com/SamarthaB10/Nfl_assistant.git
 cd Nfl_assistant
 uv sync
 uv run python -m nflviewer.sync_data
+docker compose up -d --wait postgres
+cp frontend/.env.example frontend/.env.local
+cd frontend
+npm ci
+npm run db:migrate
+cd ..
 uv run fastapi dev
 ```
 
@@ -66,7 +77,6 @@ In a second terminal:
 
 ```bash
 cd frontend
-npm install
 npm run dev
 ```
 
@@ -80,6 +90,33 @@ Open:
 - Web app: <http://localhost:3000>
 - Swagger UI: <http://127.0.0.1:8000/docs>
 - Health endpoint: <http://127.0.0.1:8000/health>
+
+### Accounts and profiles
+
+PostgreSQL listens on local host port `5433` so it does not conflict with a
+system PostgreSQL installation on the default `5432`. The committed
+`frontend/.env.example` points to this container.
+
+Before using accounts outside local development, replace
+`BETTER_AUTH_SECRET` with a cryptographically random value of at least 32
+characters and set `BETTER_AUTH_URL` to the exact deployed origin. Never commit
+the resulting `.env.local`.
+
+Account routes:
+
+- Sign up: <http://localhost:3000/signup>
+- Log in: <http://localhost:3000/login>
+- Public profile: `http://localhost:3000/u/<username>`
+- Owner profile settings: <http://localhost:3000/settings/profile>
+
+Email is private and is the only login identifier. Username, display name,
+About text, and joined month are public. Version 1 uses local LeagueWatch
+default profile/header artwork; image uploads and object storage are not yet
+enabled.
+
+Authentication and profile storage stay inside Next.js. FastAPI continues to
+serve only NFL ranking data and never receives passwords, session tokens, or
+user email addresses.
 
 The frontend proxies `/api/rankings` to FastAPI so the browser does not need a
 separate CORS configuration. Set `NFL_API_BASE_URL` before starting Next.js
@@ -650,9 +687,11 @@ diagnosis.
 │   ├── rivalries.json            # Curated non-divisional rivalry categories
 │   └── processed/                # Generated nflverse Parquet cache
 ├── frontend/
-│   ├── src/app/                  # Next.js page shell, API proxy, and styles
-│   ├── src/components/           # Ranking controls and expandable game cards
-│   ├── src/lib/                  # Typed API client and player spotlights
+│   ├── drizzle/                  # Committed PostgreSQL migrations
+│   ├── src/app/                  # Rankings, auth, profile pages, and API routes
+│   ├── src/components/           # Ranking, account, and profile components
+│   ├── src/db/                   # Drizzle PostgreSQL schema and connection
+│   ├── src/lib/                  # Auth, profile, ranking, and spotlight logic
 │   └── package.json              # Frontend dependencies and quality commands
 ├── src/nflviewer/
 │   ├── app.py                    # FastAPI lifecycle, routes, response shaping
@@ -687,12 +726,15 @@ calculate Elo ratings.
 | Parquet | Local normalized cache | Compact, typed, and fast to load without a database |
 | Next.js 16 | Responsive web interface and API proxy | One typed application for the UI and server-side FastAPI proxy |
 | React 19 + TypeScript | Interactive matchup cards | Accessible stateful controls with checked API contracts |
+| PostgreSQL 16 | Users, credentials, sessions, and profiles | Durable relational constraints for unique identities and read-heavy profiles |
+| Better Auth | Email/password authentication | Owns scrypt password hashing, cookie sessions, and auth rate limiting |
+| Drizzle ORM + Kit | Typed account persistence and migrations | Keeps PostgreSQL access typed and schema changes reviewable |
 | pytest | Regression tests | Covers data boundaries, formula behavior, and API output |
 | Vitest + Testing Library | Frontend regression tests | Covers initial loading, selection, errors, and expandable details |
 | Ruff | Linting and formatting | One fast, deterministic Python quality tool |
 
-No paid NFL API, Vegas feed, database, Redis instance, or MCP server is required
-to run this version.
+No paid NFL API, Vegas feed, Redis instance, or MCP server is required to run
+this version. A local PostgreSQL container is required for account features.
 
 ## Development commands
 
@@ -707,6 +749,10 @@ to run this version.
 | `uv run ruff check .` | Run lint checks |
 | `uv run ruff format --check .` | Verify formatting |
 | `cd frontend && npm run dev` | Start the Next.js development server |
+| `docker compose up -d --wait postgres` | Start local PostgreSQL on port `5433` |
+| `cd frontend && npm run db:generate` | Generate a migration from schema changes |
+| `cd frontend && npm run db:migrate` | Apply committed PostgreSQL migrations |
+| `cd frontend && npm run db:check` | Validate the Drizzle migration history |
 | `cd frontend && npm test` | Run frontend unit/component tests |
 | `cd frontend && npm run typecheck` | Check TypeScript without emitting files |
 | `cd frontend && npm run lint` | Run Next.js ESLint rules |
@@ -737,6 +783,10 @@ The test suite covers:
 - initial, top, and bottom matchup loading;
 - team-logo rendering, detail expansion, headlines, and player spotlights;
 - frontend error handling without removing the ranking controls.
+- signup/login validation and generic credential failures;
+- strict public-profile field mapping;
+- anonymous and cross-account profile-update rejection;
+- public profile and owner-edit component behavior.
 
 Run the complete quality gate:
 
@@ -749,6 +799,7 @@ npm test
 npm run typecheck
 npm run lint
 npm run build
+npm audit --audit-level=high
 ```
 
 ## Known limitations
@@ -772,34 +823,28 @@ npm run build
 - Team logos and player headshots are loaded from ESPN-hosted URLs for this
   prototype. A production release must confirm media usage rights and provide
   a licensed or owned asset pipeline.
+- Email verification, password recovery, OAuth, account deletion, username
+  changes, and profile image uploads are not implemented yet.
+- `npm audit` reports a moderate advisory in Drizzle Kit's development-only
+  `esbuild` loader chain. npm's automated remedy is a breaking Drizzle Kit
+  downgrade, so the project currently gates on high-severity findings and
+  should adopt an upstream non-breaking fix when available.
 
 ## Roadmap
 
 ### Near-term platform backlog
 
-These items are recorded for ideation before implementation; no provider or
-infrastructure decision has been made yet.
+Authentication and the first database-backed public profile are now
+implemented. The remaining platform work is:
 
-1. **Authentication**
-   - Determine what requires an account, beginning with saved favorite teams
-     and viewer preferences.
-   - Compare social providers, email magic links, and traditional credentials.
-   - Decide the session model, account-linking behavior, and guest-to-account
-     migration before selecting an authentication library.
-2. **Database-backed user profiles**
-   - Store one profile per authenticated user, with a display name, avatar,
-     favorite teams or general-watcher status, and saved interface preferences.
-   - Define profile visibility, authorization, account deletion, and
-     provider-account linking before finalizing the schema.
-   - Keep private account data separate from public-facing profile fields.
-3. **Persistent data pipeline**
+1. **Persistent NFL data pipeline**
    - Add a scheduled, idempotent nflverse ingestion job rather than treating
      upstream downloads as an application concern.
    - Store normalized schedules, weekly team statistics, standings inputs,
      rosters, and data-version metadata in a database.
    - Preserve historical weekly snapshots so rankings remain reproducible when
      upstream datasets change.
-4. **Application caching**
+2. **Application caching**
    - Cache fully ranked weekly slates and derive top/bottom selections from the
      cached result.
    - Include season, week, formula version, data version, and viewer profile in
