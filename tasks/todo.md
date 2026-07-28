@@ -7,7 +7,7 @@
   - Files: `frontend/src/db/`, `frontend/drizzle/`,
     `frontend/drizzle.config.ts`, frontend package manifests.
 
-- [ ] Task 2: Implement email/password authentication
+- [x] Task 2: Implement email/password authentication
   - Acceptance: users can sign up, log in, keep a database session, and sign
     out; invalid credentials are generic and auth requests are rate limited.
   - Verify: auth unit/component tests, typecheck, lint, build.

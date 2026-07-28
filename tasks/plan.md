@@ -32,15 +32,15 @@ contract unchanged.
 
 ### Phase 2: Authentication flow
 
-- [ ] Configure Better Auth and mount the Next.js auth handler.
-- [ ] Add tested signup, login, sign-out, and session-aware header behavior.
-- [ ] Verify cookies, generic credential errors, and authentication rate limits.
+- [x] Configure Better Auth and mount the Next.js auth handler.
+- [x] Add tested signup, login, sign-out, and session-aware header behavior.
+- [x] Verify cookies, generic credential errors, and authentication rate limits.
 
 ### Checkpoint: Authentication
 
-- [ ] Auth-focused tests pass.
-- [ ] Typecheck, lint, build, and existing ranking tests pass.
-- [ ] Commit the working authentication slice.
+- [x] Auth-focused tests pass.
+- [x] Typecheck, lint, build, and existing ranking tests pass.
+- [x] Commit the working authentication slice.
 
 ### Phase 3: Public profile and owner editing
 

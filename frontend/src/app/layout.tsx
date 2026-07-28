@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Barlow_Condensed, Inter } from "next/font/google";
 import Link from "next/link";
 
+import { AccountNav } from "@/components/auth/account-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 import "./globals.css";
@@ -61,7 +62,10 @@ export default function RootLayout({
                 LEAGUE<strong>WATCH</strong>
               </span>
             </Link>
-            <ThemeToggle />
+            <div className="header-actions">
+              <AccountNav />
+              <ThemeToggle />
+            </div>
           </header>
           {children}
           <footer className="site-footer">

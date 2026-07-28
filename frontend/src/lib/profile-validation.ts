@@ -24,5 +24,11 @@ export const profileUpdateSchema = z.object({
   about: z.string().trim().max(300),
 });
 
+export const loginSchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(254),
+  password: z.string().min(1).max(128),
+});
+
 export type SignupInput = z.infer<typeof signupSchema>;
 export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;
