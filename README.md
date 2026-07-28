@@ -254,31 +254,85 @@ The API returns:
 
 ## System architecture
 
-The prototype separates offline data collection from the low-latency request
+LeagueWatch separates three concerns: the browser-facing Next.js application,
+the FastAPI ranking service, and durable account storage. PostgreSQL runs in
+Docker for reproducible local development; it is not on the NFL ranking request
 path.
 
 ```mermaid
-flowchart LR
-    subgraph Sync["Offline / explicit synchronization"]
-        NV["nflverse data"] --> NR["nflreadpy"]
-        NR --> DV["Schema and integrity validation"]
-        DV --> PQ["Local Parquet cache"]
-        ESPN["ESPN search"] --> HF["Pregame headline filters"]
-        HF --> HJ["Headline JSON cache"]
+flowchart TB
+    USER["Mobile or desktop browser"]
+
+    subgraph WEB["Next.js 16 and React 19"]
+        UI["LeagueWatch interface"]
+        RANK_PROXY["Rankings API proxy"]
+        AUTH["Better Auth API"]
+        PROFILE["Public profile pages and owner profile API"]
     end
 
-    subgraph Runtime["FastAPI runtime"]
-        PQ --> MEM["Validated SeasonData in memory"]
-        RQ["GET /api/v1/rankings"] --> PRE["Build preweek records, metrics, and standings"]
-        MEM --> PRE
-        PRE --> MQ["Calculate matchup quality"]
-        PRE --> CTX["Calculate rivalry and standings context"]
-        MQ --> SCORE["Compose and rank scores"]
-        CTX --> SCORE
-        SCORE --> SUMMARY["Compact GameSummary response"]
-        HJ --> SUMMARY
+    subgraph RANKING["Python ranking service"]
+        API["FastAPI GET /api/v1/rankings"]
+        ENGINE["Watchability v6 scoring and deterministic ranking"]
+        SEASON["Validated SeasonData in memory"]
+        HEADLINE_LOOKUP["Pregame headlines in memory"]
     end
+
+    subgraph LOCAL_DATA["Persisted NFL data"]
+        PARQUET["Normalized nflverse Parquet files"]
+        HEADLINE_JSON["Validated 2025 headline JSON"]
+    end
+
+    subgraph DOCKER["Docker Compose local infrastructure"]
+        POSTGRES["PostgreSQL 16<br/>users, password hashes, sessions, profiles"]
+        VOLUME["Named persistent volume"]
+    end
+
+    subgraph SYNC["Explicit offline synchronization"]
+        NFLVERSE["nflverse"]
+        NFLREADPY["nflreadpy loaders"]
+        VALIDATE["Schema and integrity validation"]
+        ESPN["ESPN search"]
+        FILTER["Pregame headline validation"]
+    end
+
+    USER --> UI
+    UI --> RANK_PROXY
+    RANK_PROXY --> API
+    API --> ENGINE
+    ENGINE -->|"compact JSON ratings"| RANK_PROXY
+
+    UI --> AUTH
+    UI --> PROFILE
+    AUTH --> POSTGRES
+    PROFILE --> POSTGRES
+    POSTGRES --- VOLUME
+
+    PARQUET -->|"loaded once at startup"| SEASON
+    HEADLINE_JSON -->|"loaded once at startup"| HEADLINE_LOOKUP
+    SEASON --> ENGINE
+    HEADLINE_LOOKUP --> ENGINE
+
+    NFLVERSE --> NFLREADPY
+    NFLREADPY --> VALIDATE
+    VALIDATE --> PARQUET
+    ESPN --> FILTER
+    FILTER --> HEADLINE_JSON
 ```
+
+The resulting boundaries are:
+
+- **Ranking path:** browser → Next.js proxy → FastAPI → in-memory scoring. It
+  does not query PostgreSQL, nflverse, ESPN, or an MCP server.
+- **Identity path:** browser → Better Auth or the profile API → PostgreSQL.
+  Password hashing and session handling remain isolated from FastAPI.
+- **Synchronization path:** explicit CLI commands download and validate NFL
+  data before replacing the local Parquet or JSON cache.
+- **Docker boundary:** only local PostgreSQL currently runs in Compose. Its
+  named volume preserves accounts when the container is recreated. A production
+  deployment can replace it with managed PostgreSQL without changing the
+  application data model.
+- **Current cache boundary:** source data is persisted and held in memory, but
+  final weekly rating responses are not cached in Redis.
 
 ### Request lifecycle
 
