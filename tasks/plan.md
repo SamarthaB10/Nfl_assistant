@@ -19,16 +19,16 @@ contract unchanged.
 
 ### Phase 1: PostgreSQL and identity foundation
 
-- [ ] Add reviewed Better Auth, Drizzle, PostgreSQL, and validation dependencies.
-- [ ] Add environment contract, local PostgreSQL service, typed schema, and
+- [x] Add reviewed Better Auth, Drizzle, PostgreSQL, and validation dependencies.
+- [x] Add environment contract, local PostgreSQL service, typed schema, and
   committed migration.
-- [ ] Add validation and public-profile mapping tests before implementation.
+- [x] Add validation and public-profile mapping tests before implementation.
 
 ### Checkpoint: Foundation
 
-- [ ] Focused validation/schema tests pass.
-- [ ] Typecheck, lint, and existing frontend tests pass.
-- [ ] Commit the database and identity foundation.
+- [x] Focused validation/schema tests pass.
+- [x] Typecheck, lint, and existing frontend tests pass.
+- [x] Commit the database and identity foundation.
 
 ### Phase 2: Authentication flow
 

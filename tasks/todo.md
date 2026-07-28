@@ -1,6 +1,6 @@
 # Accounts and Public Profiles Tasks
 
-- [ ] Task 1: Establish the PostgreSQL identity schema
+- [x] Task 1: Establish the PostgreSQL identity schema
   - Acceptance: Better Auth core tables and LeagueWatch profile fields are
     represented by typed Drizzle schema and a committed migration.
   - Verify: focused schema and validation tests, typecheck, lint.
