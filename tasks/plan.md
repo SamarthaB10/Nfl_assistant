@@ -1,58 +1,79 @@
-# Implementation Plan: Dynamic 55/45 Watchability Formula
+# Implementation Plan: Accounts and Public Profiles
 
 ## Overview
 
-Replace the record-first composition with the approved `55%` matchup-quality
-and `45%` context formula while preserving the compact API response and
-pregame-only data boundary.
+Implement the approved email/password account and public-profile specification
+inside the existing Next.js frontend. Keep FastAPI and the public rankings
+contract unchanged.
 
 ## Architecture Decisions
 
-- Derive scoring metrics from the existing nflverse schedule cache; add no
-  dependency or network request.
-- Put pure matchup math in `matchup_quality.py` and keep weekly aggregation in
-  `data.py`.
-- Preserve normalized raw values for sorting and convert only the displayed
-  score to `1.00–10.00`.
+- Next.js owns browser authentication, sessions, profile reads, and profile
+  writes.
+- Better Auth owns credentials and session lifecycle.
+- Drizzle owns the PostgreSQL schema and forward migrations.
+- Profile access uses narrow server-only functions and public DTOs.
+- Real image uploads remain out of scope; static defaults are used.
 
 ## Task List
 
-### Phase 1: Pregame quality foundation
+### Phase 1: PostgreSQL and identity foundation
 
-- [x] Add leakage-safe weekly offense and defense metrics.
-- [x] Add pure team-strength and matchup-closeness calculations.
+- [ ] Add reviewed Better Auth, Drizzle, PostgreSQL, and validation dependencies.
+- [ ] Add environment contract, local PostgreSQL service, typed schema, and
+  committed migration.
+- [ ] Add validation and public-profile mapping tests before implementation.
 
-### Checkpoint: Quality
+### Checkpoint: Foundation
 
-- [x] Focused data and matchup-quality tests pass.
-- [x] Commit the working quality slice.
+- [ ] Focused validation/schema tests pass.
+- [ ] Typecheck, lint, and existing frontend tests pass.
+- [ ] Commit the database and identity foundation.
 
-### Phase 2: Formula integration
+### Phase 2: Authentication flow
 
-- [x] Compose `55%` matchup quality and `45%` context in rankings.
-- [x] Add meaningful quality reasons without changing the response shape.
-- [x] Update formula version and expected API scores.
+- [ ] Configure Better Auth and mount the Next.js auth handler.
+- [ ] Add tested signup, login, sign-out, and session-aware header behavior.
+- [ ] Verify cookies, generic credential errors, and authentication rate limits.
 
-### Checkpoint: Integration
+### Checkpoint: Authentication
 
-- [x] Ranking and API tests pass.
-- [x] Commit the formula integration slice.
+- [ ] Auth-focused tests pass.
+- [ ] Typecheck, lint, build, and existing ranking tests pass.
+- [ ] Commit the working authentication slice.
 
-### Phase 3: Documentation and runtime
+### Phase 3: Public profile and owner editing
 
-- [x] Update `ELOformula.md` and `README.md`.
-- [x] Run the full test, lint, formatting, and live API checks.
-- [x] Push the feature branch.
+- [ ] Add public profile data access with a strict field allowlist.
+- [ ] Add `/u/[username]` and `/settings/profile`.
+- [ ] Add ownership checks and tested display-name/About updates.
+- [ ] Build and verify the mobile-first dark/light profile UI.
+
+### Checkpoint: Profile
+
+- [ ] Profile unit, component, and authorization tests pass.
+- [ ] Browser verification passes at mobile and desktop widths.
+- [ ] Commit the public-profile slice.
+
+### Phase 4: Final verification and documentation
+
+- [ ] Run frontend test, lint, typecheck, build, and dependency audit.
+- [ ] Run Python regressions to prove FastAPI remains unchanged.
+- [ ] Document local PostgreSQL and account setup.
+- [ ] Review the final diff for security, scope, and migration risks.
 
 ## Risks and Mitigations
 
 | Risk | Impact | Mitigation |
 | --- | --- | --- |
-| Future results leak into metrics | High | Filter every aggregate to `week < selectedWeek` and test it |
-| Early weeks have no sample | High | Reuse the existing four-game 2024 prior through Week 5 |
-| Similar displayed scores hide ordering | Medium | Sort on unrounded normalized values |
-| Correlated team inputs overstate strength | Medium | Use a transparent equal-weight team benchmark and document it |
+| Private fields leak into profiles | High | Explicit public DTO and negative tests |
+| Profile edits bypass ownership | High | Derive user ID only from a verified session |
+| Username collision under concurrency | High | Normalize input and use a database unique constraint |
+| Auth attempts are brute-forced | High | Database-backed Better Auth rate limiting |
+| Auth work breaks public rankings | Medium | Keep service boundary unchanged and run regression tests per slice |
+| Mobile profile drifts from reference | Medium | Build mobile-first and verify in a real browser |
 
 ## Open Questions
 
-None.
+None. PostgreSQL production hosting and image storage remain later deployment
+decisions.

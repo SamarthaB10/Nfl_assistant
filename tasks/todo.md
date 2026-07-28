@@ -1,27 +1,34 @@
-# Dynamic 55/45 Formula Tasks
+# Accounts and Public Profiles Tasks
 
-- [x] Task 1: Add pregame team scoring metrics
-  - Acceptance: points for/allowed and league-relative offense/defense values
-    exclude the target and future weeks.
-  - Verify: `uv run pytest tests/test_data.py -q`
-  - Files: `src/nflviewer/data.py`, `tests/test_data.py`
+- [ ] Task 1: Establish the PostgreSQL identity schema
+  - Acceptance: Better Auth core tables and LeagueWatch profile fields are
+    represented by typed Drizzle schema and a committed migration.
+  - Verify: focused schema and validation tests, typecheck, lint.
+  - Files: `frontend/src/db/`, `frontend/drizzle/`,
+    `frontend/drizzle.config.ts`, frontend package manifests.
 
-- [x] Task 2: Calculate pure matchup quality
-  - Acceptance: team strength, opposing offense-defense projections, and
-    closeness produce a bounded matchup-quality value.
-  - Verify: `uv run pytest tests/test_matchup_quality.py -q`
-  - Files: `src/nflviewer/matchup_quality.py`,
-    `tests/test_matchup_quality.py`
+- [ ] Task 2: Implement email/password authentication
+  - Acceptance: users can sign up, log in, keep a database session, and sign
+    out; invalid credentials are generic and auth requests are rate limited.
+  - Verify: auth unit/component tests, typecheck, lint, build.
+  - Files: `frontend/src/lib/auth*`, `frontend/src/app/api/auth/`,
+    login/signup components and pages, site header.
 
-- [x] Task 3: Integrate the 55/45 scoring formula
-  - Acceptance: final normalized score is exactly `55%` matchup quality and
-    `45%` context; raw sorting remains deterministic.
-  - Verify: `uv run pytest tests/test_ranking.py tests/test_api.py -q`
-  - Files: `src/nflviewer/ranking.py`, `src/nflviewer/models.py`,
-    `src/nflviewer/app.py`, ranking/API tests
+- [ ] Task 3: Implement public profile reads
+  - Acceptance: `/u/[username]` is public, responsive, and exposes only the
+    approved public fields with default images.
+  - Verify: DTO tests, component tests, not-found behavior, mobile browser pass.
+  - Files: `frontend/src/lib/profiles.ts`, `frontend/src/app/u/`,
+    `frontend/src/components/profile/`.
 
-- [x] Task 4: Document and verify the current formula
-  - Acceptance: docs contain every variable and live Week 2025 output uses the
-    new formula.
-  - Verify: full pytest, Ruff, formatting, and live HTTP request
-  - Files: `ELOformula.md`, `README.md`, health test
+- [ ] Task 4: Implement owner profile editing
+  - Acceptance: the signed-in owner can update display name and About; anonymous
+    users and other accounts cannot.
+  - Verify: authorization and form tests plus browser verification.
+  - Files: `frontend/src/app/settings/profile/`, profile validation/data access.
+
+- [ ] Task 5: Verify and document the complete feature
+  - Acceptance: frontend and Python regressions pass, migrations work from a
+    clean database, setup is documented, and the final diff passes review.
+  - Verify: npm test/lint/typecheck/build/audit, pytest/Ruff, live browser flow.
+  - Files: `README.md`, `.gitignore`, task tracking documents.
