@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss
+  version="2.0"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+>
+  <channel>
+    <item>
+      <title>Bengals training camp injury tracker</title>
+      <link>https://www.cbssports.com/nfl/news/bengals-training-camp-injuries/</link>
+      <description>Cincinnati receives an update from Wednesday's practice.</description>
+      <pubDate>Wed, 29 Jul 2026 18:18:09 +0000</pubDate>
+      <dc:creator>Example CBS Reporter</dc:creator>
+      <guid isPermaLink="false">cbs-article-123</guid>
+      <enclosure
+        url="https://sportshub.cbsistatic.com/i/example/bengals.jpg"
+        length="225512"
+        type="image/jpeg"
+      />
+    </item>
+  </channel>
+</rss>

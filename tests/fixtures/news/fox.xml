@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss
+  version="2.0"
+  xmlns:media="http://search.yahoo.com/mrss/"
+>
+  <channel>
+    <item>
+      <title>49ers report for the first day of training camp</title>
+      <link>https://www.foxsports.com/stories/nfl/49ers-training-camp</link>
+      <guid>https://www.foxsports.com/stories/nfl/49ers-training-camp</guid>
+      <description>San Francisco begins its current training-camp schedule.</description>
+      <pubDate>Wed, 29 Jul 2026 14:35:38 -0400</pubDate>
+      <media:content
+        url="https://statics.foxsports.com/example/49ers.jpg"
+        type="image/jpg"
+      />
+    </item>
+  </channel>
+</rss>

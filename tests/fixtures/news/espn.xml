@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss
+  version="2.0"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+>
+  <channel>
+    <item>
+      <title>Chiefs and Bills open training camp with healthy quarterbacks</title>
+      <description>Kansas City and Buffalo begin preparations for the current season.</description>
+      <dc:creator>Example ESPN Reporter</dc:creator>
+      <link>https://www.espn.com/nfl/story/_/id/123/current-training-camp</link>
+      <pubDate>Wed, 29 Jul 2026 13:12:06 EST</pubDate>
+      <guid isPermaLink="false">US-EN-123</guid>
+    </item>
+  </channel>
+</rss>

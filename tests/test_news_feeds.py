@@ -1,0 +1,155 @@
+from datetime import UTC
+from pathlib import Path
+
+import httpx
+import pytest
+
+from nflviewer.news.feeds import (
+    FEED_CONFIGS,
+    FeedResponseTooLargeError,
+    NewsSource,
+    RssFeedClient,
+    UnsafeFeedRedirectError,
+    parse_feed,
+)
+
+FIXTURES = Path(__file__).parent / "fixtures" / "news"
+
+
+@pytest.mark.parametrize(
+    ("source", "fixture", "expected"),
+    [
+        (
+            NewsSource.ESPN,
+            "espn.xml",
+            {
+                "source_article_id": "US-EN-123",
+                "author": "Example ESPN Reporter",
+                "image_url": None,
+                "team_codes": ("BUF", "KC"),
+            },
+        ),
+        (
+            NewsSource.CBS,
+            "cbs.xml",
+            {
+                "source_article_id": "cbs-article-123",
+                "author": "Example CBS Reporter",
+                "image_url": "https://sportshub.cbsistatic.com/i/example/bengals.jpg",
+                "team_codes": ("CIN",),
+            },
+        ),
+        (
+            NewsSource.FOX,
+            "fox.xml",
+            {
+                "source_article_id": "https://www.foxsports.com/stories/nfl/49ers-training-camp",
+                "author": None,
+                "image_url": "https://statics.foxsports.com/example/49ers.jpg",
+                "team_codes": ("SF",),
+            },
+        ),
+    ],
+)
+def test_parse_feed_normalizes_current_publisher_metadata(
+    source: NewsSource,
+    fixture: str,
+    expected: dict[str, object],
+) -> None:
+    articles = parse_feed(source, (FIXTURES / fixture).read_bytes())
+
+    assert len(articles) == 1
+    article = articles[0]
+    assert article.source is source
+    assert article.source_article_id == expected["source_article_id"]
+    assert article.author == expected["author"]
+    assert article.image_url == expected["image_url"]
+    assert article.team_codes == expected["team_codes"]
+    assert article.published_at.tzinfo is UTC
+    assert article.published_at.year == 2026
+
+
+def test_parse_feed_rejects_non_publisher_article_urls() -> None:
+    payload = b"""<?xml version="1.0"?>
+    <rss version="2.0"><channel><item>
+      <title>Patriots training camp update</title>
+      <link>http://127.0.0.1/internal</link>
+      <pubDate>Wed, 29 Jul 2026 18:18:09 +0000</pubDate>
+      <guid>unsafe</guid>
+    </item></channel></rss>"""
+
+    assert parse_feed(NewsSource.ESPN, payload) == []
+
+
+@pytest.mark.parametrize("declaration", [b"<!DOCTYPE rss>", b"<!ENTITY x 'unsafe'>"])
+def test_parse_feed_rejects_xml_declarations_that_can_expand_entities(
+    declaration: bytes,
+) -> None:
+    payload = b"<?xml version='1.0'?>" + declaration + b"<rss />"
+
+    with pytest.raises(ValueError, match="Unsafe XML declaration"):
+        parse_feed(NewsSource.ESPN, payload)
+
+
+@pytest.mark.anyio
+async def test_feed_client_fetches_only_the_configured_official_url() -> None:
+    requested_urls: list[str] = []
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        requested_urls.append(str(request.url))
+        return httpx.Response(200, content=(FIXTURES / "espn.xml").read_bytes())
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http_client:
+        articles = await RssFeedClient(http_client).fetch(NewsSource.ESPN)
+
+    assert requested_urls == [FEED_CONFIGS[NewsSource.ESPN].url]
+    assert len(articles) == 1
+
+
+@pytest.mark.anyio
+async def test_feed_client_rejects_oversized_responses() -> None:
+    async def handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, content=b"x" * 129)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http_client:
+        client = RssFeedClient(http_client, max_response_bytes=128)
+
+        with pytest.raises(FeedResponseTooLargeError):
+            await client.fetch(NewsSource.ESPN)
+
+
+@pytest.mark.anyio
+async def test_feed_client_follows_only_same_publisher_https_redirects() -> None:
+    requested_urls: list[str] = []
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        requested_urls.append(str(request.url))
+        if request.url.path.endswith("/news"):
+            return httpx.Response(302, headers={"location": "/espn/rss/nfl/current"})
+        return httpx.Response(200, content=(FIXTURES / "espn.xml").read_bytes())
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http_client:
+        articles = await RssFeedClient(http_client).fetch(NewsSource.ESPN)
+
+    assert len(articles) == 1
+    assert requested_urls[-1] == "https://www.espn.com/espn/rss/nfl/current"
+
+
+@pytest.mark.anyio
+async def test_feed_client_rejects_redirects_to_unapproved_hosts() -> None:
+    async def handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(302, headers={"location": "http://127.0.0.1/internal"})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http_client:
+        with pytest.raises(UnsafeFeedRedirectError):
+            await RssFeedClient(http_client).fetch(NewsSource.ESPN)
+
+
+def test_feed_configs_target_current_nfl_feeds() -> None:
+    assert set(FEED_CONFIGS) == {
+        NewsSource.ESPN,
+        NewsSource.CBS,
+        NewsSource.FOX,
+    }
+    assert all(config.url.startswith("https://") for config in FEED_CONFIGS.values())
+    assert all("2025" not in config.url for config in FEED_CONFIGS.values())
