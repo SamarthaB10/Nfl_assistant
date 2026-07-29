@@ -327,6 +327,9 @@ the FastAPI ranking service, and durable account storage. PostgreSQL runs in
 Docker for reproducible local development; it is not on the NFL ranking request
 path.
 
+For a file-level orientation of every runtime path, see the
+[LeagueWatch codebase mind map](docs/codebase-mind-map.md).
+
 ```mermaid
 flowchart TB
     USER["Mobile or desktop browser"]
