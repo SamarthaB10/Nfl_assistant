@@ -20,12 +20,12 @@ export async function generateMetadata({
 
   return profile
     ? {
-        title: `${profile.displayName} (@${profile.username}) | LeagueWatch`,
+        title: `${profile.displayName} (@${profile.username}) | Drizzle`,
         description:
-          profile.about || `View @${profile.username} on LeagueWatch.`,
+          profile.about || `View @${profile.username} on Drizzle.`,
       }
     : {
-        title: "Profile not found | LeagueWatch",
+        title: "Profile not found | Drizzle",
       };
 }
 

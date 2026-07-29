@@ -11,7 +11,7 @@ describe("SiteNavigation", () => {
       "href",
       "/",
     );
-    expect(screen.getByRole("link", { name: "Headlines" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "LIVE NEWS" })).toHaveAttribute(
       "href",
       "/headlines",
     );
@@ -24,7 +24,7 @@ describe("SiteNavigation", () => {
   it("marks the headlines tab as the current page", () => {
     render(<SiteNavigationView pathname="/headlines" />);
 
-    expect(screen.getByRole("link", { name: "Headlines" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "LIVE NEWS" })).toHaveAttribute(
       "aria-current",
       "page",
     );

@@ -26,6 +26,7 @@ describe("PublicProfileView", () => {
       screen.getByText("Watching every divisional matchup."),
     ).toBeInTheDocument();
     expect(screen.getByText("Joined September 2025")).toBeInTheDocument();
+    expect(screen.getByText("Drizzle profile")).toBeInTheDocument();
     expect(screen.queryByText(/karma/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/followers/i)).not.toBeInTheDocument();
   });

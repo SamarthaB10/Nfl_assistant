@@ -96,12 +96,10 @@ export function HeadlinesWorkspace() {
     <main className="headlines-workspace">
       <header className="headlines-hero">
         <p className="section-kicker">Live NFL desk</p>
-        <h1>
-          The league, <span>right now.</span>
-        </h1>
+        <h1>LIVE NEWS</h1>
         <p>
-          Current reporting from ESPN, CBS Sports, and FOX Sports—collected in
-          one clean feed and refreshed every hour.
+          Current reporting from ESPN, CBS Sports, and FOX Sports. One clean
+          feed, refreshed every hour.
         </p>
       </header>
 

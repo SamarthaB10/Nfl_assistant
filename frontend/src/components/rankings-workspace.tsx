@@ -65,9 +65,8 @@ export function RankingsWorkspace() {
   return (
     <main className="workspace">
       <header className="hero">
-        <h1>
-          Know what’s <span>worth watching.</span>
-        </h1>
+        <h1 className="hero-brand-title">DRIZZLE</h1>
+        <p className="hero-value">Know what’s worth watching.</p>
         <p>
           Every matchup, ranked by team quality, rivalry, and playoff stakes.
         </p>

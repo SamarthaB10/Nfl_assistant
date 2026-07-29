@@ -9,7 +9,7 @@ interface SiteNavigationViewProps {
 
 const TABS = [
   { href: "/", label: "Matchups" },
-  { href: "/headlines", label: "Headlines" },
+  { href: "/headlines", label: "LIVE NEWS" },
 ] as const;
 
 export function SiteNavigationView({ pathname }: SiteNavigationViewProps) {

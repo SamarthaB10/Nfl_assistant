@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow_Condensed, Inter } from "next/font/google";
+import { Barlow_Condensed, Dancing_Script, Inter } from "next/font/google";
 import Link from "next/link";
 
 import { AccountNav } from "@/components/auth/account-nav";
@@ -20,15 +20,21 @@ const body = Inter({
   variable: "--font-body",
 });
 
+const script = Dancing_Script({
+  subsets: ["latin"],
+  variable: "--font-script",
+  weight: ["600", "700"],
+});
+
 export const metadata: Metadata = {
-  title: "LeagueWatch | Matchups worth watching",
+  title: "Drizzle | Matchups worth watching",
   description:
     "Rank every 2025 NFL matchup by team quality, rivalry, and playoff stakes.",
 };
 
 export const viewport: Viewport = {
   colorScheme: "dark light",
-  themeColor: "#050505",
+  themeColor: "#32302f",
 };
 
 const themeInitializer = `
@@ -53,15 +59,15 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitializer }} />
       </head>
-      <body className={`${display.variable} ${body.variable}`}>
+      <body className={`${display.variable} ${body.variable} ${script.variable}`}>
         <div className="site-shell">
           <header className="site-header">
-            <Link className="brand" href="/" aria-label="LeagueWatch home">
+            <Link className="brand" href="/" aria-label="Drizzle home">
               <span className="brand-mark" aria-hidden="true">
-                L
+                DZ
               </span>
-              <span>
-                LEAGUE<strong>WATCH</strong>
+              <span aria-hidden="true" className="brand-wordmark">
+                DRIZZLE
               </span>
             </Link>
             <SiteNavigation />

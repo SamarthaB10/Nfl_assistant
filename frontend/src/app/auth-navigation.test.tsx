@@ -8,11 +8,19 @@ describe("authentication page navigation", () => {
   it.each([
     ["login", LoginPage],
     ["signup", SignupPage],
-  ])("links from the %s page to the LeagueWatch home page", (_page, Page) => {
+  ])("links from the %s page to the Drizzle home page", (_page, Page) => {
     render(<Page />);
 
     expect(
-      screen.getByRole("link", { name: "LeagueWatch home" }),
+      screen.getByRole("link", { name: "Drizzle home" }),
     ).toHaveAttribute("href", "/");
+  });
+
+  it("uses the Drizzle brand on the signup page", () => {
+    render(<SignupPage />);
+
+    expect(
+      screen.getByRole("heading", { name: "Join Drizzle" }),
+    ).toBeInTheDocument();
   });
 });

@@ -59,9 +59,10 @@ describe("RankingsWorkspace", () => {
 
     expect(
       screen.getByRole("heading", {
-        name: "Know what’s worth watching.",
+        name: "DRIZZLE",
       }),
     ).toBeInTheDocument();
+    expect(screen.getByText("Know what’s worth watching.")).toBeInTheDocument();
     expect(screen.queryByText("Live model v6")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Loading matchups")).toBeInTheDocument();
     expect(
@@ -158,7 +159,7 @@ describe("RankingsWorkspace", () => {
       "fetch",
       vi.fn().mockResolvedValue(
         Response.json(
-          { detail: "Unable to reach the LeagueWatch API." },
+          { detail: "Unable to reach the Drizzle API." },
           { status: 502 },
         ),
       ),
@@ -167,7 +168,7 @@ describe("RankingsWorkspace", () => {
     render(<RankingsWorkspace />);
 
     expect(
-      await screen.findByText("Unable to reach the LeagueWatch API."),
+      await screen.findByText("Unable to reach the Drizzle API."),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Rank matchups" }),

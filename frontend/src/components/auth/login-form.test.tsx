@@ -12,6 +12,7 @@ describe("LoginForm", () => {
       "email",
     );
     expect(screen.queryByLabelText("Username")).not.toBeInTheDocument();
+    expect(screen.getByText("New to Drizzle?")).toBeInTheDocument();
   });
 
   it("shows a generic message when credentials are rejected", async () => {

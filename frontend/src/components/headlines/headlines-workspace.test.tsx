@@ -45,7 +45,7 @@ describe("HeadlinesWorkspace", () => {
     render(<HeadlinesWorkspace />);
 
     expect(
-      screen.getByRole("heading", { name: "The league, right now." }),
+      screen.getByRole("heading", { name: "LIVE NEWS" }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Loading headlines")).toBeInTheDocument();
     expect(

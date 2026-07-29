@@ -49,7 +49,7 @@ describe("GET /api/rankings", () => {
 
     expect(response.status).toBe(502);
     await expect(response.json()).resolves.toEqual({
-      detail: "Unable to reach the LeagueWatch API.",
+      detail: "Unable to reach the Drizzle API.",
     });
   });
 });

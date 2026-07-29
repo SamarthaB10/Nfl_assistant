@@ -4,8 +4,8 @@ import Link from "next/link";
 import { LoginForm } from "@/components/auth/login-form";
 
 export const metadata: Metadata = {
-  title: "Log in | LeagueWatch",
-  description: "Log in to your LeagueWatch NFL profile.",
+  title: "Log in | Drizzle",
+  description: "Log in to your Drizzle NFL profile.",
 };
 
 export default function LoginPage() {
@@ -14,7 +14,7 @@ export default function LoginPage() {
       <section className="auth-page__intro">
         <Link className="auth-home-link" href="/">
           <span aria-hidden="true">←</span>
-          LeagueWatch home
+          Drizzle home
         </Link>
         <p className="section-kicker">Back for another week.</p>
         <h1>Welcome back</h1>

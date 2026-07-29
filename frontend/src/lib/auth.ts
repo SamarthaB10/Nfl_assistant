@@ -13,7 +13,7 @@ import { signupIdentitySchema } from "./profile-validation";
 const appUrl = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
 
 export const auth = betterAuth({
-  appName: "LeagueWatch",
+  appName: "Drizzle",
   baseURL: appUrl,
   secret: process.env.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, {

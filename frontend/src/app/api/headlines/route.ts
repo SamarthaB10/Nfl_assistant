@@ -36,7 +36,7 @@ export async function GET(request: Request): Promise<Response> {
     });
   } catch {
     return Response.json(
-      { detail: "Unable to reach the LeagueWatch API." },
+      { detail: "Unable to reach the Drizzle API." },
       { status: 502 },
     );
   }

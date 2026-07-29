@@ -42,7 +42,7 @@ export function PublicProfileView({
             />
           </div>
           <div className="profile-title">
-            <p className="section-kicker">LeagueWatch profile</p>
+            <p className="section-kicker">Drizzle profile</p>
             <h1 id="profile-name">{profile.displayName}</h1>
             <p className="profile-handle">@{profile.username}</p>
           </div>
@@ -72,7 +72,7 @@ export function PublicProfileView({
         <h2 id="coming-heading">Your season starts here</h2>
         <p>
           Favorite teams and personal matchup recommendations are the next
-          account features coming to LeagueWatch.
+          account features coming to Drizzle.
         </p>
         <Link href="/">Explore this week&apos;s rankings</Link>
       </section>

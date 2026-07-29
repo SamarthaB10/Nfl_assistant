@@ -92,7 +92,7 @@ export function LoginForm({
         {isSubmitting ? "Logging in…" : "Log in"}
       </button>
       <p className="auth-switch">
-        New to LeagueWatch? <Link href="/signup">Create an account</Link>
+        New to Drizzle? <Link href="/signup">Create an account</Link>
       </p>
     </form>
   );

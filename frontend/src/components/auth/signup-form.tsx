@@ -91,7 +91,7 @@ export function SignupForm({
       <AuthField
         autoComplete="username"
         error={fieldErrors.username}
-        hint="3–24 lowercase letters, numbers, or underscores"
+        hint="3-24 lowercase letters, numbers, or underscores"
         label="Username"
         name="username"
         placeholder="sunday_fan"

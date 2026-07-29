@@ -7,7 +7,7 @@ import { auth } from "@/lib/auth";
 import { getEditableProfile } from "@/lib/profiles";
 
 export const metadata: Metadata = {
-  title: "Edit profile | LeagueWatch",
+  title: "Edit profile | Drizzle",
 };
 
 export const dynamic = "force-dynamic";

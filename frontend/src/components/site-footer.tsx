@@ -13,7 +13,7 @@ export function SiteFooterView({ pathname }: SiteFooterViewProps) {
         <div className="footer-meta">
           <p>Current NFL coverage · Updated hourly</p>
           <p>Headlines via ESPN, CBS Sports, and FOX Sports</p>
-          <p>LeagueWatch stores metadata only. Stories open at the publisher.</p>
+          <p>Drizzle stores metadata only. Stories open at the publisher.</p>
         </div>
       </footer>
     );
@@ -38,14 +38,14 @@ export function SiteFooterView({ pathname }: SiteFooterViewProps) {
               aria-hidden="true"
               className="rating-legend__dot rating-legend__dot--high"
             />
-            7.00–10
+            7.00-10
           </li>
           <li>
             <span
               aria-hidden="true"
               className="rating-legend__dot rating-legend__dot--mid"
             />
-            5.50–6.99
+            5.50-6.99
           </li>
           <li>
             <span
