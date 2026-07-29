@@ -40,6 +40,10 @@ experience; favorite-team personalization remains future work.
 - Gives each account a unique public handle and mobile-first public profile.
 - Lets profile owners edit their display name and About text without exposing
   their private email address.
+- Aggregates current NFL offseason, transaction, injury, and training-camp
+  coverage from the official ESPN, CBS Sports, and FOX Sports RSS feeds.
+- Refreshes live headlines hourly, retains one rolling year in PostgreSQL, and
+  exposes cursor pagination with optional publisher and team filters.
 - Dynamically selects one active offensive player per team and explains each
   selection with two or three statistics available before that game.
 - Explains ratings of `3.20` or lower with specific quality, blowout-risk, and
@@ -70,7 +74,8 @@ cd frontend
 npm ci
 npm run db:migrate
 cd ..
-uv run fastapi dev
+DATABASE_URL=postgresql://leaguewatch:leaguewatch@127.0.0.1:5433/leaguewatch \
+  uv run fastapi dev
 ```
 
 In a second terminal:
@@ -134,6 +139,12 @@ it is optional and makes requests to ESPN's search endpoint:
 ```bash
 uv run python -m nflviewer.sync_headlines
 ```
+
+That cache is used only for historical 2025 matchup explanations. The
+standalone live Headlines service does not import it. When FastAPI starts with
+`DATABASE_URL` configured, it reads current articles from the official ESPN,
+CBS Sports, and FOX Sports feeds, stores them in `news_articles`, and checks for
+updates once per hour.
 
 ## API
 
@@ -252,6 +263,59 @@ The API returns:
   `top` and `bottom`;
 - `503` from the rankings endpoint when the NFL data cache could not be loaded.
 
+### `GET /api/v1/headlines`
+
+Returns current NFL reporting stored in PostgreSQL, newest first. This feed is
+independent from the historical 2025 ranking data and is intended for current
+offseason and training-camp coverage.
+
+| Query field | Default | Validation | Meaning |
+| --- | --- | --- | --- |
+| `limit` | `20` | Integer `1–50` | Maximum stories returned |
+| `cursor` | none | Opaque cursor from the prior response | Continue pagination |
+| `source` | none | `ESPN`, `CBS`, or `FOX` | Filter by publisher |
+| `team` | none | NFL abbreviation such as `NE` | Filter by tagged team |
+
+```bash
+# Newest 20 stories
+curl "http://127.0.0.1:8000/api/v1/headlines"
+
+# Up to 20 Patriots stories from ESPN
+curl "http://127.0.0.1:8000/api/v1/headlines?source=ESPN&team=NE"
+```
+
+Example response:
+
+```json
+{
+  "items": [
+    {
+      "id": 10482,
+      "source": "ESPN",
+      "title": "Example current NFL headline",
+      "author": "Example Author",
+      "excerpt": "Feed-provided summary.",
+      "url": "https://www.espn.com/nfl/story/_/id/example",
+      "imageUrl": "https://example.com/image.jpg",
+      "teamCodes": ["NE"],
+      "publishedAt": "2026-07-29T19:02:00Z"
+    }
+  ],
+  "nextCursor": null,
+  "hasMore": false
+}
+```
+
+Pass `nextCursor` unchanged as the next request's `cursor`. Invalid filters or
+cursors return `422`. If `DATABASE_URL` is missing or PostgreSQL is
+unavailable, this endpoint returns `503`; rankings remain available.
+
+The hourly synchronizer starts with FastAPI, runs immediately when stored
+source data is stale, and uses a PostgreSQL advisory lock to prevent duplicate
+work across API instances. Publisher failures are isolated, so successfully
+stored stories remain readable and other publishers can still refresh. Rows
+older than one year by publisher timestamp are removed after synchronization.
+
 ## System architecture
 
 LeagueWatch separates three concerns: the browser-facing Next.js application,
@@ -277,13 +341,19 @@ flowchart TB
         HEADLINE_LOOKUP["Pregame headlines in memory"]
     end
 
+    subgraph LIVE_NEWS["Current NFL news service"]
+        NEWS_API["FastAPI GET /api/v1/headlines"]
+        SCHEDULER["Hourly isolated synchronizer"]
+        FEEDS["Official ESPN, CBS, and FOX RSS"]
+    end
+
     subgraph LOCAL_DATA["Persisted NFL data"]
         PARQUET["Normalized nflverse Parquet files"]
         HEADLINE_JSON["Validated 2025 headline JSON"]
     end
 
     subgraph DOCKER["Docker Compose local infrastructure"]
-        POSTGRES["PostgreSQL 16<br/>users, password hashes, sessions, profiles"]
+        POSTGRES["PostgreSQL 16<br/>accounts, profiles, and live news_articles"]
         VOLUME["Named persistent volume"]
     end
 
@@ -312,6 +382,11 @@ flowchart TB
     SEASON --> ENGINE
     HEADLINE_LOOKUP --> ENGINE
 
+    UI --> NEWS_API
+    NEWS_API --> POSTGRES
+    SCHEDULER --> FEEDS
+    SCHEDULER --> POSTGRES
+
     NFLVERSE --> NFLREADPY
     NFLREADPY --> VALIDATE
     VALIDATE --> PARQUET
@@ -325,12 +400,15 @@ The resulting boundaries are:
   does not query PostgreSQL, nflverse, ESPN, or an MCP server.
 - **Identity path:** browser → Better Auth or the profile API → PostgreSQL.
   Password hashing and session handling remain isolated from FastAPI.
+- **Live-news path:** browser → FastAPI → PostgreSQL. A separate hourly
+  background task ingests only current official RSS metadata; live publisher
+  requests never occur in a user request.
 - **Synchronization path:** explicit CLI commands download and validate NFL
-  data before replacing the local Parquet or JSON cache.
-- **Docker boundary:** only local PostgreSQL currently runs in Compose. Its
-  named volume preserves accounts when the container is recreated. A production
-  deployment can replace it with managed PostgreSQL without changing the
-  application data model.
+  ranking data before replacing the local Parquet or historical JSON cache.
+- **Docker boundary:** only local PostgreSQL runs in Compose. Its named volume
+  preserves accounts and live headline metadata when the container is
+  recreated. A production deployment can replace it with managed PostgreSQL
+  without changing the application data model.
 - **Current cache boundary:** source data is persisted and held in memory, but
   final weekly rating responses are not cached in Redis.
 
