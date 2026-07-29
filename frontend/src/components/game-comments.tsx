@@ -38,20 +38,16 @@ async function resolveCurrentSession(): Promise<boolean> {
   return Boolean(data?.user);
 }
 
-function replaceComment(
+function removeCommentFromTree(
   comments: GameComment[],
   commentId: number,
-  update: (comment: GameComment) => GameComment,
 ): GameComment[] {
-  return comments.map((comment) => {
-    if (comment.id === commentId) {
-      return update(comment);
-    }
-    return {
+  return comments
+    .filter((comment) => comment.id !== commentId)
+    .map((comment) => ({
       ...comment,
-      replies: replaceComment(comment.replies, commentId, update),
-    };
-  });
+      replies: removeCommentFromTree(comment.replies, commentId),
+    }));
 }
 
 function appendReply(
@@ -197,14 +193,7 @@ export function GameComments({
     setError("");
     try {
       await removeComment(commentId);
-      setComments((current) =>
-        replaceComment(current, commentId, (comment) => ({
-          ...comment,
-          body: "Comment deleted.",
-          isDeleted: true,
-          canDelete: false,
-        })),
-      );
+      setComments((current) => removeCommentFromTree(current, commentId));
     } catch (caught) {
       setError(
         caught instanceof Error

@@ -20,8 +20,6 @@ import {
 } from "./comment-validation";
 import { DEFAULT_AVATAR_URL } from "./public-profile";
 
-const DELETED_COMMENT_BODY = "Comment deleted.";
-
 const commentSelection = {
   id: gameComments.id,
   gameKey: gameComments.gameKey,
@@ -74,7 +72,7 @@ function toGameComment(
 ): GameComment {
   return {
     id: row.id,
-    body: row.isDeleted ? DELETED_COMMENT_BODY : row.body,
+    body: row.body,
     isDeleted: row.isDeleted,
     createdAt: row.createdAt.toISOString(),
     canDelete: !row.isDeleted && row.userId === viewerId,
@@ -117,6 +115,7 @@ export async function getGameComments({
       and(
         eq(gameComments.gameKey, gameKey),
         isNull(gameComments.parentCommentId),
+        eq(gameComments.isDeleted, false),
         cursorCondition,
       ),
     )
@@ -137,6 +136,7 @@ export async function getGameComments({
             and(
               eq(gameComments.gameKey, gameKey),
               inArray(gameComments.parentCommentId, parentIds),
+              eq(gameComments.isDeleted, false),
             ),
           )
           .orderBy(asc(gameComments.createdAt), asc(gameComments.id));
@@ -225,22 +225,16 @@ export async function createGameComment({
   return toGameComment(row, userId);
 }
 
-export async function softDeleteOwnComment(
+export async function deleteOwnComment(
   commentId: number,
   userId: string,
 ): Promise<boolean> {
   const deleted = await db
-    .update(gameComments)
-    .set({
-      body: "",
-      isDeleted: true,
-      updatedAt: new Date(),
-    })
+    .delete(gameComments)
     .where(
       and(
         eq(gameComments.id, commentId),
         eq(gameComments.userId, userId),
-        eq(gameComments.isDeleted, false),
       ),
     )
     .returning({ id: gameComments.id });

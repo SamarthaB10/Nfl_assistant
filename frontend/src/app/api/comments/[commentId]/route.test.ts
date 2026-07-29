@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getSession = vi.fn();
-const softDeleteOwnComment = vi.fn();
+const deleteOwnComment = vi.fn();
 
 vi.mock("@/lib/auth", () => ({
   auth: {
@@ -12,7 +12,7 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 vi.mock("@/lib/comments", () => ({
-  softDeleteOwnComment,
+  deleteOwnComment,
 }));
 
 const context = {
@@ -22,7 +22,7 @@ const context = {
 describe("DELETE /api/comments/:commentId", () => {
   beforeEach(() => {
     getSession.mockReset();
-    softDeleteOwnComment.mockReset();
+    deleteOwnComment.mockReset();
   });
 
   it("requires authentication", async () => {
@@ -35,12 +35,12 @@ describe("DELETE /api/comments/:commentId", () => {
     );
 
     expect(response.status).toBe(401);
-    expect(softDeleteOwnComment).not.toHaveBeenCalled();
+    expect(deleteOwnComment).not.toHaveBeenCalled();
   });
 
-  it("uses the session user for an author-owned soft delete", async () => {
+  it("uses the session user for an author-owned hard delete", async () => {
     getSession.mockResolvedValue({ user: { id: "session-user" } });
-    softDeleteOwnComment.mockResolvedValue(true);
+    deleteOwnComment.mockResolvedValue(true);
     const { DELETE } = await import("./route");
 
     const response = await DELETE(
@@ -49,12 +49,12 @@ describe("DELETE /api/comments/:commentId", () => {
     );
 
     expect(response.status).toBe(204);
-    expect(softDeleteOwnComment).toHaveBeenCalledWith(17, "session-user");
+    expect(deleteOwnComment).toHaveBeenCalledWith(17, "session-user");
   });
 
   it("returns a generic not-found response for invalid ownership", async () => {
     getSession.mockResolvedValue({ user: { id: "another-user" } });
-    softDeleteOwnComment.mockResolvedValue(false);
+    deleteOwnComment.mockResolvedValue(false);
     const { DELETE } = await import("./route");
 
     const response = await DELETE(

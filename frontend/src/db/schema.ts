@@ -165,7 +165,9 @@ export const gameComments = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     parentCommentId: bigint("parent_comment_id", {
       mode: "number",
-    }).references((): AnyPgColumn => gameComments.id),
+    }).references((): AnyPgColumn => gameComments.id, {
+      onDelete: "cascade",
+    }),
     body: text("body").notNull(),
     isDeleted: boolean("is_deleted").default(false).notNull(),
     createdAt,

@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { commentIdSchema } from "@/lib/comment-validation";
-import { softDeleteOwnComment } from "@/lib/comments";
+import { deleteOwnComment } from "@/lib/comments";
 
 type CommentRouteContext = {
   params: Promise<{ commentId: string }>;
@@ -23,7 +23,7 @@ export async function DELETE(
     return Response.json({ error: "Invalid comment ID." }, { status: 422 });
   }
 
-  const deleted = await softDeleteOwnComment(
+  const deleted = await deleteOwnComment(
     parsedCommentId.data,
     session.user.id,
   );

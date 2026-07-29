@@ -143,7 +143,10 @@ describe("GameComments", () => {
       })[0],
     );
     await waitFor(() => expect(removeComment).toHaveBeenCalledWith(4));
-    expect(screen.getByText("Comment deleted.")).toBeInTheDocument();
+    expect(
+      screen.queryByText("This division title game is appointment viewing."),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Comment deleted.")).not.toBeInTheDocument();
   });
 
   it("loads the next cursor page without replacing existing comments", async () => {

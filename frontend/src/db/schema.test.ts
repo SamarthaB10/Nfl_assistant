@@ -78,8 +78,11 @@ describe("news article schema", () => {
 });
 
 describe("game comment schema", () => {
-  it("stores game-scoped comments, authors, replies, and soft deletion", () => {
+  it("stores game-scoped comments and cascades reply deletion", () => {
     const config = getTableConfig(gameComments);
+    const replyForeignKey = config.foreignKeys.find((foreignKey) =>
+      foreignKey.reference().columns.includes(gameComments.parentCommentId),
+    );
 
     expect(config.name).toBe("game_comments");
     expect(gameComments.gameKey.notNull).toBe(true);
@@ -91,6 +94,7 @@ describe("game comment schema", () => {
     expect(gameComments.createdAt.notNull).toBe(true);
     expect(gameComments.updatedAt.notNull).toBe(true);
     expect(config.foreignKeys).toHaveLength(2);
+    expect(replyForeignKey?.onDelete).toBe("cascade");
   });
 
   it("defines game cursor, reply order, and author lookup indexes", () => {
