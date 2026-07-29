@@ -13,6 +13,7 @@ from nflviewer.news.feeds import FeedArticle, NewsSource
 logger = logging.getLogger(__name__)
 
 REFRESH_INTERVAL = timedelta(hours=1)
+FAILED_REFRESH_RETRY_INTERVAL = timedelta(minutes=1)
 
 
 class FeedClient(Protocol):
@@ -53,12 +54,14 @@ class NewsSyncService:
         now: Callable[[], datetime] | None = None,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         refresh_interval: timedelta = REFRESH_INTERVAL,
+        failed_refresh_retry_interval: timedelta = FAILED_REFRESH_RETRY_INTERVAL,
     ) -> None:
         self._repository = repository
         self._client = client
         self._now = now or (lambda: datetime.now(UTC))
         self._sleep = sleep
         self._refresh_interval = refresh_interval
+        self._failed_refresh_retry_interval = failed_refresh_retry_interval
 
     async def _refresh_source(self, source: NewsSource) -> tuple[NewsSource, int, bool]:
         try:
@@ -101,10 +104,14 @@ class NewsSyncService:
 
     async def run_forever(self) -> None:
         while True:
+            sleep_interval = self._refresh_interval
             try:
-                await self.synchronize_once()
+                result = await self.synchronize_once()
+                if result.failed_sources:
+                    sleep_interval = self._failed_refresh_retry_interval
             except asyncio.CancelledError:
                 raise
             except Exception:
                 logger.exception("NFL news synchronization cycle failed")
-            await self._sleep(self._refresh_interval.total_seconds())
+                sleep_interval = self._failed_refresh_retry_interval
+            await self._sleep(sleep_interval.total_seconds())

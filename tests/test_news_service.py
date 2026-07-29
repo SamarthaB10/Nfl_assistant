@@ -100,9 +100,10 @@ async def test_one_publisher_failure_does_not_block_other_sources() -> None:
     assert {articles[0].source for articles in repository.upserts} == {
         NewsSource.ESPN,
         NewsSource.FOX,
+        NewsSource.NBC,
     }
     assert result.failed_sources == (NewsSource.CBS,)
-    assert result.stored_articles == 2
+    assert result.stored_articles == 3
     assert repository.retention_cutoffs == [datetime(2025, 7, 29, 18, tzinfo=UTC)]
 
 
@@ -149,6 +150,26 @@ async def test_scheduler_task_can_be_cancelled_cleanly() -> None:
 
     with pytest.raises(asyncio.CancelledError):
         await task
+
+
+@pytest.mark.anyio
+async def test_scheduler_retries_failed_publishers_before_the_hourly_refresh() -> None:
+    recorded_sleeps: list[float] = []
+
+    async def stop_after_sleep(seconds: float) -> None:
+        recorded_sleeps.append(seconds)
+        raise asyncio.CancelledError
+
+    service = NewsSyncService(
+        FakeRepository(),
+        FakeFeedClient(failing_source=NewsSource.CBS),
+        sleep=stop_after_sleep,
+    )
+
+    with pytest.raises(asyncio.CancelledError):
+        await service.run_forever()
+
+    assert recorded_sleeps == [60.0]
 
 
 def test_app_lifespan_opens_and_closes_the_news_runtime() -> None:

@@ -1,4 +1,4 @@
-export type HeadlineSource = "ESPN" | "CBS" | "FOX";
+export type HeadlineSource = "ESPN" | "CBS" | "FOX" | "NBC";
 export type HeadlineSourceFilter = "ALL" | HeadlineSource;
 
 export interface HeadlineItem {

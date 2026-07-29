@@ -40,6 +40,7 @@ const PUBLISHER_OPTIONS: PickerOption<HeadlineSourceFilter>[] = [
   { label: "ESPN", value: "ESPN" },
   { label: "CBS Sports", value: "CBS" },
   { label: "FOX Sports", value: "FOX" },
+  { label: "NBC Sports", value: "NBC" },
 ];
 
 const TEAM_OPTIONS: PickerOption<string>[] = [

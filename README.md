@@ -41,7 +41,8 @@ experience; favorite-team personalization remains future work.
 - Lets profile owners edit their display name and About text without exposing
   their private email address.
 - Aggregates current NFL offseason, transaction, injury, and training-camp
-  coverage from the official ESPN, CBS Sports, and FOX Sports RSS feeds.
+  coverage from the official ESPN, CBS Sports, FOX Sports, and NBC Sports
+  syndication feeds.
 - Refreshes live headlines hourly, retains one rolling year in PostgreSQL, and
   exposes cursor pagination with optional publisher and team filters.
 - Provides a mobile-first Headlines tab with article imagery, publisher/team
@@ -147,8 +148,9 @@ uv run python -m nflviewer.sync_headlines
 That cache is used only for historical 2025 matchup explanations. The
 standalone live Headlines service does not import it. When FastAPI starts with
 `DATABASE_URL` configured, it reads current articles from the official ESPN,
-CBS Sports, and FOX Sports feeds, stores them in `news_articles`, and checks for
-updates once per hour.
+CBS Sports, FOX Sports, and NBC Sports feeds, stores them in `news_articles`,
+and checks for updates once per hour. NBC Atom entries are enriched from their
+canonical article metadata for author, image, and publisher-provided team tags.
 
 ## API
 
@@ -277,7 +279,7 @@ offseason and training-camp coverage.
 | --- | --- | --- | --- |
 | `limit` | `20` | Integer `1–50` | Maximum stories returned |
 | `cursor` | none | Opaque cursor from the prior response | Continue pagination |
-| `source` | none | `ESPN`, `CBS`, or `FOX` | Filter by publisher |
+| `source` | none | `ESPN`, `CBS`, `FOX`, or `NBC` | Filter by publisher |
 | `team` | none | NFL abbreviation such as `NE` | Filter by tagged team |
 
 ```bash
@@ -351,7 +353,7 @@ flowchart TB
     subgraph LIVE_NEWS["Current NFL news service"]
         NEWS_API["FastAPI GET /api/v1/headlines"]
         SCHEDULER["Hourly isolated synchronizer"]
-        FEEDS["Official ESPN, CBS, and FOX RSS"]
+        FEEDS["Official ESPN, CBS, FOX, and NBC syndication feeds"]
     end
 
     subgraph LOCAL_DATA["Persisted NFL data"]

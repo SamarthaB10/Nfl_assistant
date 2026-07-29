@@ -117,7 +117,7 @@ class GameSummary(APIModel):
     players_to_watch: list[PlayerSpotlight] = Field(default_factory=list)
 
 
-HeadlineSource = Literal["ESPN", "CBS", "FOX"]
+HeadlineSource = Literal["ESPN", "CBS", "FOX", "NBC"]
 
 
 class HeadlinesQuery(BaseModel):

@@ -13,7 +13,7 @@ const contentSecurityPolicy = [
   "object-src 'none'",
   developmentScriptPolicy,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https://a.espncdn.com https://sportshub.cbsistatic.com https://a57.foxsports.com https://statics.foxsports.com",
+  "img-src 'self' data: https://a.espncdn.com https://sportshub.cbsistatic.com https://a57.foxsports.com https://statics.foxsports.com https://nbcsports.brightspotcdn.com",
   "font-src 'self' data:",
   "connect-src 'self'",
 ].join("; ");
@@ -66,6 +66,10 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "statics.foxsports.com",
+      },
+      {
+        protocol: "https",
+        hostname: "nbcsports.brightspotcdn.com",
       },
     ],
   },

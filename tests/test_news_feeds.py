@@ -49,6 +49,16 @@ FIXTURES = Path(__file__).parent / "fixtures" / "news"
                 "team_codes": ("SF",),
             },
         ),
+        (
+            NewsSource.NBC,
+            "nbc.atom",
+            {
+                "source_article_id": "urn:uuid:nbc-article-123",
+                "author": "NBC Sports",
+                "image_url": None,
+                "team_codes": ("NE",),
+            },
+        ),
     ],
 )
 def test_parse_feed_normalizes_current_publisher_metadata(
@@ -162,6 +172,55 @@ async def test_feed_client_fetches_only_the_configured_official_url() -> None:
 
 
 @pytest.mark.anyio
+async def test_nbc_feed_uses_article_metadata_for_author_image_and_team() -> None:
+    requested_urls: list[str] = []
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        requested_urls.append(str(request.url))
+        if request.url.path == "/nfl.atom":
+            return httpx.Response(200, content=(FIXTURES / "nbc.atom").read_bytes())
+        return httpx.Response(200, content=(FIXTURES / "nbc-article.html").read_bytes())
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http_client:
+        articles = await RssFeedClient(
+            http_client,
+            nbc_article_delay_seconds=0,
+        ).fetch(NewsSource.NBC)
+
+    assert requested_urls == [
+        "https://www.nbcsports.com/nfl.atom",
+        (
+            "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/"
+            "drake-maye-returns-to-practice"
+        ),
+    ]
+    assert articles[0].author == "Example NBC Reporter"
+    assert articles[0].image_url == ("https://nbcsports.brightspotcdn.com/example/drake-maye.jpg")
+    assert articles[0].excerpt == ("The Patriots welcomed their quarterback back to practice.")
+    assert articles[0].team_codes == ("NE",)
+
+
+@pytest.mark.anyio
+async def test_nbc_feed_keeps_atom_metadata_when_article_enrichment_fails() -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/nfl.atom":
+            return httpx.Response(200, content=(FIXTURES / "nbc.atom").read_bytes())
+        return httpx.Response(503)
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http_client:
+        articles = await RssFeedClient(
+            http_client,
+            nbc_article_delay_seconds=0,
+        ).fetch(NewsSource.NBC)
+
+    assert articles
+    assert articles[0].source is NewsSource.NBC
+    assert articles[0].author == "NBC Sports"
+    assert articles[0].image_url is None
+    assert articles[0].team_codes == ("NE",)
+
+
+@pytest.mark.anyio
 async def test_feed_client_rejects_oversized_responses() -> None:
     async def handler(_: httpx.Request) -> httpx.Response:
         return httpx.Response(200, content=b"x" * 129)
@@ -205,6 +264,7 @@ def test_feed_configs_target_current_nfl_feeds() -> None:
         NewsSource.ESPN,
         NewsSource.CBS,
         NewsSource.FOX,
+        NewsSource.NBC,
     }
     assert all(config.url.startswith("https://") for config in FEED_CONFIGS.values())
     assert all("2025" not in config.url for config in FEED_CONFIGS.values())

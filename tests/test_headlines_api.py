@@ -98,7 +98,7 @@ def test_headlines_passes_valid_cursor_source_and_team_filters() -> None:
             params={
                 "limit": 35,
                 "cursor": cursor,
-                "source": "CBS",
+                "source": "NBC",
                 "team": "NE",
             },
         )
@@ -108,7 +108,7 @@ def test_headlines_passes_valid_cursor_source_and_team_filters() -> None:
         {
             "limit": 35,
             "cursor": cursor,
-            "source": NewsSource.CBS,
+            "source": NewsSource.NBC,
             "team": "NE",
         }
     ]

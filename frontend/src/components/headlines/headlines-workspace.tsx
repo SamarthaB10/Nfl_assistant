@@ -98,8 +98,8 @@ export function HeadlinesWorkspace() {
         <p className="section-kicker">Live NFL desk</p>
         <h1>LIVE NEWS</h1>
         <p>
-          Current reporting from ESPN, CBS Sports, and FOX Sports. One clean
-          feed, refreshed every hour.
+          Current reporting from ESPN, CBS Sports, FOX Sports, and NBC Sports.
+          One clean feed, refreshed every hour.
         </p>
       </header>
 

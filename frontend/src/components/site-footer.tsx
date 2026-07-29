@@ -12,7 +12,7 @@ export function SiteFooterView({ pathname }: SiteFooterViewProps) {
       <footer className="site-footer">
         <div className="footer-meta">
           <p>Current NFL coverage · Updated hourly</p>
-          <p>Headlines via ESPN, CBS Sports, and FOX Sports</p>
+          <p>Headlines via ESPN, CBS Sports, FOX Sports, and NBC Sports</p>
           <p>Drizzle stores metadata only. Stories open at the publisher.</p>
         </div>
       </footer>

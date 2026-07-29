@@ -33,6 +33,16 @@ describe("HeadlineFilters", () => {
     expect(document.querySelector("select")).not.toBeInTheDocument();
 
     fireEvent.click(
+      screen.getByRole("combobox", { name: "Publisher: All publishers" }),
+    );
+    expect(
+      screen.getByRole("option", { name: "NBC Sports" }),
+    ).toBeInTheDocument();
+
+    fireEvent.keyDown(screen.getByRole("listbox", { name: "Publisher" }), {
+      key: "Escape",
+    });
+    fireEvent.click(
       screen.getByRole("combobox", { name: "Team: All NFL teams" }),
     );
 

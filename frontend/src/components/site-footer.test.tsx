@@ -8,7 +8,9 @@ describe("SiteFooter", () => {
     render(<SiteFooterView pathname="/headlines" />);
 
     expect(screen.getByText("Current NFL coverage · Updated hourly")).toBeInTheDocument();
-    expect(screen.getByText(/ESPN, CBS Sports, and FOX Sports/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/ESPN, CBS Sports, FOX Sports, and NBC Sports/),
+    ).toBeInTheDocument();
     expect(
       screen.queryByLabelText("Watch rating color guide"),
     ).not.toBeInTheDocument();
