@@ -44,6 +44,8 @@ experience; favorite-team personalization remains future work.
   coverage from the official ESPN, CBS Sports, and FOX Sports RSS feeds.
 - Refreshes live headlines hourly, retains one rolling year in PostgreSQL, and
   exposes cursor pagination with optional publisher and team filters.
+- Provides a mobile-first Headlines tab with article imagery, publisher/team
+  controls, loading and failure states, and cursor-based “Load 20 more.”
 - Dynamically selects one active offensive player per team and explains each
   selection with two or three statistics available before that game.
 - Explains ratings of `3.20` or lower with specific quality, blowout-risk, and
@@ -93,6 +95,7 @@ files under `data/processed/`. Subsequent syncs use the local files unless
 Open:
 
 - Web app: <http://localhost:3000>
+- Current NFL headlines: <http://localhost:3000/headlines>
 - Swagger UI: <http://127.0.0.1:8000/docs>
 - Health endpoint: <http://127.0.0.1:8000/health>
 
@@ -123,9 +126,10 @@ Authentication and profile storage stay inside Next.js. FastAPI serves public
 NFL ranking and headline data, but never receives passwords, session tokens, or
 user email addresses.
 
-The frontend proxies `/api/rankings` to FastAPI so the browser does not need a
-separate CORS configuration. Set `NFL_API_BASE_URL` before starting Next.js
-only when FastAPI is not available at `http://127.0.0.1:8000`.
+The frontend proxies `/api/rankings` and `/api/headlines` to FastAPI so the
+browser does not need a separate CORS configuration. Set `NFL_API_BASE_URL`
+before starting Next.js only when FastAPI is not available at
+`http://127.0.0.1:8000`.
 
 To replace the local nflverse cache:
 
