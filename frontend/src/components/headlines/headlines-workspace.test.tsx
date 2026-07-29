@@ -27,6 +27,13 @@ const cbsStory = {
   publishedAt: "2026-07-29T18:18:09Z",
 };
 
+function chooseFilter(label: string, option: string) {
+  fireEvent.click(
+    screen.getByRole("combobox", { name: new RegExp(`^${label}:`) }),
+  );
+  fireEvent.click(screen.getByRole("option", { name: option }));
+}
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
@@ -87,12 +94,8 @@ describe("HeadlinesWorkspace", () => {
     render(<HeadlinesWorkspace />);
     await screen.findByRole("heading", { name: espnStory.title });
 
-    fireEvent.change(screen.getByLabelText("Publisher"), {
-      target: { value: "CBS" },
-    });
-    fireEvent.change(screen.getByLabelText("Team"), {
-      target: { value: "BUF" },
-    });
+    chooseFilter("Publisher", "CBS Sports");
+    chooseFilter("Team", "Buffalo Bills");
     fireEvent.click(screen.getByRole("button", { name: "Update feed" }));
 
     await waitFor(() => {
@@ -204,12 +207,8 @@ describe("HeadlinesWorkspace", () => {
     render(<HeadlinesWorkspace />);
     await screen.findByRole("heading", { name: espnStory.title });
 
-    fireEvent.change(screen.getByLabelText("Publisher"), {
-      target: { value: "CBS" },
-    });
-    fireEvent.change(screen.getByLabelText("Team"), {
-      target: { value: "BUF" },
-    });
+    chooseFilter("Publisher", "CBS Sports");
+    chooseFilter("Team", "Buffalo Bills");
     fireEvent.click(screen.getByRole("button", { name: "Update feed" }));
     await screen.findByText(
       "Current NFL headlines are temporarily unavailable.",

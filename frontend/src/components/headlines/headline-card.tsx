@@ -62,9 +62,9 @@ export function HeadlineCard({ headline }: HeadlineCardProps) {
                       <Image
                         alt=""
                         aria-hidden="true"
-                        height={22}
+                        height={34}
                         src={team.logoUrl}
-                        width={22}
+                        width={34}
                       />
                     </span>
                   ) : (
