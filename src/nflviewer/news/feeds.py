@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import xml.etree.ElementTree as ET
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
@@ -120,18 +121,34 @@ def _normalized(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", value.lower()).strip()
 
 
-def _team_codes(title: str, excerpt: str | None) -> tuple[str, ...]:
+def _team_codes(
+    title: str,
+    excerpt: str | None,
+    *,
+    player_team_codes: Mapping[str, str] | None = None,
+) -> tuple[str, ...]:
     content = _normalized(f"{title} {excerpt or ''}")
-    return tuple(
-        sorted(
+    padded_content = f" {content} "
+    team_codes = {
+        team_id
+        for team_id, aliases in TEAM_ALIASES.items()
+        if any(re.search(rf"\b{re.escape(_normalized(alias))}\b", content) for alias in aliases)
+    }
+    if player_team_codes:
+        team_codes.update(
             team_id
-            for team_id, aliases in TEAM_ALIASES.items()
-            if any(re.search(rf"\b{re.escape(_normalized(alias))}\b", content) for alias in aliases)
+            for player_name, team_id in player_team_codes.items()
+            if f" {player_name} " in padded_content
         )
-    )
+    return tuple(sorted(team_codes))
 
 
-def parse_feed(source: NewsSource, payload: bytes) -> list[FeedArticle]:
+def parse_feed(
+    source: NewsSource,
+    payload: bytes,
+    *,
+    player_team_codes: Mapping[str, str] | None = None,
+) -> list[FeedArticle]:
     upper_payload = payload.upper()
     if b"<!DOCTYPE" in upper_payload or b"<!ENTITY" in upper_payload:
         raise ValueError("Unsafe XML declaration")
@@ -164,7 +181,7 @@ def parse_feed(source: NewsSource, payload: bytes) -> list[FeedArticle]:
                 excerpt=excerpt,
                 canonical_url=canonical_url,
                 image_url=_image_url(item, config),
-                team_codes=_team_codes(title, excerpt),
+                team_codes=_team_codes(title, excerpt, player_team_codes=player_team_codes),
                 published_at=published_at,
             )
         )
@@ -177,9 +194,11 @@ class RssFeedClient:
         http_client: httpx.AsyncClient,
         *,
         max_response_bytes: int = DEFAULT_MAX_RESPONSE_BYTES,
+        player_team_codes: Mapping[str, str] | None = None,
     ) -> None:
         self._http_client = http_client
         self._max_response_bytes = max_response_bytes
+        self._player_team_codes = dict(player_team_codes or {})
 
     async def fetch(self, source: NewsSource) -> list[FeedArticle]:
         config = FEED_CONFIGS[source]
@@ -213,5 +232,9 @@ class RssFeedClient:
                         raise FeedResponseTooLargeError(
                             f"{source} feed exceeded {self._max_response_bytes} bytes"
                         )
-            return parse_feed(source, bytes(content))
+            return parse_feed(
+                source,
+                bytes(content),
+                player_team_codes=self._player_team_codes,
+            )
         raise UnsafeFeedRedirectError(f"Too many {source} feed redirects")

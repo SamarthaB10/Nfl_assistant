@@ -2,6 +2,7 @@ from collections.abc import Callable
 from contextlib import AbstractContextManager
 
 import polars as pl
+import pytest
 from fastapi.testclient import TestClient
 
 from nflviewer.app import create_app
@@ -137,6 +138,21 @@ def client_for(loader: Callable[[], SeasonData]) -> AbstractContextManager[TestC
 
 
 def test_health_reports_loaded_data() -> None:
+    with client_for(season_data) as client:
+        response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json()["dataLoaded"] is True
+
+
+def test_health_keeps_rankings_available_when_player_team_map_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_player_team_map(_: SeasonData) -> dict[str, str]:
+        raise ValueError("invalid roster mapping")
+
+    monkeypatch.setattr(SeasonData, "player_team_codes", fail_player_team_map)
+
     with client_for(season_data) as client:
         response = client.get("/health")
 

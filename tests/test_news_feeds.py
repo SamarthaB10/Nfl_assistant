@@ -81,6 +81,61 @@ def test_parse_feed_rejects_non_publisher_article_urls() -> None:
     assert parse_feed(NewsSource.ESPN, payload) == []
 
 
+def test_parse_feed_tags_a_player_only_article_with_the_latest_roster_team() -> None:
+    payload = b"""<?xml version="1.0"?>
+    <rss version="2.0"><channel><item>
+      <title>Patrick Mahomes returns to practice</title>
+      <description>The quarterback is expected to be ready for camp.</description>
+      <link>https://www.espn.com/nfl/story/_/id/456/mahomes-returns</link>
+      <pubDate>Wed, 29 Jul 2026 18:18:09 +0000</pubDate>
+      <guid>mahomes-returns</guid>
+    </item></channel></rss>"""
+
+    articles = parse_feed(
+        NewsSource.ESPN,
+        payload,
+        player_team_codes={"patrick mahomes": "KC"},
+    )
+
+    assert articles[0].team_codes == ("KC",)
+
+
+def test_parse_feed_preserves_explicit_team_tags_alongside_player_tags() -> None:
+    payload = b"""<?xml version="1.0"?>
+    <rss version="2.0"><channel><item>
+      <title>Patrick Mahomes watches the Bills open camp</title>
+      <link>https://www.espn.com/nfl/story/_/id/789/mahomes-bills</link>
+      <pubDate>Wed, 29 Jul 2026 18:18:09 +0000</pubDate>
+      <guid>mahomes-bills</guid>
+    </item></channel></rss>"""
+
+    articles = parse_feed(
+        NewsSource.ESPN,
+        payload,
+        player_team_codes={"patrick mahomes": "KC"},
+    )
+
+    assert articles[0].team_codes == ("BUF", "KC")
+
+
+def test_parse_feed_does_not_match_player_surnames_without_the_full_name() -> None:
+    payload = b"""<?xml version="1.0"?>
+    <rss version="2.0"><channel><item>
+      <title>Mahomes returns to practice</title>
+      <link>https://www.espn.com/nfl/story/_/id/101/mahomes-returns</link>
+      <pubDate>Wed, 29 Jul 2026 18:18:09 +0000</pubDate>
+      <guid>surname-only</guid>
+    </item></channel></rss>"""
+
+    articles = parse_feed(
+        NewsSource.ESPN,
+        payload,
+        player_team_codes={"patrick mahomes": "KC"},
+    )
+
+    assert articles[0].team_codes == ()
+
+
 @pytest.mark.parametrize("declaration", [b"<!DOCTYPE rss>", b"<!ENTITY x 'unsafe'>"])
 def test_parse_feed_rejects_xml_declarations_that_can_expand_entities(
     declaration: bytes,

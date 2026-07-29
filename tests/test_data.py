@@ -178,6 +178,60 @@ def test_returns_non_active_espn_ids_for_matchup_teams_and_week() -> None:
     assert unavailable == ["4595348"]
 
 
+def test_builds_player_team_map_from_each_players_latest_unambiguous_roster_week() -> None:
+    weekly_rosters = pl.DataFrame(
+        [
+            {
+                "season": 2025,
+                "week": 1,
+                "team": "NE",
+                "espn_id": 1,
+                "status": "ACT",
+                "full_name": "Drake Maye",
+                "gsis_id": "drake-maye",
+                "position": "QB",
+            },
+            {
+                "season": 2025,
+                "week": 2,
+                "team": "TB",
+                "espn_id": 1,
+                "status": "ACT",
+                "full_name": "Drake Maye",
+                "gsis_id": "drake-maye",
+                "position": "QB",
+            },
+            {
+                "season": 2025,
+                "week": 2,
+                "team": "KC",
+                "espn_id": 2,
+                "status": "ACT",
+                "full_name": "Shared Name",
+                "gsis_id": "shared-kc",
+                "position": "WR",
+            },
+            {
+                "season": 2025,
+                "week": 3,
+                "team": "SF",
+                "espn_id": 3,
+                "status": "ACT",
+                "full_name": "Shared Name",
+                "gsis_id": "shared-sf",
+                "position": "WR",
+            },
+        ]
+    )
+    data = SeasonData.from_frames(
+        schedule_rows(),
+        team_rows(),
+        weekly_rosters=weekly_rosters,
+    )
+
+    assert data.player_team_codes() == {"drake maye": "TB"}
+
+
 def test_treats_missing_weekly_roster_status_as_non_active() -> None:
     weekly_rosters = weekly_roster_rows().with_columns(
         pl.when(pl.col("espn_id") == 4595348).then(None).otherwise(pl.col("status")).alias("status")

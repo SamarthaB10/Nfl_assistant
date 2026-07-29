@@ -147,11 +147,17 @@ def create_app(
         news_task: asyncio.Task[None] | None = None
         http_client: httpx.AsyncClient | None = None
         news_repository_open = False
+        player_team_codes: dict[str, str] = {}
         try:
             app.state.season_data = data_repository.get()
         except Exception:
             logger.exception("Unable to load NFL season data")
             app.state.season_data = None
+        else:
+            try:
+                player_team_codes = app.state.season_data.player_team_codes()
+            except Exception:
+                logger.exception("Unable to build player-team map for news classification")
         app.state.news_repository = None
         if news_repository is not None:
             try:
@@ -161,7 +167,10 @@ def create_app(
                 active_feed_client = news_feed_client
                 if active_feed_client is None:
                     http_client = httpx.AsyncClient(timeout=httpx.Timeout(10.0))
-                    active_feed_client = RssFeedClient(http_client)
+                    active_feed_client = RssFeedClient(
+                        http_client,
+                        player_team_codes=player_team_codes,
+                    )
                 news_service = NewsSyncService(news_repository, active_feed_client)
                 news_task = asyncio.create_task(
                     news_service.run_forever(),

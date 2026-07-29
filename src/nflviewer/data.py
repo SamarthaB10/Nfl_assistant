@@ -380,6 +380,50 @@ class SeasonData:
         )
         return sorted(set(unavailable["espn_id"].to_list()))
 
+    def player_team_codes(self) -> dict[str, str]:
+        """Return conservative normalized player-name to latest roster-team mappings."""
+        roster = (
+            self._weekly_rosters.filter(
+                pl.col("full_name").is_not_null() & pl.col("team").is_not_null()
+            )
+            .with_columns(
+                pl.when(pl.col("gsis_id").fill_null("").str.strip_chars() != "")
+                .then(pl.concat_str([pl.lit("gsis:"), pl.col("gsis_id")]))
+                .when(pl.col("espn_id").fill_null("").str.strip_chars() != "")
+                .then(pl.concat_str([pl.lit("espn:"), pl.col("espn_id")]))
+                .otherwise(None)
+                .alias("player_id"),
+                pl.col("full_name")
+                .str.to_lowercase()
+                .str.replace_all(r"[^a-z0-9]+", " ")
+                .str.strip_chars()
+                .alias("player_name")
+            )
+            .filter(pl.col("player_id").is_not_null() & (pl.col("player_name") != ""))
+        )
+        if roster.is_empty():
+            return {}
+
+        latest_week = roster.group_by("player_id").agg(pl.col("week").max().alias("week"))
+        latest_roster = roster.join(latest_week, on=["player_id", "week"], how="inner")
+        unambiguous_players = (
+            latest_roster.group_by("player_id")
+            .agg(pl.col("team").n_unique().alias("team_count"))
+            .filter(pl.col("team_count") == 1)
+            .select("player_id")
+        )
+        unambiguous = (
+            latest_roster.join(unambiguous_players, on="player_id", how="inner")
+            .group_by("player_name")
+            .agg(
+                pl.col("player_id").n_unique().alias("player_count"),
+                pl.col("team").n_unique().alias("team_count"),
+                pl.col("team").first().alias("team"),
+            )
+            .filter((pl.col("player_count") == 1) & (pl.col("team_count") == 1))
+        )
+        return dict(unambiguous.select("player_name", "team").iter_rows())
+
     def player_spotlights_before_week(
         self,
         week: int,
