@@ -23,6 +23,14 @@ export function GameCard({ game, gameKey, rank }: GameCardProps) {
     name: names[index] ?? teamId,
     record,
   }));
+  const finalScores = game.finalScores ?? {};
+  const hasFinalScores =
+    teams.length === 2 &&
+    teams.every((team) => Number.isInteger(finalScores[team.id]));
+  const winningScore =
+    hasFinalScores && finalScores[teams[0].id] !== finalScores[teams[1].id]
+      ? Math.max(finalScores[teams[0].id], finalScores[teams[1].id])
+      : null;
   const headline = game.reasons.find((reason) => reason.startsWith("Headline:"));
   const reasons = game.reasons.filter((reason) => !reason.startsWith("Headline:"));
   let ratingClass = "";
@@ -63,28 +71,50 @@ export function GameCard({ game, gameKey, rank }: GameCardProps) {
         </span>
 
         <span className="team-stack">
-          {teams.map((team) => (
-            <span className="team-line" key={team.id}>
-              <span className="team-logo">
-                {team.logoUrl ? (
-                  <Image
-                    alt={`${team.id} logo`}
-                    height={56}
-                    src={team.logoUrl}
-                    width={56}
-                  />
-                ) : (
-                  <span aria-hidden="true">{team.id}</span>
-                )}
-              </span>
-              <span className="team-copy">
-                <strong>{team.name}</strong>
-                <span>
-                  {team.id} · {team.record}
+          {teams.map((team) => {
+            const finalScore = hasFinalScores ? finalScores[team.id] : null;
+            const isWinner =
+              finalScore !== null &&
+              winningScore !== null &&
+              finalScore === winningScore;
+
+            return (
+              <span className="team-line" key={team.id}>
+                <span className="team-logo">
+                  {team.logoUrl ? (
+                    <Image
+                      alt={`${team.id} logo`}
+                      height={56}
+                      src={team.logoUrl}
+                      width={56}
+                    />
+                  ) : (
+                    <span aria-hidden="true">{team.id}</span>
+                  )}
+                </span>
+                <span className="team-copy">
+                  <span className="team-name-line">
+                    <strong>{team.name}</strong>
+                    {finalScore !== null && (
+                      <span
+                        aria-label={`${team.name} final score ${finalScore}${
+                          isWinner ? ", winner" : ""
+                        }`}
+                        className={`team-final-score${
+                          isWinner ? " is-winner" : ""
+                        }`}
+                      >
+                        – {finalScore}
+                      </span>
+                    )}
+                  </span>
+                  <span className="team-record">
+                    {team.id} · {team.record}
+                  </span>
                 </span>
               </span>
-            </span>
-          ))}
+            );
+          })}
         </span>
 
         <span className={`rating-block${ratingClass}`}>

@@ -20,6 +20,7 @@ export interface GameSummary {
   matchup: string;
   records: Record<string, string>;
   logos: Record<string, string | null>;
+  finalScores?: Record<string, number>;
   score: number;
   reasons: string[];
   unavailablePlayerIds?: string[];

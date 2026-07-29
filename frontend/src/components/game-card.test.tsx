@@ -4,6 +4,74 @@ import { describe, expect, it } from "vitest";
 import { GameCard } from "./game-card";
 
 describe("GameCard", () => {
+  it("shows final scores beside each team and marks only the winner", () => {
+    render(
+      <GameCard
+        gameKey="2025_01_SF_SEA"
+        game={{
+          matchup: "San Francisco 49ers vs Seattle Seahawks",
+          records: { SF: "0-0", SEA: "0-0" },
+          logos: { SF: null, SEA: null },
+          finalScores: { SF: 17, SEA: 30 },
+          score: 7.2,
+          reasons: [],
+        }}
+        rank={1}
+      />,
+    );
+
+    const winningScore = screen.getByLabelText(
+      "Seattle Seahawks final score 30, winner",
+    );
+    const losingScore = screen.getByLabelText(
+      "San Francisco 49ers final score 17",
+    );
+
+    expect(winningScore).toHaveTextContent("– 30");
+    expect(winningScore).toHaveClass("is-winner");
+    expect(losingScore).toHaveTextContent("– 17");
+    expect(losingScore).not.toHaveClass("is-winner");
+  });
+
+  it("does not show scores when a game has not finished", () => {
+    render(
+      <GameCard
+        gameKey="2025_02_BUF_DAL"
+        game={{
+          matchup: "Buffalo Bills vs Dallas Cowboys",
+          records: { BUF: "1-0", DAL: "1-0" },
+          logos: { BUF: null, DAL: null },
+          finalScores: {},
+          score: 6.4,
+          reasons: [],
+        }}
+        rank={1}
+      />,
+    );
+
+    expect(screen.queryByLabelText(/final score/)).not.toBeInTheDocument();
+  });
+
+  it("does not mark either team as the winner when a game ends tied", () => {
+    render(
+      <GameCard
+        gameKey="2025_01_CIN_GB"
+        game={{
+          matchup: "Cincinnati Bengals vs Green Bay Packers",
+          records: { CIN: "0-0", GB: "0-0" },
+          logos: { CIN: null, GB: null },
+          finalScores: { CIN: 27, GB: 27 },
+          score: 6.8,
+          reasons: [],
+        }}
+        rank={1}
+      />,
+    );
+
+    expect(document.querySelectorAll(".team-final-score")).toHaveLength(2);
+    expect(document.querySelectorAll(".team-final-score.is-winner")).toHaveLength(0);
+  });
+
   it("assigns rating colors at the 7.0 and 5.5 boundaries", () => {
     render(
       <ul>

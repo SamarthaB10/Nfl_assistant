@@ -181,6 +181,7 @@ def test_rankings_returns_all_games_in_rank_order() -> None:
                 "NE": "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png",
                 "BUF": "https://a.espncdn.com/i/teamlogos/nfl/500/buf.png",
             },
+            "finalScores": {"NE": 14, "BUF": 28},
             "score": 3.73,
             "reasons": ["Divisional matchup"],
             "unavailablePlayerIds": [],
@@ -193,6 +194,7 @@ def test_rankings_returns_all_games_in_rank_order() -> None:
                 "NYG": "https://a.espncdn.com/i/teamlogos/nfl/500/nyg.png",
                 "DAL": "https://a.espncdn.com/i/teamlogos/nfl/500/dal.png",
             },
+            "finalScores": {"NYG": 10, "DAL": 24},
             "score": 1.81,
             "reasons": [
                 "Divisional matchup",
@@ -220,6 +222,7 @@ def test_rankings_applies_top_after_scoring_all_games() -> None:
                 "NE": "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png",
                 "BUF": "https://a.espncdn.com/i/teamlogos/nfl/500/buf.png",
             },
+            "finalScores": {"NE": 14, "BUF": 28},
             "score": 3.73,
             "reasons": ["Divisional matchup"],
             "unavailablePlayerIds": [],
@@ -244,6 +247,7 @@ def test_rankings_returns_bottom_games_worst_first() -> None:
                 "NYG": "https://a.espncdn.com/i/teamlogos/nfl/500/nyg.png",
                 "DAL": "https://a.espncdn.com/i/teamlogos/nfl/500/dal.png",
             },
+            "finalScores": {"NYG": 10, "DAL": 24},
             "score": 1.81,
             "reasons": [
                 "Divisional matchup",
@@ -271,7 +275,24 @@ def test_rankings_show_each_current_record_before_the_selected_week() -> None:
 
     assert response.status_code == 200
     assert response.json()[0]["records"] == {"BUF": "1-0", "DAL": "1-0"}
+    assert response.json()[0]["finalScores"] == {}
     assert response.json()[0]["unavailablePlayerIds"] == ["1234567"]
+
+
+def test_rankings_include_final_scores_for_completed_games() -> None:
+    with client_for(season_data) as client:
+        response = client.get("/api/v1/rankings", params={"week": 1})
+
+    assert response.status_code == 200
+    games_by_matchup = {game["matchup"]: game for game in response.json()}
+    assert games_by_matchup["New England Patriots vs Buffalo Bills"]["finalScores"] == {
+        "NE": 14,
+        "BUF": 28,
+    }
+    assert games_by_matchup["New York Giants vs Dallas Cowboys"]["finalScores"] == {
+        "NYG": 10,
+        "DAL": 24,
+    }
 
 
 def test_rankings_adds_cached_headline_without_changing_score(tmp_path) -> None:

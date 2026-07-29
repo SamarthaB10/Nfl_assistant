@@ -16,10 +16,11 @@ beside the watchability rating. Opening a matchup reveals its ranking reasons,
 validated pregame headline, and two active player spotlights—one per team—with
 pregame season totals, league-position context, and recent performance.
 
-The FastAPI response stays focused: matchup, actual pregame records, logo URLs,
-rating, human-readable reasons, and the two player spotlights needed by the
-interface. This repository currently implements the general NFL-watcher
-experience; favorite-team personalization remains future work.
+The FastAPI response stays focused: matchup, actual pregame records, final
+scores when available, logo URLs, rating, human-readable reasons, and the two
+player spotlights needed by the interface. This repository currently
+implements the general NFL-watcher experience; favorite-team personalization
+remains future work.
 
 ## Current capabilities
 
@@ -195,6 +196,10 @@ Example response:
       "SEA": "https://a.espncdn.com/i/teamlogos/nfl/500/sea.png",
       "SF": "https://a.espncdn.com/i/teamlogos/nfl/500/sf.png"
     },
+    "finalScores": {
+      "SEA": 13,
+      "SF": 3
+    },
     "score": 8.39,
     "reasons": [
       "Both teams have winning records",
@@ -211,7 +216,8 @@ Example response:
 
 The displayed records are the actual 2025 records before that game. Early
 season prior values affect scoring only; they are never shown as the team's
-record.
+record. `finalScores` is populated from nflverse only when both teams have a
+score; unfinished games return an empty object.
 
 ### Weekly player availability
 

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import ClassVar, Literal, Self
+from typing import Annotated, ClassVar, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pydantic.alias_generators import to_camel
@@ -111,6 +111,7 @@ class GameSummary(APIModel):
     matchup: str
     records: dict[str, str]
     logos: dict[str, str | None] = Field(default_factory=dict)
+    final_scores: dict[str, Annotated[int, Field(ge=0)]] = Field(default_factory=dict)
     score: float = Field(ge=1, le=10)
     reasons: list[str]
     unavailable_player_ids: list[str] = Field(default_factory=list)

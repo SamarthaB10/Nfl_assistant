@@ -41,11 +41,13 @@ def test_game_summary_accepts_ten_point_watchability_score() -> None:
     game = GameSummary(
         matchup="Team A vs Team B",
         records={"A": "10-2", "B": "11-1"},
+        final_scores={"A": 24, "B": 27},
         score=10,
         reasons=[],
     )
 
     assert game.score == 10
+    assert game.model_dump(by_alias=True)["finalScores"] == {"A": 24, "B": 27}
     assert game.logos == {}
     assert game.unavailable_player_ids == []
     assert game.model_dump(by_alias=True)["unavailablePlayerIds"] == []

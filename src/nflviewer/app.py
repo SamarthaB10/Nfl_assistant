@@ -70,6 +70,7 @@ def _ranking_response(
     headline_repository: HeadlineRepository,
 ) -> list[GameSummary]:
     matchups = data.matchups_for_week(query.week)
+    matchups_by_id = {matchup.game_id: matchup for matchup in matchups}
     inputs = [
         MatchupInput(
             game_id=matchup.game_id,
@@ -100,6 +101,13 @@ def _ranking_response(
     )
     summaries: list[GameSummary] = []
     for game in games:
+        matchup = matchups_by_id[game.game_id]
+        final_scores = {}
+        if matchup.away_score is not None and matchup.home_score is not None:
+            final_scores = {
+                matchup.away_team_id: matchup.away_score,
+                matchup.home_team_id: matchup.home_score,
+            }
         reasons = list(game.reasons)
         headline_reason = headline_repository.reason_for(game.game_id)
         if headline_reason:
@@ -115,6 +123,7 @@ def _ranking_response(
                     game.away_team.team_id: game.away_team.logo_url,
                     game.home_team.team_id: game.home_team.logo_url,
                 },
+                final_scores=final_scores,
                 score=game.watchability_score,
                 reasons=reasons,
                 unavailable_player_ids=data.unavailable_player_ids_for_matchup(

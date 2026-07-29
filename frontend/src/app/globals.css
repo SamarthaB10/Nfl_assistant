@@ -15,6 +15,7 @@
   --green: #72d68b;
   --rating-green: #007200;
   --rating-mid: #6798c0;
+  --score-winner: #d79921;
   --header-background: rgb(0 0 0 / 94%);
   --control-background: #282828;
   --hover-background: #45403d;
@@ -37,6 +38,7 @@ html[data-theme="light"] {
   --accent-hover: #363950;
   --on-accent: #fff;
   --brand: #1e90ff;
+  --score-winner: #8f5f00;
   --header-background: rgb(255 255 255 / 94%);
   --control-background: #fff;
   --hover-background: #f5f5f8;
@@ -1133,6 +1135,13 @@ a {
   gap: 2px;
 }
 
+.team-name-line {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
 .team-copy strong {
   font-family: var(--font-display), sans-serif;
   font-size: clamp(1.2rem, 5.6vw, 1.65rem);
@@ -1140,7 +1149,20 @@ a {
   line-height: 1.02;
 }
 
-.team-copy > span {
+.team-final-score {
+  flex: none;
+  color: var(--ink);
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(1.2rem, 5.6vw, 1.65rem);
+  font-weight: 700;
+  line-height: 1.02;
+}
+
+.team-final-score.is-winner {
+  color: var(--score-winner);
+}
+
+.team-record {
   color: var(--muted);
   font-size: 0.7rem;
   font-weight: 700;
