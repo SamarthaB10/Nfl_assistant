@@ -44,7 +44,7 @@
   - Files: `frontend/src/db/schema.ts`, `frontend/src/db/schema.test.ts`,
     `frontend/drizzle/`.
 
-- [ ] Task 2: Add the game comments API
+- [x] Task 2: Add the game comments API
   - Acceptance: reads are public; signed-in users can post, reply once, and
     soft-delete only their own comments; top-level reads use a 20-item cursor.
   - Verify: validation, authentication, ownership, reply-depth, and pagination

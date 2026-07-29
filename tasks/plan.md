@@ -96,9 +96,9 @@ FastAPI ranking contract.
 
 ### Phase 2: Comment API
 
-- [ ] Add public cursor-paginated reads.
-- [ ] Add authenticated create, one-level reply, and author-only soft delete.
-- [ ] Add validation, authorization, and pagination tests.
+- [x] Add public cursor-paginated reads.
+- [x] Add authenticated create, one-level reply, and author-only soft delete.
+- [x] Add validation, authorization, and pagination tests.
 
 ### Phase 3: Game discussion UI
 
