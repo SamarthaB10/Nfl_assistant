@@ -40,7 +40,7 @@ def decode_cursor(value: str) -> NewsCursor:
             raise ValueError
         published_at = datetime.fromisoformat(payload["publishedAt"])
         article_id = payload["id"]
-        if published_at.tzinfo is None or not isinstance(article_id, int) or article_id < 1:
+        if published_at.tzinfo is None or type(article_id) is not int or article_id < 1:
             raise ValueError
     except (TypeError, ValueError, UnicodeDecodeError, json.JSONDecodeError) as error:
         raise InvalidCursorError("Invalid headlines cursor") from error

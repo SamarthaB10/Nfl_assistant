@@ -58,7 +58,16 @@ def test_cursor_round_trip_preserves_timestamp_and_id() -> None:
     assert decode_cursor(encode_cursor(cursor)) == cursor
 
 
-@pytest.mark.parametrize("cursor", ["", "not-base64", "e30", "W10"])
+@pytest.mark.parametrize(
+    "cursor",
+    [
+        "",
+        "not-base64",
+        "e30",
+        "W10",
+        "eyJwdWJsaXNoZWRBdCI6IjIwMjYtMDctMjlUMTg6MzA6MDArMDA6MDAiLCJpZCI6dHJ1ZX0",
+    ],
+)
 def test_cursor_rejects_malformed_values(cursor: str) -> None:
     with pytest.raises(InvalidCursorError):
         decode_cursor(cursor)
