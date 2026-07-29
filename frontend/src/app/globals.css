@@ -2,7 +2,7 @@
   --ink: #ebdbb2;
   --muted: #bdae93;
   --muted-strong: #d5c4a1;
-  --canvas: #32302f;
+  --canvas: #000;
   --surface: #3c3836;
   --surface-raised: #504945;
   --line: #665c54;
@@ -15,12 +15,12 @@
   --green: #72d68b;
   --rating-green: #007200;
   --rating-mid: #6798c0;
-  --header-background: rgb(50 48 47 / 94%);
+  --header-background: rgb(0 0 0 / 94%);
   --control-background: #282828;
   --hover-background: #45403d;
   --skeleton-background: #3c3836;
   --skeleton-highlight: #504945;
-  --hero-overlay: 50 48 47;
+  --hero-overlay: 0 0 0;
   --radius: 12px;
 }
 
@@ -728,42 +728,40 @@ a {
   text-transform: uppercase;
 }
 
-.brand strong {
-  color: var(--brand);
-  font-family: var(--font-script, "Brush Script MT"), "Segoe Script", cursive;
-  font-size: 1.45em;
-  font-style: italic;
-  font-weight: 700;
-  letter-spacing: 0.015em;
-  line-height: 1.1;
-}
-
 .brand-wordmark,
 .brand > span:last-child,
 .drizzle-title,
 .hero h1.hero-brand-title {
   color: var(--brand);
-  font-family: var(--font-script, "Brush Script MT"), "Segoe Script", cursive;
-  font-style: italic;
-  font-weight: 700;
-  letter-spacing: 0.015em;
-  line-height: 1.1;
+  font-family: var(--font-display), sans-serif;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 0.92;
 }
 
 .brand-mark {
-  display: grid;
-  width: 34px;
-  height: 30px;
-  place-items: center;
-  border: 0;
-  color: var(--brand);
-  font-family: var(--font-script, "Brush Script MT"), "Segoe Script", cursive;
-  font-size: 1.35rem;
-  font-style: italic;
-  font-weight: 700;
-  letter-spacing: -0.08em;
-  line-height: 1.1;
-  transform: rotate(-7deg);
+  display: block;
+  width: 42px;
+  height: 32px;
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+.brand-mark__tile {
+  fill: var(--brand);
+}
+
+.brand-mark__field {
+  fill: #000;
+}
+
+.brand-mark__stroke {
+  fill: none;
+  stroke: var(--brand);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 5;
 }
 
 .theme-toggle {

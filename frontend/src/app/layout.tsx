@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow_Condensed, Dancing_Script, Inter } from "next/font/google";
+import { Barlow_Condensed, Inter } from "next/font/google";
 import Link from "next/link";
 
 import { AccountNav } from "@/components/auth/account-nav";
@@ -20,12 +20,6 @@ const body = Inter({
   variable: "--font-body",
 });
 
-const script = Dancing_Script({
-  subsets: ["latin"],
-  variable: "--font-script",
-  weight: ["600", "700"],
-});
-
 export const metadata: Metadata = {
   title: "Drizzle | Matchups worth watching",
   description:
@@ -34,7 +28,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: "dark light",
-  themeColor: "#32302f",
+  themeColor: "#000000",
 };
 
 const themeInitializer = `
@@ -59,13 +53,37 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitializer }} />
       </head>
-      <body className={`${display.variable} ${body.variable} ${script.variable}`}>
+      <body className={`${display.variable} ${body.variable}`}>
         <div className="site-shell">
           <header className="site-header">
             <Link className="brand" href="/" aria-label="Drizzle home">
-              <span className="brand-mark" aria-hidden="true">
-                DZ
-              </span>
+              <svg
+                aria-hidden="true"
+                className="brand-mark"
+                focusable="false"
+                viewBox="0 0 72 52"
+              >
+                <rect
+                  className="brand-mark__tile"
+                  x="1"
+                  y="1"
+                  width="70"
+                  height="50"
+                  rx="12"
+                />
+                <rect
+                  className="brand-mark__field"
+                  x="7"
+                  y="7"
+                  width="58"
+                  height="38"
+                  rx="8"
+                />
+                <path
+                  className="brand-mark__stroke"
+                  d="M16 14v24M16 14c13-2 20 2 20 12s-7 14-20 12M41 15c7-2 13-2 18 0-6 5-12 10-16 15-3 3-5 6-6 8 8 2 16 2 22-1"
+                />
+              </svg>
               <span aria-hidden="true" className="brand-wordmark">
                 DRIZZLE
               </span>
