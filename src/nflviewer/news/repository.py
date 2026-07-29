@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -8,6 +10,8 @@ from psycopg_pool import AsyncConnectionPool
 
 from nflviewer.news.cursor import NewsCursor, decode_cursor, encode_cursor
 from nflviewer.news.feeds import FeedArticle, NewsSource
+
+NEWS_SYNC_LOCK_ID = int.from_bytes(b"LW_NEWS", byteorder="big")
 
 
 @dataclass(frozen=True, slots=True)
@@ -122,18 +126,36 @@ class NewsRepository:
             )
         return result.rowcount or 0
 
-    async def latest_fetched_at(self, source: NewsSource) -> datetime | None:
+    async def latest_refreshed_at(self, source: NewsSource) -> datetime | None:
         async with self.pool.connection() as connection:
             result = await connection.execute(
                 """
-                SELECT MAX(fetched_at) AS fetched_at
+                SELECT MAX(updated_at) AS refreshed_at
                 FROM news_articles
                 WHERE source = %s
                 """,
                 (source.value,),
             )
             row = await result.fetchone()
-        return row["fetched_at"] if row else None
+        return row["refreshed_at"] if row else None
+
+    @asynccontextmanager
+    async def sync_lock(self) -> AsyncIterator[bool]:
+        async with self.pool.connection() as connection:
+            result = await connection.execute(
+                "SELECT pg_try_advisory_lock(%s) AS acquired",
+                (NEWS_SYNC_LOCK_ID,),
+            )
+            row = await result.fetchone()
+            acquired = bool(row and row["acquired"])
+            try:
+                yield acquired
+            finally:
+                if acquired:
+                    await connection.execute(
+                        "SELECT pg_advisory_unlock(%s)",
+                        (NEWS_SYNC_LOCK_ID,),
+                    )
 
     async def list_articles(
         self,

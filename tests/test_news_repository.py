@@ -251,3 +251,20 @@ async def test_retention_deletes_articles_older_than_one_year(
 
     assert deleted == 1
     assert [item.title for item in page.items] == ["Current story"]
+
+
+@pytest.mark.anyio
+async def test_sync_lock_allows_only_one_repository_instance(
+    repository: NewsRepository,
+) -> None:
+    competing_repository = NewsRepository(TEST_DATABASE_URL)
+    await competing_repository.open()
+    try:
+        async with (
+            repository.sync_lock() as first_acquired,
+            competing_repository.sync_lock() as second_acquired,
+        ):
+            assert first_acquired is True
+            assert second_acquired is False
+    finally:
+        await competing_repository.close()

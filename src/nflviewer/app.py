@@ -1,15 +1,21 @@
+import asyncio
 import logging
+import os
 from collections.abc import AsyncIterator, Mapping
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from pathlib import Path
 from typing import Annotated, Protocol
 
+import httpx
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 
 from nflviewer.data import Record, Repository, SeasonData
 from nflviewer.headlines import HeadlineRepository
 from nflviewer.models import GameSummary, HealthResponse, RankingQuery, RecordSummary
+from nflviewer.news.feeds import RssFeedClient
+from nflviewer.news.repository import NewsRepository
+from nflviewer.news.service import FeedClient, NewsStore, NewsSyncService
 from nflviewer.ranking import MatchupInput, rank_matchups
 
 logger = logging.getLogger(__name__)
@@ -17,6 +23,12 @@ logger = logging.getLogger(__name__)
 
 class DataRepository(Protocol):
     def get(self) -> SeasonData: ...
+
+
+class NewsRuntimeRepository(NewsStore, Protocol):
+    async def open(self) -> None: ...
+
+    async def close(self) -> None: ...
 
 
 def _record_summaries(records: Mapping[str, Record]) -> dict[str, RecordSummary]:
@@ -105,18 +117,51 @@ def create_app(
     repository: DataRepository | None = None,
     *,
     headline_repository: HeadlineRepository | None = None,
+    news_repository: NewsRuntimeRepository | None = None,
+    news_feed_client: FeedClient | None = None,
 ) -> FastAPI:
     data_repository = repository or Repository()
     headlines = headline_repository or HeadlineRepository(Path("data/headlines-2025.json"))
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        news_task: asyncio.Task[None] | None = None
+        http_client: httpx.AsyncClient | None = None
+        news_repository_open = False
         try:
             app.state.season_data = data_repository.get()
         except Exception:
             logger.exception("Unable to load NFL season data")
             app.state.season_data = None
-        yield
+        app.state.news_repository = None
+        if news_repository is not None:
+            try:
+                await news_repository.open()
+                news_repository_open = True
+                app.state.news_repository = news_repository
+                active_feed_client = news_feed_client
+                if active_feed_client is None:
+                    http_client = httpx.AsyncClient(timeout=httpx.Timeout(10.0))
+                    active_feed_client = RssFeedClient(http_client)
+                news_service = NewsSyncService(news_repository, active_feed_client)
+                news_task = asyncio.create_task(
+                    news_service.run_forever(),
+                    name="leaguewatch-news-sync",
+                )
+            except Exception:
+                logger.exception("Unable to start NFL news synchronization")
+                app.state.news_repository = None
+        try:
+            yield
+        finally:
+            if news_task is not None:
+                news_task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await news_task
+            if http_client is not None:
+                await http_client.aclose()
+            if news_repository is not None and news_repository_open:
+                await news_repository.close()
 
     application = FastAPI(
         title="LeagueWatch API",
@@ -154,4 +199,7 @@ def create_app(
     return application
 
 
-app = create_app()
+database_url = os.getenv("DATABASE_URL")
+app = create_app(
+    news_repository=NewsRepository(database_url) if database_url else None,
+)
