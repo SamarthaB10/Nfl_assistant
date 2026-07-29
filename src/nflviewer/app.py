@@ -9,12 +9,22 @@ from typing import Annotated, Protocol
 import httpx
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
+from psycopg import Error as PsycopgError
+from psycopg_pool import PoolClosed, PoolTimeout
 
 from nflviewer.data import Record, Repository, SeasonData
 from nflviewer.headlines import HeadlineRepository
-from nflviewer.models import GameSummary, HealthResponse, RankingQuery, RecordSummary
-from nflviewer.news.feeds import RssFeedClient
-from nflviewer.news.repository import NewsRepository
+from nflviewer.models import (
+    GameSummary,
+    HeadlineItem,
+    HeadlinesPage,
+    HeadlinesQuery,
+    HealthResponse,
+    RankingQuery,
+    RecordSummary,
+)
+from nflviewer.news.feeds import NewsSource, RssFeedClient
+from nflviewer.news.repository import NewsPage, NewsRepository
 from nflviewer.news.service import FeedClient, NewsStore, NewsSyncService
 from nflviewer.ranking import MatchupInput, rank_matchups
 
@@ -29,6 +39,15 @@ class NewsRuntimeRepository(NewsStore, Protocol):
     async def open(self) -> None: ...
 
     async def close(self) -> None: ...
+
+    async def list_articles(
+        self,
+        *,
+        limit: int,
+        cursor: str | None = None,
+        source: NewsSource | None = None,
+        team: str | None = None,
+    ) -> NewsPage: ...
 
 
 def _record_summaries(records: Mapping[str, Record]) -> dict[str, RecordSummary]:
@@ -195,6 +214,53 @@ def create_app(
                 detail="NFL data is unavailable. Run the data sync command and retry.",
             )
         return _ranking_response(data, query, headlines)
+
+    @application.get(
+        "/api/v1/headlines",
+        response_model=HeadlinesPage,
+        summary="List current NFL headlines",
+    )
+    async def current_headlines(
+        request: Request,
+        query: Annotated[HeadlinesQuery, Query()],
+    ) -> HeadlinesPage:
+        news = getattr(request.app.state, "news_repository", None)
+        if news is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Current NFL headlines are temporarily unavailable.",
+            )
+        try:
+            page = await news.list_articles(
+                limit=query.limit,
+                cursor=query.cursor,
+                source=NewsSource(query.source) if query.source else None,
+                team=query.team,
+            )
+        except (PoolClosed, PoolTimeout, PsycopgError):
+            logger.exception("Unable to read current NFL headlines")
+            raise HTTPException(
+                status_code=503,
+                detail="Current NFL headlines are temporarily unavailable.",
+            ) from None
+        return HeadlinesPage(
+            items=[
+                HeadlineItem(
+                    id=item.id,
+                    source=item.source.value,
+                    title=item.title,
+                    author=item.author,
+                    excerpt=item.excerpt,
+                    url=item.canonical_url,
+                    image_url=item.image_url,
+                    team_codes=list(item.team_codes),
+                    published_at=item.published_at,
+                )
+                for item in page.items
+            ],
+            next_cursor=page.next_cursor,
+            has_more=page.has_more,
+        )
 
     return application
 
