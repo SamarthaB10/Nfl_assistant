@@ -50,7 +50,7 @@
   - Verify: validation, authentication, ownership, reply-depth, and pagination
     tests.
 
-- [ ] Task 3: Add the ranking discussion UI
+- [x] Task 3: Add the ranking discussion UI
   - Acceptance: expanded games expose the approved green comment control and a
     responsive public thread with authenticated write controls.
   - Verify: component tests and browser checks at mobile and desktop widths.

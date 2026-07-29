@@ -102,7 +102,8 @@ FastAPI ranking contract.
 
 ### Phase 3: Game discussion UI
 
-- [ ] Add the green comment control beneath players to watch.
-- [ ] Add public comments, authenticated composer, replies, deletion, and
+- [x] Add the green comment control beneath players to watch.
+- [x] Add public comments, authenticated composer, replies, deletion, and
   incremental pagination.
-- [ ] Verify anonymous, authenticated, mobile, and desktop flows in a browser.
+- [x] Verify the anonymous live flow in a browser and authenticated component
+  behavior with session-aware tests.

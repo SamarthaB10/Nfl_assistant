@@ -26,6 +26,16 @@ export interface GameSummary {
   playersToWatch?: PlayerSpotlight[];
 }
 
+export function buildGameKey(week: number, teamIds: string[]): string {
+  if (teamIds.length !== 2) {
+    throw new Error("A game key requires exactly two teams.");
+  }
+
+  return `2025_${String(week).padStart(2, "0")}_${teamIds
+    .map((teamId) => teamId.toUpperCase())
+    .join("_")}`;
+}
+
 export function buildRankingsSearch({
   week,
   mode,

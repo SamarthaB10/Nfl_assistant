@@ -8,6 +8,7 @@ describe("GameCard", () => {
     render(
       <ul>
         <GameCard
+          gameKey="2025_11_BUF_KC"
           game={{
             matchup: "Buffalo Bills vs Kansas City Chiefs",
             records: { BUF: "8-2", KC: "9-1" },
@@ -18,6 +19,7 @@ describe("GameCard", () => {
           rank={1}
         />
         <GameCard
+          gameKey="2025_11_CHI_DET"
           game={{
             matchup: "Chicago Bears vs Detroit Lions",
             records: { CHI: "5-5", DET: "7-3" },
@@ -28,6 +30,7 @@ describe("GameCard", () => {
           rank={2}
         />
         <GameCard
+          gameKey="2025_11_CAR_TEN"
           game={{
             matchup: "Carolina Panthers vs Tennessee Titans",
             records: { CAR: "3-7", TEN: "2-8" },
@@ -74,6 +77,7 @@ describe("GameCard", () => {
   it("renders two dynamic players with season and peer details", () => {
     render(
       <GameCard
+        gameKey="2025_18_LAC_DEN"
         game={{
           matchup: "Los Angeles Chargers vs Denver Broncos",
           records: { LAC: "11-5", DEN: "13-3" },
@@ -131,6 +135,7 @@ describe("GameCard", () => {
   it("renders Jaxson Dart instead of unavailable Malik Nabers", () => {
     render(
       <GameCard
+        gameKey="2025_16_NYG_WAS"
         game={{
           matchup: "New York Giants vs Washington Commanders",
           records: { NYG: "2-12", WAS: "4-10" },

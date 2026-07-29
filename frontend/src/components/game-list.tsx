@@ -1,5 +1,10 @@
 import { GameCard } from "@/components/game-card";
-import type { GameSummary, RankingsRequest, SelectionMode } from "@/lib/rankings";
+import {
+  buildGameKey,
+  type GameSummary,
+  type RankingsRequest,
+  type SelectionMode,
+} from "@/lib/rankings";
 
 interface GameListProps {
   games: GameSummary[];
@@ -38,7 +43,12 @@ export function GameList({ games, request }: GameListProps) {
       ) : (
         <ol className="game-list">
           {games.map((game, index) => (
-            <GameCard game={game} key={game.matchup} rank={index + 1} />
+            <GameCard
+              game={game}
+              gameKey={buildGameKey(request.week, Object.keys(game.records))}
+              key={game.matchup}
+              rank={index + 1}
+            />
           ))}
         </ol>
       )}

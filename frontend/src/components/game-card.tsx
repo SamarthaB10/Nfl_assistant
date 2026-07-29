@@ -3,15 +3,17 @@
 import Image from "next/image";
 import { useId, useState } from "react";
 
+import { GameComments } from "@/components/game-comments";
 import { selectFeaturedPlayers } from "@/lib/featured-players";
 import type { GameSummary, PlayerSpotlight } from "@/lib/rankings";
 
 interface GameCardProps {
   game: GameSummary;
+  gameKey: string;
   rank: number;
 }
 
-export function GameCard({ game, rank }: GameCardProps) {
+export function GameCard({ game, gameKey, rank }: GameCardProps) {
   const [open, setOpen] = useState(false);
   const detailsId = useId();
   const names = game.matchup.split(" vs ");
@@ -161,6 +163,8 @@ export function GameCard({ game, rank }: GameCardProps) {
               </div>
             </div>
           )}
+
+          <GameComments gameKey={gameKey} />
         </div>
       )}
     </li>
