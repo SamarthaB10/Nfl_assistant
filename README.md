@@ -1054,6 +1054,16 @@ The next product and model increments are:
 7. Add opponent-adjusted efficiency and recent-form features after validating
    them against historical outcomes.
 8. Add defensive-player spotlights and richer opponent-relative player context.
+9. Add a postgame **Game Stats** view for completed matchups.
+   - Show a compact button beside the existing comments control only after the
+     game status is final.
+   - Open a mobile-first view with offense and defense tabs, team summary
+     metrics, player headshots, and position-specific box-score statistics.
+   - Load the completed game's player and team statistics from nflverse, attach
+     them to the canonical `game_key`, and keep the control hidden while the
+     game is scheduled or in progress.
+   - Treat this as postgame context only; it must not change the matchup's
+     original watchability score or pregame explanations.
 
 The complete scoring reference is available in
 [ELOformula.md](ELOformula.md).
