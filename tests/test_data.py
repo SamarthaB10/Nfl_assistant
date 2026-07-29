@@ -107,6 +107,46 @@ def team_rows() -> pl.DataFrame:
     )
 
 
+def weekly_roster_rows() -> pl.DataFrame:
+    return pl.DataFrame(
+        [
+            {
+                "season": 2025,
+                "week": 16,
+                "team": "NYG",
+                "espn_id": 4595348,
+                "gsis_id": "malik",
+                "status": "RES",
+                "full_name": "Malik Nabers",
+                "position": "WR",
+                "headshot_url": "https://example.test/malik.png",
+            },
+            {
+                "season": 2025,
+                "week": 16,
+                "team": "NYG",
+                "espn_id": 4689114,
+                "gsis_id": "dart",
+                "status": "ACT",
+                "full_name": "Jaxson Dart",
+                "position": "QB",
+                "headshot_url": "https://example.test/dart.png",
+            },
+            {
+                "season": 2025,
+                "week": 16,
+                "team": "DAL",
+                "espn_id": 9999999,
+                "gsis_id": "other",
+                "status": "RES",
+                "full_name": "Other matchup player",
+                "position": "WR",
+                "headshot_url": "https://example.test/other.png",
+            },
+        ]
+    )
+
+
 def test_normalizes_known_nflverse_team_aliases() -> None:
     assert normalize_team_id("LA") == "LAR"
     assert normalize_team_id("JAC") == "JAX"
@@ -126,6 +166,87 @@ def test_builds_target_week_matchups_and_filters_postseason() -> None:
     assert set(data.teams) == {"JAX", "LAR"}
 
 
+def test_returns_non_active_espn_ids_for_matchup_teams_and_week() -> None:
+    data = SeasonData.from_frames(
+        schedule_rows(),
+        team_rows(),
+        weekly_rosters=weekly_roster_rows(),
+    )
+
+    unavailable = data.unavailable_player_ids_for_matchup(16, "NYG", "PHI")
+
+    assert unavailable == ["4595348"]
+
+
+def test_builds_player_team_map_from_each_players_latest_unambiguous_roster_week() -> None:
+    weekly_rosters = pl.DataFrame(
+        [
+            {
+                "season": 2025,
+                "week": 1,
+                "team": "NE",
+                "espn_id": 1,
+                "status": "ACT",
+                "full_name": "Drake Maye",
+                "gsis_id": "drake-maye",
+                "position": "QB",
+            },
+            {
+                "season": 2025,
+                "week": 2,
+                "team": "TB",
+                "espn_id": 1,
+                "status": "ACT",
+                "full_name": "Drake Maye",
+                "gsis_id": "drake-maye",
+                "position": "QB",
+            },
+            {
+                "season": 2025,
+                "week": 2,
+                "team": "KC",
+                "espn_id": 2,
+                "status": "ACT",
+                "full_name": "Shared Name",
+                "gsis_id": "shared-kc",
+                "position": "WR",
+            },
+            {
+                "season": 2025,
+                "week": 3,
+                "team": "SF",
+                "espn_id": 3,
+                "status": "ACT",
+                "full_name": "Shared Name",
+                "gsis_id": "shared-sf",
+                "position": "WR",
+            },
+        ]
+    )
+    data = SeasonData.from_frames(
+        schedule_rows(),
+        team_rows(),
+        weekly_rosters=weekly_rosters,
+    )
+
+    assert data.player_team_codes() == {"drake maye": "TB"}
+
+
+def test_treats_missing_weekly_roster_status_as_non_active() -> None:
+    weekly_rosters = weekly_roster_rows().with_columns(
+        pl.when(pl.col("espn_id") == 4595348).then(None).otherwise(pl.col("status")).alias("status")
+    )
+    data = SeasonData.from_frames(
+        schedule_rows(),
+        team_rows(),
+        weekly_rosters=weekly_rosters,
+    )
+
+    unavailable = data.unavailable_player_ids_for_matchup(16, "NYG", "PHI")
+
+    assert unavailable == ["4595348"]
+
+
 def test_calculates_previous_and_preweek_records_without_future_leakage() -> None:
     data = SeasonData.from_frames(schedule_rows(), team_rows())
 
@@ -141,6 +262,68 @@ def test_calculates_previous_and_preweek_records_without_future_leakage() -> Non
         "JAX": Record(losses=1),
         "LAR": Record(wins=1),
     }
+
+
+def test_builds_standings_from_only_games_before_the_selected_week() -> None:
+    data = SeasonData.from_frames(schedule_rows(), team_rows())
+
+    week_one = data.current_standings_before_week(1)
+    week_three = data.current_standings_before_week(3)
+
+    assert week_one["JAX"].record.wins == 0
+    assert week_one["JAX"].point_differential == 0
+    assert week_three["JAX"].record.losses == 1
+    assert week_three["JAX"].point_differential == -3
+    assert week_three["LAR"].record.wins == 1
+    assert week_three["LAR"].point_differential == 3
+
+
+def test_builds_weekly_scoring_metrics_with_early_season_prior() -> None:
+    data = SeasonData.from_frames(schedule_rows(), team_rows())
+
+    week_one = data.team_metrics_before_week(1)
+    week_three = data.team_metrics_before_week(3)
+
+    assert week_one["JAX"].points_for_per_game == pytest.approx(15.5)
+    assert week_one["JAX"].points_allowed_per_game == pytest.approx(22.5)
+    assert week_one["JAX"].offense_percentile == 0
+    assert week_one["JAX"].defense_percentile == 0
+    assert week_one["JAX"].point_differential_percentile == 0
+    assert week_one["LAR"].offense_percentile == 1
+    assert week_one["LAR"].defense_percentile == 1
+    assert week_one["LAR"].point_differential_percentile == 1
+    assert week_three["JAX"].points_for_per_game == pytest.approx(15.2)
+    assert week_three["JAX"].points_allowed_per_game == pytest.approx(21.4)
+
+
+def test_weekly_scoring_metrics_exclude_target_week_results() -> None:
+    schedules = schedule_rows().with_columns(
+        pl.when(pl.col("game_id") == "2025_03_JAC_LA")
+        .then(50)
+        .otherwise(pl.col("away_score"))
+        .alias("away_score"),
+        pl.when(pl.col("game_id") == "2025_03_JAC_LA")
+        .then(0)
+        .otherwise(pl.col("home_score"))
+        .alias("home_score"),
+    )
+    data = SeasonData.from_frames(schedules, team_rows())
+
+    metrics = data.team_metrics_before_week(3)
+
+    assert metrics["JAX"].points_for_per_game == pytest.approx(15.2)
+    assert metrics["LAR"].points_allowed_per_game == pytest.approx(15.2)
+
+
+def test_scoring_metrics_use_only_current_season_after_week_five() -> None:
+    data = SeasonData.from_frames(schedule_rows(), team_rows())
+
+    metrics = data.team_metrics_before_week(6)
+
+    assert metrics["JAX"].points_for_per_game == 14
+    assert metrics["JAX"].points_allowed_per_game == 17
+    assert metrics["LAR"].points_for_per_game == 17
+    assert metrics["LAR"].points_allowed_per_game == 14
 
 
 def test_missing_completed_game_does_not_create_a_record_or_bye() -> None:
@@ -183,15 +366,31 @@ def test_rejects_duplicate_game_ids() -> None:
 
 
 def test_parquet_round_trip_uses_local_cache(tmp_path: Path) -> None:
-    data = SeasonData.from_frames(schedule_rows(), team_rows())
+    data = SeasonData.from_frames(
+        schedule_rows(),
+        team_rows(),
+        weekly_rosters=weekly_roster_rows(),
+    )
     schedule_path = tmp_path / "schedules-2024-2025.parquet"
     team_path = tmp_path / "teams-2025.parquet"
+    weekly_roster_path = tmp_path / "rosters-weekly-2025.parquet"
 
-    data.write_cache(schedule_path, team_path)
-    restored = SeasonData.from_cache(schedule_path, team_path)
+    data.write_cache(schedule_path, team_path, weekly_roster_path)
+    restored = SeasonData.from_cache(schedule_path, team_path, weekly_roster_path)
 
+    assert set(pl.read_parquet(weekly_roster_path).columns) == {
+        "full_name",
+        "gsis_id",
+        "position",
+        "season",
+        "week",
+        "team",
+        "espn_id",
+        "status",
+    }
     assert restored.matchups_for_week(3) == data.matchups_for_week(3)
     assert restored.previous_records() == data.previous_records()
+    assert restored.unavailable_player_ids_for_matchup(16, "NYG", "PHI") == ["4595348"]
 
 
 def test_repository_refreshes_and_then_loads_local_parquet(tmp_path: Path) -> None:
@@ -205,6 +404,50 @@ def test_repository_refreshes_and_then_loads_local_parquet(tmp_path: Path) -> No
 
     assert repository.is_cached
     assert refreshed.matchups_for_week(3) == loaded.matchups_for_week(3)
+
+
+def test_repository_refreshes_weekly_rosters_for_target_season(tmp_path: Path) -> None:
+    requested_seasons: list[list[int]] = []
+    requested_player_stats: list[tuple[list[int], str]] = []
+    repository = Repository(tmp_path, require_32_teams=False)
+
+    repository.refresh(
+        schedule_loader=lambda _: schedule_rows(),
+        team_loader=team_rows,
+        weekly_roster_loader=lambda seasons: (
+            requested_seasons.append(seasons) or weekly_roster_rows()
+        ),
+        player_stat_loader=lambda seasons, summary_level: (
+            requested_player_stats.append((seasons, summary_level))
+            or pl.DataFrame(
+                [
+                    {
+                        "player_id": "dart",
+                        "player_display_name": "Jaxson Dart",
+                        "position": "QB",
+                        "headshot_url": "https://example.test/dart.png",
+                        "season": 2025,
+                        "week": 15,
+                        "season_type": "REG",
+                        "team": "NYG",
+                        "passing_yards": 275,
+                        "passing_tds": 2,
+                        "rushing_yards": 20,
+                        "rushing_tds": 0,
+                        "receiving_yards": 0,
+                        "receiving_tds": 0,
+                        "fantasy_points_ppr": 19.0,
+                    }
+                ]
+            )
+        ),
+    )
+    loaded = repository.load()
+
+    assert requested_seasons == [[2025]]
+    assert requested_player_stats == [([2024, 2025], "week")]
+    assert loaded.unavailable_player_ids_for_matchup(16, "NYG", "PHI") == ["4595348"]
+    assert loaded.player_spotlights_before_week(16, ["NYG"])["NYG"].name == "Jaxson Dart"
 
 
 def test_repository_requires_32_teams_by_default(tmp_path: Path) -> None:

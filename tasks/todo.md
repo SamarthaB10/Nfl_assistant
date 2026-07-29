@@ -1,9 +1,56 @@
-# NFL Viewer Backend MVP Tasks
+# Accounts and Public Profiles Tasks
 
-- [x] Scaffold FastAPI and health endpoint
-- [x] Freeze request and response contracts
-- [x] Implement nflverse data loading
-- [x] Implement record and rivalry scoring
-- [x] Integrate ranking endpoint
-- [x] Verify 2025 Week 1 and Week 4
-- [x] Document setup and formula
+- [x] Task 1: Establish the PostgreSQL identity schema
+  - Acceptance: Better Auth core tables and LeagueWatch profile fields are
+    represented by typed Drizzle schema and a committed migration.
+  - Verify: focused schema and validation tests, typecheck, lint.
+  - Files: `frontend/src/db/`, `frontend/drizzle/`,
+    `frontend/drizzle.config.ts`, frontend package manifests.
+
+- [x] Task 2: Implement email/password authentication
+  - Acceptance: users can sign up, log in, keep a database session, and sign
+    out; invalid credentials are generic and auth requests are rate limited.
+  - Verify: auth unit/component tests, typecheck, lint, build.
+  - Files: `frontend/src/lib/auth*`, `frontend/src/app/api/auth/`,
+    login/signup components and pages, site header.
+
+- [x] Task 3: Implement public profile reads
+  - Acceptance: `/u/[username]` is public, responsive, and exposes only the
+    approved public fields with default images.
+  - Verify: DTO tests, component tests, not-found behavior, mobile browser pass.
+  - Files: `frontend/src/lib/profiles.ts`, `frontend/src/app/u/`,
+    `frontend/src/components/profile/`.
+
+- [x] Task 4: Implement owner profile editing
+  - Acceptance: the signed-in owner can update display name and About; anonymous
+    users and other accounts cannot.
+  - Verify: authorization and form tests plus browser verification.
+  - Files: `frontend/src/app/settings/profile/`, profile validation/data access.
+
+- [ ] Task 5: Verify and document the complete feature
+  - Acceptance: frontend and Python regressions pass, migrations work from a
+    clean database, setup is documented, and the final diff passes review.
+  - Verify: npm test/lint/typecheck/build/audit, pytest/Ruff, live browser flow.
+  - Files: `README.md`, `.gitignore`, task tracking documents.
+
+---
+
+# Game Comments Tasks
+
+- [x] Task 1: Add the PostgreSQL comments foundation
+  - Acceptance: typed comments support stable game keys, authors, one-level
+    replies, soft deletion, timestamps, and the required read indexes.
+  - Verify: focused schema tests, generated migration check, typecheck, lint.
+  - Files: `frontend/src/db/schema.ts`, `frontend/src/db/schema.test.ts`,
+    `frontend/drizzle/`.
+
+- [x] Task 2: Add the game comments API
+  - Acceptance: reads are public; signed-in users can post, reply once, and
+    soft-delete only their own comments; top-level reads use a 20-item cursor.
+  - Verify: validation, authentication, ownership, reply-depth, and pagination
+    tests.
+
+- [x] Task 3: Add the ranking discussion UI
+  - Acceptance: expanded games expose the approved green comment control and a
+    responsive public thread with authenticated write controls.
+  - Verify: component tests and browser checks at mobile and desktop widths.

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>NFL Football - NBC Sports</title>
+  <link rel="alternate" type="text/html" href="https://www.nbcsports.com/nfl" />
+  <link rel="self" href="https://www.nbcsports.com/nfl.atom" />
+  <author>
+    <name>NBC Sports</name>
+  </author>
+  <id>urn:uuid:nbc-nfl-feed</id>
+  <updated>2026-07-29T22:04:24Z</updated>
+  <entry>
+    <title>Patriots quarterback Drake Maye returns to practice</title>
+    <link
+      rel="alternate"
+      type="text/html"
+      href="https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/drake-maye-returns-to-practice"
+    />
+    <id>urn:uuid:nbc-article-123</id>
+    <updated>2026-07-29T22:04:24Z</updated>
+    <published>2026-07-29T22:04:24Z</published>
+    <summary>New England welcomed Drake Maye back to training camp.</summary>
+  </entry>
+</feed>
