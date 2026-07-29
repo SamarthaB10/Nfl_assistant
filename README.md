@@ -119,8 +119,8 @@ About text, and joined month are public. Version 1 uses local LeagueWatch
 default profile/header artwork; image uploads and object storage are not yet
 enabled.
 
-Authentication and profile storage stay inside Next.js. FastAPI continues to
-serve only NFL ranking data and never receives passwords, session tokens, or
+Authentication and profile storage stay inside Next.js. FastAPI serves public
+NFL ranking and headline data, but never receives passwords, session tokens, or
 user email addresses.
 
 The frontend proxies `/api/rankings` to FastAPI so the browser does not need a
