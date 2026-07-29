@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { LoginForm } from "@/components/auth/login-form";
 
@@ -11,6 +12,10 @@ export default function LoginPage() {
   return (
     <main className="auth-page">
       <section className="auth-page__intro">
+        <Link className="auth-home-link" href="/">
+          <span aria-hidden="true">←</span>
+          LeagueWatch home
+        </Link>
         <p className="section-kicker">Back for another week.</p>
         <h1>Welcome back</h1>
         <p>

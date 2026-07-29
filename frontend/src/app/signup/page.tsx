@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { SignupForm } from "@/components/auth/signup-form";
 
@@ -11,6 +12,10 @@ export default function SignupPage() {
   return (
     <main className="auth-page">
       <section className="auth-page__intro">
+        <Link className="auth-home-link" href="/">
+          <span aria-hidden="true">←</span>
+          LeagueWatch home
+        </Link>
         <p className="section-kicker">Your season. Your profile.</p>
         <h1>Join LeagueWatch</h1>
         <p>
