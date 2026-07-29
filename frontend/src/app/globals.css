@@ -338,6 +338,24 @@ a {
   text-transform: uppercase;
 }
 
+.auth-welcome {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 3cqi, 24px);
+  margin-top: 12px;
+}
+
+.auth-welcome h1 {
+  margin: 0;
+}
+
+.auth-welcome__mark {
+  display: block;
+  width: clamp(54px, 10cqi, 78px);
+  height: auto;
+  flex: 0 0 auto;
+}
+
 .auth-page__intro > p:last-child {
   max-width: 520px;
   margin: 22px 0 0;

@@ -23,4 +23,16 @@ describe("authentication page navigation", () => {
       screen.getByRole("heading", { name: "Join Drizzle" }),
     ).toBeInTheDocument();
   });
+
+  it("pairs the Drizzle mark with the welcome heading without the old kicker", () => {
+    const { container } = render(<LoginPage />);
+
+    expect(
+      screen.getByRole("heading", { name: "Welcome back" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Back for another week."),
+    ).not.toBeInTheDocument();
+    expect(container.querySelector(".auth-welcome__mark")).not.toBeNull();
+  });
 });

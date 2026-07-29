@@ -16,8 +16,36 @@ export default function LoginPage() {
           <span aria-hidden="true">←</span>
           Drizzle home
         </Link>
-        <p className="section-kicker">Back for another week.</p>
-        <h1>Welcome back</h1>
+        <div className="auth-welcome">
+          <svg
+            aria-hidden="true"
+            className="auth-welcome__mark"
+            focusable="false"
+            viewBox="0 0 72 52"
+          >
+            <rect
+              className="brand-mark__tile"
+              x="1"
+              y="1"
+              width="70"
+              height="50"
+              rx="12"
+            />
+            <rect
+              className="brand-mark__field"
+              x="7"
+              y="7"
+              width="58"
+              height="38"
+              rx="8"
+            />
+            <path
+              className="brand-mark__stroke"
+              d="M16 14v24M16 14c13-2 20 2 20 12s-7 14-20 12M41 15c7-2 13-2 18 0-6 5-12 10-16 15-3 3-5 6-6 8 8 2 16 2 22-1"
+            />
+          </svg>
+          <h1>Welcome back</h1>
+        </div>
         <p>
           Log in with your private email. Your public profile keeps the handle
           and name you chose.
