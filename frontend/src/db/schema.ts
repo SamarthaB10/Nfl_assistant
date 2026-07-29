@@ -1,4 +1,5 @@
 import {
+  type AnyPgColumn,
   bigint,
   bigserial,
   boolean,
@@ -154,6 +155,37 @@ export const newsArticles = pgTable(
   ],
 );
 
+export const gameComments = pgTable(
+  "game_comments",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    gameKey: text("game_key").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    parentCommentId: bigint("parent_comment_id", {
+      mode: "number",
+    }).references((): AnyPgColumn => gameComments.id),
+    body: text("body").notNull(),
+    isDeleted: boolean("is_deleted").default(false).notNull(),
+    createdAt,
+    updatedAt,
+  },
+  (table) => [
+    index("game_comments_game_cursor_idx").on(
+      table.gameKey,
+      table.createdAt.desc(),
+      table.id.desc(),
+    ),
+    index("game_comments_parent_created_idx").on(
+      table.parentCommentId,
+      table.createdAt,
+      table.id,
+    ),
+    index("game_comments_user_id_idx").on(table.userId),
+  ],
+);
+
 export const authSchema = {
   user,
   session,
@@ -163,3 +195,4 @@ export const authSchema = {
 };
 
 export type UserRecord = typeof user.$inferSelect;
+export type GameCommentRecord = typeof gameComments.$inferSelect;

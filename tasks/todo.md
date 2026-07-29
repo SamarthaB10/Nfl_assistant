@@ -32,3 +32,25 @@
     clean database, setup is documented, and the final diff passes review.
   - Verify: npm test/lint/typecheck/build/audit, pytest/Ruff, live browser flow.
   - Files: `README.md`, `.gitignore`, task tracking documents.
+
+---
+
+# Game Comments Tasks
+
+- [x] Task 1: Add the PostgreSQL comments foundation
+  - Acceptance: typed comments support stable game keys, authors, one-level
+    replies, soft deletion, timestamps, and the required read indexes.
+  - Verify: focused schema tests, generated migration check, typecheck, lint.
+  - Files: `frontend/src/db/schema.ts`, `frontend/src/db/schema.test.ts`,
+    `frontend/drizzle/`.
+
+- [ ] Task 2: Add the game comments API
+  - Acceptance: reads are public; signed-in users can post, reply once, and
+    soft-delete only their own comments; top-level reads use a 20-item cursor.
+  - Verify: validation, authentication, ownership, reply-depth, and pagination
+    tests.
+
+- [ ] Task 3: Add the ranking discussion UI
+  - Acceptance: expanded games expose the approved green comment control and a
+    responsive public thread with authenticated write controls.
+  - Verify: component tests and browser checks at mobile and desktop widths.

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   account,
+  gameComments,
   newsArticles,
   rateLimit,
   session,
@@ -73,5 +74,35 @@ describe("news article schema", () => {
       true,
     );
     expect(indexes.get("news_articles_team_codes_idx")?.method).toBe("gin");
+  });
+});
+
+describe("game comment schema", () => {
+  it("stores game-scoped comments, authors, replies, and soft deletion", () => {
+    const config = getTableConfig(gameComments);
+
+    expect(config.name).toBe("game_comments");
+    expect(gameComments.gameKey.notNull).toBe(true);
+    expect(gameComments.userId.notNull).toBe(true);
+    expect(gameComments.parentCommentId.notNull).toBe(false);
+    expect(gameComments.body.notNull).toBe(true);
+    expect(gameComments.isDeleted.notNull).toBe(true);
+    expect(gameComments.isDeleted.hasDefault).toBe(true);
+    expect(gameComments.createdAt.notNull).toBe(true);
+    expect(gameComments.updatedAt.notNull).toBe(true);
+    expect(config.foreignKeys).toHaveLength(2);
+  });
+
+  it("defines game cursor, reply order, and author lookup indexes", () => {
+    const config = getTableConfig(gameComments);
+    const indexNames = config.indexes.map((index) => index.config.name);
+
+    expect(indexNames).toEqual(
+      expect.arrayContaining([
+        "game_comments_game_cursor_idx",
+        "game_comments_parent_created_idx",
+        "game_comments_user_id_idx",
+      ]),
+    );
   });
 });

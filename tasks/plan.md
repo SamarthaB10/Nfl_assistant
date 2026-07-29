@@ -77,3 +77,32 @@ contract unchanged.
 
 None. PostgreSQL production hosting and image storage remain later deployment
 decisions.
+
+---
+
+# Implementation Plan: Game Comments
+
+## Overview
+
+Add public, game-scoped discussions to expanded rankings without changing the
+FastAPI ranking contract.
+
+### Phase 1: Database foundation
+
+- [x] Add schema tests for game ownership, reply relationships, soft deletion,
+  and cursor indexes.
+- [x] Add the `game_comments` Drizzle table and PostgreSQL migration.
+- [x] Verify schema tests, typecheck, lint, and migration consistency.
+
+### Phase 2: Comment API
+
+- [ ] Add public cursor-paginated reads.
+- [ ] Add authenticated create, one-level reply, and author-only soft delete.
+- [ ] Add validation, authorization, and pagination tests.
+
+### Phase 3: Game discussion UI
+
+- [ ] Add the green comment control beneath players to watch.
+- [ ] Add public comments, authenticated composer, replies, deletion, and
+  incremental pagination.
+- [ ] Verify anonymous, authenticated, mobile, and desktop flows in a browser.
