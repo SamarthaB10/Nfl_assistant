@@ -1619,12 +1619,24 @@ a {
   gap: 4px;
 }
 
-.headline-card__teams b {
-  padding: 2px 5px;
+.headline-card__teams b,
+.headline-card__team {
+  display: inline-flex;
+  width: 28px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 4px;
   border: 1px solid var(--line-strong);
   color: var(--muted-strong);
   font-size: 0.55rem;
   letter-spacing: 0.06em;
+}
+
+.headline-card__team img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .headline-card__arrow {

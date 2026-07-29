@@ -1,6 +1,7 @@
 import Image from "next/image";
 
 import type { HeadlineItem } from "@/lib/headlines";
+import { getNflTeam } from "@/lib/nfl-teams";
 
 interface HeadlineCardProps {
   headline: HeadlineItem;
@@ -46,13 +47,30 @@ export function HeadlineCard({ headline }: HeadlineCardProps) {
           <footer>
             <span>{headline.author ?? `${headline.source} Sports`}</span>
             {headline.teamCodes.length > 0 ? (
-              <span
-                aria-label={`Teams: ${headline.teamCodes.join(", ")}`}
-                className="headline-card__teams"
-              >
-                {headline.teamCodes.map((team) => (
-                  <b key={team}>{team}</b>
-                ))}
+              <span className="headline-card__teams">
+                {headline.teamCodes.map((teamCode) => {
+                  const team = getNflTeam(teamCode);
+
+                  return team ? (
+                    <span
+                      aria-label={team.name}
+                      className="headline-card__team"
+                      key={team.code}
+                      role="img"
+                      title={team.name}
+                    >
+                      <Image
+                        alt=""
+                        aria-hidden="true"
+                        height={22}
+                        src={team.logoUrl}
+                        width={22}
+                      />
+                    </span>
+                  ) : (
+                    <b key={teamCode}>{teamCode}</b>
+                  );
+                })}
               </span>
             ) : null}
           </footer>

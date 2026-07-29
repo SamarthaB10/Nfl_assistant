@@ -52,7 +52,10 @@ describe("HeadlinesWorkspace", () => {
       await screen.findByRole("heading", { name: espnStory.title }),
     ).toBeInTheDocument();
     expect(screen.getByText("NFL Nation")).toBeInTheDocument();
-    expect(screen.getByText("CLE")).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "Cleveland Browns" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("CLE")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Sources: Browns/ })).toHaveAttribute(
       "href",
       espnStory.url,
