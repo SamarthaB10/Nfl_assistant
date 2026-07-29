@@ -1,5 +1,6 @@
 import {
   bigint,
+  bigserial,
   boolean,
   index,
   pgTable,
@@ -112,6 +113,45 @@ export const rateLimit = pgTable(
     lastRequest: bigint("last_request", { mode: "number" }).notNull(),
   },
   (table) => [uniqueIndex("rate_limits_key_unique").on(table.key)],
+);
+
+export const newsArticles = pgTable(
+  "news_articles",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    source: text("source").notNull(),
+    sourceArticleId: text("source_article_id").notNull(),
+    title: text("title").notNull(),
+    author: text("author"),
+    excerpt: text("excerpt"),
+    canonicalUrl: text("canonical_url").notNull(),
+    imageUrl: text("image_url"),
+    teamCodes: text("team_codes").array().notNull(),
+    publishedAt: timestamp("published_at", { withTimezone: true }).notNull(),
+    fetchedAt: timestamp("fetched_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("news_articles_source_article_unique").on(
+      table.source,
+      table.sourceArticleId,
+    ),
+    uniqueIndex("news_articles_canonical_url_unique").on(table.canonicalUrl),
+    index("news_articles_cursor_idx").on(
+      table.publishedAt.desc(),
+      table.id.desc(),
+    ),
+    index("news_articles_source_cursor_idx").on(
+      table.source,
+      table.publishedAt.desc(),
+      table.id.desc(),
+    ),
+    index("news_articles_team_codes_idx").using("gin", table.teamCodes),
+  ],
 );
 
 export const authSchema = {

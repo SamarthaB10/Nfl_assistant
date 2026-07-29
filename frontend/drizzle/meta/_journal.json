@@ -15,6 +15,13 @@
       "when": 1785213936423,
       "tag": "0001_gray_pride",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785352111070,
+      "tag": "0002_wonderful_reaper",
+      "breakpoints": true
     }
   ]
 }
