@@ -3,6 +3,9 @@ import Image from "next/image";
 import type { HeadlineItem } from "@/lib/headlines";
 import { getNflTeam } from "@/lib/nfl-teams";
 
+const NFL_SHIELD_URL =
+  "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png";
+
 interface HeadlineCardProps {
   headline: HeadlineItem;
 }
@@ -46,9 +49,9 @@ export function HeadlineCard({ headline }: HeadlineCardProps) {
           {headline.excerpt ? <p>{headline.excerpt}</p> : null}
           <footer>
             <span>{headline.author ?? `${headline.source} Sports`}</span>
-            {headline.teamCodes.length > 0 ? (
-              <span className="headline-card__teams">
-                {headline.teamCodes.map((teamCode) => {
+            <span className="headline-card__teams">
+              {headline.teamCodes.length > 0 ? (
+                headline.teamCodes.map((teamCode) => {
                   const team = getNflTeam(teamCode);
 
                   return team ? (
@@ -70,9 +73,24 @@ export function HeadlineCard({ headline }: HeadlineCardProps) {
                   ) : (
                     <b key={teamCode}>{teamCode}</b>
                   );
-                })}
-              </span>
-            ) : null}
+                })
+              ) : (
+                <span
+                  aria-label="NFL"
+                  className="headline-card__team"
+                  role="img"
+                  title="NFL"
+                >
+                  <Image
+                    alt=""
+                    aria-hidden="true"
+                    height={34}
+                    src={NFL_SHIELD_URL}
+                    width={34}
+                  />
+                </span>
+              )}
+            </span>
           </footer>
         </div>
         <span aria-hidden="true" className="headline-card__arrow">

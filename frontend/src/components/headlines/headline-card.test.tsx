@@ -33,6 +33,27 @@ describe("HeadlineCard", () => {
     expect(logo).toHaveAttribute("height", "34");
   });
 
+  it("shows the NFL shield when no team can be classified", () => {
+    render(
+      <HeadlineCard
+        headline={{
+          ...headline,
+          title: "League owners approve a new regular-season policy",
+          teamCodes: [],
+        }}
+      />,
+    );
+
+    const leagueBadge = screen.getByRole("img", { name: "NFL" });
+    const logo = leagueBadge.querySelector("img");
+
+    expect(leagueBadge).toHaveAttribute("title", "NFL");
+    expect(leagueBadge).toHaveClass("headline-card__team");
+    expect(decodeURIComponent(logo?.getAttribute("src") ?? "")).toContain(
+      "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png",
+    );
+  });
+
   it("styles headline team tags as high-contrast gold badges", () => {
     const styles = readFileSync(resolve("src/app/globals.css"), "utf8");
     const badgeStyles = styles.slice(
