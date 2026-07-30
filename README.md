@@ -101,6 +101,62 @@ Open:
 - Swagger UI: <http://127.0.0.1:8000/docs>
 - Health endpoint: <http://127.0.0.1:8000/health>
 
+## Deploy the web app to Netlify
+
+The repository is configured for Netlify through the root
+[`netlify.toml`](netlify.toml). Netlify builds the Next.js application from
+`frontend/` with Node.js 22 and publishes the `.next` output through Netlify's
+native Next.js runtime. This deployment does not use OpenAI Sites.
+
+The FastAPI process is a separate long-running service and must be deployed to
+a Python host such as Render, Railway, or Fly.io before the Netlify site can
+load rankings and live headlines. PostgreSQL must also be hosted outside
+Netlify. Use a pooled PostgreSQL connection string when the provider offers
+one.
+
+Before importing the GitHub repository into Netlify:
+
+1. Deploy FastAPI and confirm `GET /health` returns `200`.
+2. Provision PostgreSQL and apply the frontend migrations:
+
+   ```bash
+   cd frontend
+   DATABASE_URL="postgresql://..." npm run db:migrate
+   ```
+
+3. In Netlify, choose **Add new project → Import an existing project**, select
+   this repository, and deploy the `main` branch. The committed configuration
+   supplies the base directory, build command, publish directory, and Node.js
+   version.
+4. Add these variables under **Project configuration → Environment
+   variables**:
+
+   | Variable | Production value |
+   | --- | --- |
+   | `DATABASE_URL` | Hosted PostgreSQL connection string |
+   | `BETTER_AUTH_SECRET` | Cryptographically random value of at least 32 characters |
+   | `BETTER_AUTH_URL` | Exact Netlify production origin, such as `https://drizzle.example.com` |
+   | `NFL_API_BASE_URL` | Public HTTPS origin of the deployed FastAPI service |
+
+Do not place secrets in `netlify.toml` or commit a production `.env` file.
+Deploy previews need their own safe environment-variable scope if accounts or
+comments should work in previews. Database migrations are intentionally not
+part of `npm run build`; run them explicitly before deploying schema changes
+so a failed preview build cannot modify production data.
+
+After the first production deploy, verify:
+
+- `/` loads weekly rankings through FastAPI;
+- `/headlines` loads current articles;
+- signup, login, logout, and a public profile work;
+- creating and deleting a comment works while signed in;
+- security headers are present; and
+- FastAPI `/health` remains healthy.
+
+To roll back, select the previous successful production deploy in Netlify and
+publish it. If the release included a database migration, review that
+migration separately before rolling the schema back.
+
 ### Accounts and profiles
 
 PostgreSQL listens on local host port `5433` so it does not conflict with a
