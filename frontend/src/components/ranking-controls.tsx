@@ -16,8 +16,8 @@ const MODES: Array<{ value: SelectionMode; label: string }> = [
 ];
 
 const SEASONS: Array<{ value: Season; label: string }> = [
-  { value: 2026, label: "2026 schedule" },
-  { value: 2025, label: "2025 rankings" },
+  { value: 2026, label: "2026" },
+  { value: 2025, label: "2025" },
 ];
 
 export function RankingControls({

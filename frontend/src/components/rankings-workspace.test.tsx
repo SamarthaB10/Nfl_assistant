@@ -101,6 +101,8 @@ describe("RankingsWorkspace", () => {
       }),
     ).toBeInTheDocument();
     expect(screen.getByText("Know what’s worth watching.")).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "2025" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "2026" })).toBeInTheDocument();
     expect(screen.queryByText("Live model v6")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Loading matchups")).toBeInTheDocument();
     expect(
