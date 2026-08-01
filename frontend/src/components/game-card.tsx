@@ -4,7 +4,10 @@ import Image from "next/image";
 import { useId, useState } from "react";
 
 import { GameComments } from "@/components/game-comments";
-import { selectFeaturedPlayers } from "@/lib/featured-players";
+import {
+  selectFeaturedPlayers,
+  selectStartingQuarterbacks,
+} from "@/lib/featured-players";
 import type { GameSummary, PlayerSpotlight } from "@/lib/rankings";
 
 interface GameCardProps {
@@ -58,7 +61,15 @@ export function GameCard({ game, gameKey, rank }: GameCardProps) {
   }
   const players: PlayerSpotlight[] =
     isSchedule
-      ? []
+      ? selectStartingQuarterbacks(teams.map((team) => team.id)).map((player) => ({
+          playerId: player.id,
+          teamId: player.teamId,
+          name: player.name,
+          position: player.position,
+          imageUrl: player.imageUrl,
+          profileUrl: player.profileUrl,
+          details: [],
+        }))
       : game.playersToWatch && game.playersToWatch.length > 0
         ? game.playersToWatch
         : selectFeaturedPlayers(
@@ -191,7 +202,9 @@ export function GameCard({ game, gameKey, rank }: GameCardProps) {
 
           {players.length > 0 && (
             <div className="players">
-              <p className="detail-label">Players to watch</p>
+              <p className="detail-label">
+                {isSchedule ? "Starting quarterbacks" : "Players to watch"}
+              </p>
               <div className="player-grid">
                 {players.map((player) => (
                   <a

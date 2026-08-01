@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   FEATURED_PLAYER_CANDIDATES,
   selectFeaturedPlayers,
+  selectStartingQuarterbacks,
 } from "./featured-players";
 
 const NFL_TEAM_IDS = [
@@ -79,5 +80,15 @@ describe("selectFeaturedPlayers", () => {
         teamId: "NYG",
       }),
     ]);
+  });
+});
+
+describe("selectStartingQuarterbacks", () => {
+  it("returns one quarterback for every NFL team", () => {
+    const players = selectStartingQuarterbacks(NFL_TEAM_IDS);
+
+    expect(players).toHaveLength(NFL_TEAM_IDS.length);
+    expect(players.map((player) => player.teamId)).toEqual(NFL_TEAM_IDS);
+    expect(players.every((player) => player.position === "QB")).toBe(true);
   });
 });

@@ -116,9 +116,53 @@ const COMPLETE_PLAYER_CANDIDATES = {
   WAS: [featuredPlayer("4426348", "Jayden Daniels", "QB", "jayden-daniels")],
 } satisfies Record<NflTeamId, readonly FeaturedPlayer[]>;
 
+const STARTING_QUARTERBACKS = {
+  ARI: featuredPlayer("2578570", "Jacoby Brissett", "QB", "jacoby-brissett"),
+  ATL: featuredPlayer("4241479", "Tua Tagovailoa", "QB", "tua-tagovailoa"),
+  BAL: featuredPlayer("3916387", "Lamar Jackson", "QB", "lamar-jackson"),
+  BUF: featuredPlayer("3918298", "Josh Allen", "QB", "josh-allen"),
+  CAR: featuredPlayer("4685720", "Bryce Young", "QB", "bryce-young"),
+  CHI: featuredPlayer("4431611", "Caleb Williams", "QB", "caleb-williams"),
+  CIN: featuredPlayer("3915511", "Joe Burrow", "QB", "joe-burrow"),
+  CLE: featuredPlayer("3122840", "Deshaun Watson", "QB", "deshaun-watson"),
+  DAL: featuredPlayer("2577417", "Dak Prescott", "QB", "dak-prescott"),
+  DEN: featuredPlayer("4426338", "Bo Nix", "QB", "bo-nix"),
+  DET: featuredPlayer("3046779", "Jared Goff", "QB", "jared-goff"),
+  GB: featuredPlayer("4036378", "Jordan Love", "QB", "jordan-love"),
+  HOU: featuredPlayer("4432577", "C.J. Stroud", "QB", "cj-stroud"),
+  IND: featuredPlayer("3917792", "Daniel Jones", "QB", "daniel-jones"),
+  JAX: featuredPlayer("4360310", "Trevor Lawrence", "QB", "trevor-lawrence"),
+  KC: featuredPlayer("3139477", "Patrick Mahomes", "QB", "patrick-mahomes"),
+  LAC: featuredPlayer("4038941", "Justin Herbert", "QB", "justin-herbert"),
+  LAR: featuredPlayer("12483", "Matthew Stafford", "QB", "matthew-stafford"),
+  LV: featuredPlayer("14880", "Kirk Cousins", "QB", "kirk-cousins"),
+  MIA: featuredPlayer("4242512", "Malik Willis", "QB", "malik-willis"),
+  MIN: featuredPlayer("3917315", "Kyler Murray", "QB", "kyler-murray"),
+  NE: featuredPlayer("4431452", "Drake Maye", "QB", "drake-maye"),
+  NO: featuredPlayer("4360689", "Tyler Shough", "QB", "tyler-shough"),
+  NYG: featuredPlayer("4689114", "Jaxson Dart", "QB", "jaxson-dart"),
+  NYJ: featuredPlayer("15864", "Geno Smith", "QB", "geno-smith"),
+  PHI: featuredPlayer("4040715", "Jalen Hurts", "QB", "jalen-hurts"),
+  PIT: featuredPlayer("8439", "Aaron Rodgers", "QB", "aaron-rodgers"),
+  SEA: featuredPlayer("3912547", "Sam Darnold", "QB", "sam-darnold"),
+  SF: featuredPlayer("4361741", "Brock Purdy", "QB", "brock-purdy"),
+  TB: featuredPlayer("3052587", "Baker Mayfield", "QB", "baker-mayfield"),
+  TEN: featuredPlayer("4688380", "Cam Ward", "QB", "cam-ward"),
+  WAS: featuredPlayer("4426348", "Jayden Daniels", "QB", "jayden-daniels"),
+} satisfies Record<NflTeamId, FeaturedPlayer>;
+
 export const FEATURED_PLAYER_CANDIDATES: Readonly<
   Record<string, readonly FeaturedPlayer[]>
 > = COMPLETE_PLAYER_CANDIDATES;
+
+export function selectStartingQuarterbacks(
+  teamIds: readonly string[],
+): SelectedFeaturedPlayer[] {
+  return teamIds.flatMap((teamId) => {
+    const player = STARTING_QUARTERBACKS[teamId as NflTeamId];
+    return player ? [{ ...player, teamId }] : [];
+  });
+}
 
 export function selectFeaturedPlayers(
   teamIds: readonly string[],

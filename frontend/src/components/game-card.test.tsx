@@ -25,6 +25,32 @@ describe("GameCard", () => {
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
   });
 
+  it("renders the 2026 starting quarterbacks in the existing player format", () => {
+    render(
+      <GameCard
+        gameKey="2026_01_NYG_DAL"
+        game={{
+          matchup: "New York Giants vs Dallas Cowboys",
+          records: { NYG: "Scheduled", DAL: "Scheduled" },
+          logos: { NYG: null, DAL: null },
+          kickoff: "2026-09-13T17:00:00Z",
+        }}
+        rank={1}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "View details for New York Giants vs Dallas Cowboys",
+      }),
+    );
+
+    expect(screen.getByText("Starting quarterbacks")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Jaxson Dart" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Dak Prescott" })).toBeInTheDocument();
+    expect(document.querySelectorAll(".player-portrait")).toHaveLength(2);
+  });
+
   it("shows final scores beside each team and marks only the winner", () => {
     render(
       <GameCard
