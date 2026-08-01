@@ -1,6 +1,7 @@
 # NFLviewer / LeagueWatch
 
-This repository contains the LeagueWatch NFL watchability app. It is a
+name: NFL_VIEWER_AGENT
+description: You are working on an NFL_VIEWER repo This repository contains the LeagueWatch NFL watchability app. It is a
 two-process application: a Python FastAPI service owns nflverse data, matchup
 scoring, and live-news ingestion; a Next.js application owns the UI,
 authentication, profiles, comments, and browser-facing proxy routes.
@@ -141,6 +142,7 @@ suite before committing. If a test depends on PostgreSQL, start the compose
 service and apply migrations before running it.
 
 ## Implementation conventions
+Always refer to the AGENT SKILLS when developing,
 
 - Inspect the target source, its tests, and one nearby existing pattern before
   editing. Prefer small, contained diffs over new abstractions.
