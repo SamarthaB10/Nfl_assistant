@@ -1,6 +1,8 @@
 export type SelectionMode = "all" | "top" | "bottom";
+export type Season = 2025 | 2026;
 
 export interface RankingsRequest {
+  season: Season;
   week: number;
   mode: SelectionMode;
   count: number;
@@ -17,33 +19,36 @@ export interface PlayerSpotlight {
 }
 
 export interface GameSummary {
+  gameId?: string;
   matchup: string;
   records: Record<string, string>;
   logos: Record<string, string | null>;
   finalScores?: Record<string, number>;
-  score: number;
-  reasons: string[];
+  score?: number;
+  reasons?: string[];
+  kickoff?: string;
   unavailablePlayerIds?: string[];
   playersToWatch?: PlayerSpotlight[];
 }
 
-export function buildGameKey(week: number, teamIds: string[]): string {
+export function buildGameKey(season: Season, week: number, teamIds: string[]): string {
   if (teamIds.length !== 2) {
     throw new Error("A game key requires exactly two teams.");
   }
 
-  return `2025_${String(week).padStart(2, "0")}_${teamIds
+  return `${season}_${String(week).padStart(2, "0")}_${teamIds
     .map((teamId) => teamId.toUpperCase())
     .join("_")}`;
 }
 
 export function buildRankingsSearch({
+  season,
   week,
   mode,
   count,
 }: RankingsRequest): URLSearchParams {
   const search = new URLSearchParams({
-    season: "2025",
+    season: String(season),
     week: String(week),
   });
 

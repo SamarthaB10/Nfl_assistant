@@ -1,6 +1,6 @@
 import type { FormEvent } from "react";
 
-import type { RankingsRequest, SelectionMode } from "@/lib/rankings";
+import type { RankingsRequest, Season, SelectionMode } from "@/lib/rankings";
 
 interface RankingControlsProps {
   request: RankingsRequest;
@@ -13,6 +13,11 @@ const MODES: Array<{ value: SelectionMode; label: string }> = [
   { value: "all", label: "All" },
   { value: "top", label: "Top" },
   { value: "bottom", label: "Bottom" },
+];
+
+const SEASONS: Array<{ value: Season; label: string }> = [
+  { value: 2026, label: "2026 schedule" },
+  { value: 2025, label: "2025 rankings" },
 ];
 
 export function RankingControls({
@@ -28,6 +33,26 @@ export function RankingControls({
 
   return (
     <form className="ranking-controls" onSubmit={submit}>
+      <label className="control-field">
+        <span>Season</span>
+        <select
+          aria-label="Season"
+          value={request.season}
+          onChange={(event) =>
+            onChange({
+              ...request,
+              season: Number(event.target.value) as Season,
+            })
+          }
+        >
+          {SEASONS.map((season) => (
+            <option key={season.value} value={season.value}>
+              {season.label}
+            </option>
+          ))}
+        </select>
+      </label>
+
       <label className="control-field">
         <span>Week</span>
         <select
@@ -51,6 +76,7 @@ export function RankingControls({
           {MODES.map((mode) => (
             <button
               aria-pressed={request.mode === mode.value}
+              disabled={request.season === 2026 && mode.value !== "all"}
               key={mode.value}
               onClick={() => onChange({ ...request, mode: mode.value })}
               type="button"
@@ -65,7 +91,7 @@ export function RankingControls({
         <span>Number of games</span>
         <input
           aria-label="Number of games"
-          disabled={request.mode === "all"}
+          disabled={request.mode === "all" || request.season === 2026}
           max={16}
           min={1}
           onChange={(event) =>
@@ -77,7 +103,13 @@ export function RankingControls({
       </label>
 
       <button className="rank-button" disabled={loading} type="submit">
-        {loading ? "Ranking…" : "Rank matchups"}
+        {loading
+          ? request.season === 2026
+            ? "Loading…"
+            : "Ranking…"
+          : request.season === 2026
+            ? "Load schedule"
+            : "Rank matchups"}
       </button>
     </form>
   );

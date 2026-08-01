@@ -14,6 +14,7 @@ from nflviewer.spotlights import build_player_spotlights
 from nflviewer.standings import TeamStanding, build_standings
 
 TARGET_SEASON = 2025
+SCHEDULE_SEASON = 2026
 PREVIOUS_SEASON = 2024
 TEAM_ALIASES = {"LA": "LAR", "JAC": "JAX"}
 
@@ -173,7 +174,7 @@ def _empty_player_stats() -> pl.DataFrame:
 
 
 class SeasonData:
-    """Validated, normalized 2024/2025 nflverse data held in memory."""
+    """Validated, normalized 2024–2026 nflverse data held in memory."""
 
     def __init__(
         self,
@@ -208,7 +209,7 @@ class SeasonData:
 
         regular = schedules.filter(
             (pl.col("game_type") == "REG")
-            & pl.col("season").is_in([PREVIOUS_SEASON, TARGET_SEASON])
+            & pl.col("season").is_in([PREVIOUS_SEASON, TARGET_SEASON, SCHEDULE_SEASON])
         ).select(sorted(SCHEDULE_COLUMNS))
 
         duplicate_ids = (
@@ -345,9 +346,9 @@ class SeasonData:
             player_stats_path.parent.mkdir(parents=True, exist_ok=True)
             self._player_stats.write_parquet(player_stats_path)
 
-    def matchups_for_week(self, week: int) -> list[Matchup]:
+    def matchups_for_week(self, week: int, season: int = TARGET_SEASON) -> list[Matchup]:
         rows = self._schedules.filter(
-            (pl.col("season") == TARGET_SEASON) & (pl.col("week") == week)
+            (pl.col("season") == season) & (pl.col("week") == week)
         ).sort(["gameday", "gametime", "game_id"])
         return [
             Matchup(
@@ -576,7 +577,7 @@ class Repository:
         require_32_teams: bool = True,
     ) -> None:
         self.cache_dir = cache_dir
-        self.schedule_path = cache_dir / "schedules-2024-2025.parquet"
+        self.schedule_path = cache_dir / "schedules-2024-2026.parquet"
         self.team_path = cache_dir / "teams-2025.parquet"
         self.weekly_roster_path = cache_dir / "rosters-weekly-2025-v2.parquet"
         self.player_stats_path = cache_dir / "player-stats-2024-2025.parquet"
@@ -624,7 +625,7 @@ class Repository:
                 player_stat_loader = player_stat_loader or nfl.load_player_stats
 
         data = SeasonData.from_frames(
-            schedule_loader([PREVIOUS_SEASON, TARGET_SEASON]),
+            schedule_loader([PREVIOUS_SEASON, TARGET_SEASON, SCHEDULE_SEASON]),
             team_loader(),
             weekly_rosters=(
                 weekly_roster_loader([TARGET_SEASON]) if weekly_roster_loader is not None else None

@@ -25,7 +25,7 @@ class HealthResponse(APIModel):
 class RankingQuery(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    season: int = Field(default=2025, ge=2025, le=2025)
+    season: int = Field(default=2025, ge=2025, le=2026)
     week: int = Field(ge=1, le=18)
     top: int | None = Field(
         default=None,
@@ -44,6 +44,8 @@ class RankingQuery(BaseModel):
     def validate_selection(self) -> Self:
         if self.top is not None and self.bottom is not None:
             raise ValueError("top and bottom are mutually exclusive")
+        if self.season == 2026 and (self.top is not None or self.bottom is not None):
+            raise ValueError("top and bottom are only supported for 2025 rankings")
         return self
 
 
@@ -116,6 +118,14 @@ class GameSummary(APIModel):
     reasons: list[str]
     unavailable_player_ids: list[str] = Field(default_factory=list)
     players_to_watch: list[PlayerSpotlight] = Field(default_factory=list)
+
+
+class ScheduleGameSummary(APIModel):
+    game_id: str
+    matchup: str
+    records: dict[str, str]
+    logos: dict[str, str | None] = Field(default_factory=dict)
+    kickoff: datetime
 
 
 HeadlineSource = Literal["ESPN", "CBS", "FOX", "NBC"]

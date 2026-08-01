@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from nflviewer.models import GameSummary, PlayerSpotlight, RankingQuery
+from nflviewer.models import GameSummary, PlayerSpotlight, RankingQuery, ScheduleGameSummary
 
 
 def test_ranking_query_defaults_to_all_2025_games() -> None:
@@ -16,7 +16,7 @@ def test_ranking_query_defaults_to_all_2025_games() -> None:
 @pytest.mark.parametrize(
     ("field", "value"),
     [
-        ("season", 2026),
+        ("season", 2027),
         ("week", 0),
         ("week", 19),
         ("top", 0),
@@ -35,6 +35,28 @@ def test_ranking_query_rejects_unsupported_values(field: str, value: int) -> Non
 def test_ranking_query_rejects_top_and_bottom_together() -> None:
     with pytest.raises(ValidationError, match="mutually exclusive"):
         RankingQuery(week=4, top=3, bottom=3)
+
+
+def test_ranking_query_rejects_rank_limits_for_schedule_only_season() -> None:
+    with pytest.raises(ValidationError, match="only supported for 2025"):
+        RankingQuery(season=2026, week=1, top=3)
+
+
+def test_schedule_game_summary_serializes_without_a_score() -> None:
+    game = ScheduleGameSummary(
+        game_id="2026_01_NE_BUF",
+        matchup="New England Patriots vs Buffalo Bills",
+        records={"NE": "Scheduled", "BUF": "Scheduled"},
+        kickoff="2026-09-10T00:20:00Z",
+    )
+
+    assert game.model_dump(mode="json", by_alias=True) == {
+        "gameId": "2026_01_NE_BUF",
+        "matchup": "New England Patriots vs Buffalo Bills",
+        "records": {"NE": "Scheduled", "BUF": "Scheduled"},
+        "logos": {},
+        "kickoff": "2026-09-10T00:20:00Z",
+    }
 
 
 def test_game_summary_accepts_ten_point_watchability_score() -> None:

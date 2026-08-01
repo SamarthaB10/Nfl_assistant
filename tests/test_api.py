@@ -78,6 +78,32 @@ def season_data() -> SeasonData:
                 "home_score": None,
                 "div_game": 0,
             },
+            {
+                "game_id": "2026_01_NE_BUF",
+                "season": 2026,
+                "game_type": "REG",
+                "week": 1,
+                "gameday": "2026-09-09",
+                "gametime": "20:20",
+                "away_team": "NE",
+                "away_score": None,
+                "home_team": "BUF",
+                "home_score": None,
+                "div_game": 1,
+            },
+            {
+                "game_id": "2026_01_NYG_DAL",
+                "season": 2026,
+                "game_type": "REG",
+                "week": 1,
+                "gameday": "2026-09-13",
+                "gametime": "20:20",
+                "away_team": "NYG",
+                "away_score": None,
+                "home_team": "DAL",
+                "home_score": None,
+                "div_game": 1,
+            },
         ]
     )
     teams = pl.DataFrame(
@@ -204,6 +230,23 @@ def test_rankings_returns_all_games_in_rank_order() -> None:
             "playersToWatch": [],
         },
     ]
+
+
+def test_2026_schedule_returns_games_without_scores_or_rankings() -> None:
+    with client_for(season_data) as client:
+        response = client.get("/api/v1/rankings", params={"season": 2026, "week": 1})
+
+    assert response.status_code == 200
+    games = response.json()
+    assert [game["gameId"] for game in games] == [
+        "2026_01_NE_BUF",
+        "2026_01_NYG_DAL",
+    ]
+    assert games[0]["matchup"] == "New England Patriots vs Buffalo Bills"
+    assert games[0]["records"] == {"NE": "Scheduled", "BUF": "Scheduled"}
+    assert games[0]["kickoff"] == "2026-09-10T00:20:00Z"
+    assert "score" not in games[0]
+    assert "reasons" not in games[0]
 
 
 def test_rankings_applies_top_after_scoring_all_games() -> None:

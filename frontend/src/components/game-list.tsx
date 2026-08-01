@@ -23,16 +23,24 @@ export function GameList({ games, request }: GameListProps) {
     <section className="results" aria-labelledby="results-heading">
       <header className="results-header">
         <div>
-          <p className="eyebrow">2025 regular season</p>
+          <p className="eyebrow">
+            {request.season === 2026
+              ? "2026 regular-season schedule"
+              : "2025 regular season rankings"}
+          </p>
           <h2 id="results-heading">
             Week {request.week} · {modeLabel(request.mode, request.count)}
           </h2>
         </div>
-        <p className="weight-legend">
-          <span>Quality 55%</span>
-          <span aria-hidden="true">·</span>
-          Context 45%
-        </p>
+        {request.season === 2025 ? (
+          <p className="weight-legend">
+            <span>Quality 55%</span>
+            <span aria-hidden="true">·</span>
+            Context 45%
+          </p>
+        ) : (
+          <p className="weight-legend">Scores coming later</p>
+        )}
       </header>
 
       {games.length === 0 ? (
@@ -45,7 +53,11 @@ export function GameList({ games, request }: GameListProps) {
           {games.map((game, index) => (
             <GameCard
               game={game}
-              gameKey={buildGameKey(request.week, Object.keys(game.records))}
+              gameKey={buildGameKey(
+                request.season,
+                request.week,
+                Object.keys(game.records),
+              )}
               key={game.matchup}
               rank={index + 1}
             />

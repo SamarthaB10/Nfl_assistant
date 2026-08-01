@@ -12,7 +12,7 @@ from fastapi.responses import RedirectResponse
 from psycopg import Error as PsycopgError
 from psycopg_pool import PoolClosed, PoolTimeout
 
-from nflviewer.data import Record, Repository, SeasonData
+from nflviewer.data import SCHEDULE_SEASON, Record, Repository, SeasonData
 from nflviewer.headlines import HeadlineRepository
 from nflviewer.models import (
     GameSummary,
@@ -22,6 +22,7 @@ from nflviewer.models import (
     HealthResponse,
     RankingQuery,
     RecordSummary,
+    ScheduleGameSummary,
 )
 from nflviewer.news.feeds import NewsSource, RssFeedClient
 from nflviewer.news.repository import NewsPage, NewsRepository
@@ -141,6 +142,28 @@ def _ranking_response(
     return summaries
 
 
+def _schedule_response(data: SeasonData, query: RankingQuery) -> list[ScheduleGameSummary]:
+    return [
+        ScheduleGameSummary(
+            game_id=matchup.game_id,
+            matchup=(
+                f"{data.teams[matchup.away_team_id].name} vs "
+                f"{data.teams[matchup.home_team_id].name}"
+            ),
+            records={
+                matchup.away_team_id: "Scheduled",
+                matchup.home_team_id: "Scheduled",
+            },
+            logos={
+                matchup.away_team_id: data.teams[matchup.away_team_id].logo_url,
+                matchup.home_team_id: data.teams[matchup.home_team_id].logo_url,
+            },
+            kickoff=matchup.kickoff,
+        )
+        for matchup in data.matchups_for_week(query.week, season=SCHEDULE_SEASON)
+    ]
+
+
 def create_app(
     repository: DataRepository | None = None,
     *,
@@ -202,7 +225,10 @@ def create_app(
 
     application = FastAPI(
         title="LeagueWatch API",
-        description=("Rank 2025 NFL matchups and retrieve current multi-publisher NFL news."),
+        description=(
+            "Rank 2025 NFL matchups, display the 2026 schedule, and retrieve current "
+            "multi-publisher NFL news."
+        ),
         version="0.1.0",
         lifespan=lifespan,
     )
@@ -218,19 +244,21 @@ def create_app(
 
     @application.get(
         "/api/v1/rankings",
-        response_model=list[GameSummary],
-        summary="Rank a week of 2025 NFL matchups",
+        response_model=list[GameSummary | ScheduleGameSummary],
+        summary="Rank 2025 matchups or display the 2026 schedule",
     )
     def rankings(
         request: Request,
         query: Annotated[RankingQuery, Query()],
-    ) -> list[GameSummary]:
+    ) -> list[GameSummary | ScheduleGameSummary]:
         data = getattr(request.app.state, "season_data", None)
         if data is None:
             raise HTTPException(
                 status_code=503,
                 detail="NFL data is unavailable. Run the data sync command and retry.",
             )
+        if query.season == SCHEDULE_SEASON:
+            return _schedule_response(data, query)
         return _ranking_response(data, query, headlines)
 
     @application.get(

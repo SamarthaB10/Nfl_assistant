@@ -4,6 +4,27 @@ import { describe, expect, it } from "vitest";
 import { GameCard } from "./game-card";
 
 describe("GameCard", () => {
+  it("renders an unranked scheduled game without a watch score", () => {
+    render(
+      <GameCard
+        gameKey="2026_01_NE_BUF"
+        game={
+          {
+            matchup: "New England Patriots vs Buffalo Bills",
+            records: { NE: "Scheduled", BUF: "Scheduled" },
+            logos: { NE: null, BUF: null },
+            kickoff: "2026-09-10T00:20:00Z",
+          }
+        }
+        rank={1}
+      />,
+    );
+
+    expect(screen.getByText("Schedule")).toBeInTheDocument();
+    expect(screen.queryByText("Watch rating")).not.toBeInTheDocument();
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+  });
+
   it("shows final scores beside each team and marks only the winner", () => {
     render(
       <GameCard

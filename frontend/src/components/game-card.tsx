@@ -13,6 +13,18 @@ interface GameCardProps {
   rank: number;
 }
 
+function formatKickoff(kickoff?: string): string {
+  if (!kickoff) return "Time TBD";
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  }).format(new Date(kickoff));
+}
+
 export function GameCard({ game, gameKey, rank }: GameCardProps) {
   const [open, setOpen] = useState(false);
   const detailsId = useId();
@@ -31,29 +43,36 @@ export function GameCard({ game, gameKey, rank }: GameCardProps) {
     hasFinalScores && finalScores[teams[0].id] !== finalScores[teams[1].id]
       ? Math.max(finalScores[teams[0].id], finalScores[teams[1].id])
       : null;
-  const headline = game.reasons.find((reason) => reason.startsWith("Headline:"));
-  const reasons = game.reasons.filter((reason) => !reason.startsWith("Headline:"));
+  const isSchedule = typeof game.score !== "number";
+  const kickoff = formatKickoff(game.kickoff);
+  const headline = game.reasons?.find((reason) =>
+    reason.startsWith("Headline:"),
+  );
+  const reasons =
+    game.reasons?.filter((reason) => !reason.startsWith("Headline:")) ?? [];
   let ratingClass = "";
-  if (game.score >= 7) {
+  if (game.score !== undefined && game.score >= 7) {
     ratingClass = " is-high-rating";
-  } else if (game.score >= 5.5) {
+  } else if (game.score !== undefined && game.score >= 5.5) {
     ratingClass = " is-mid-rating";
   }
   const players: PlayerSpotlight[] =
-    game.playersToWatch && game.playersToWatch.length > 0
-      ? game.playersToWatch
-      : selectFeaturedPlayers(
-          teams.map((team) => team.id),
-          game.unavailablePlayerIds,
-        ).map((player) => ({
-          playerId: player.id,
-          teamId: player.teamId,
-          name: player.name,
-          position: player.position,
-          imageUrl: player.imageUrl,
-          profileUrl: player.profileUrl,
-          details: [],
-        }));
+    isSchedule
+      ? []
+      : game.playersToWatch && game.playersToWatch.length > 0
+        ? game.playersToWatch
+        : selectFeaturedPlayers(
+            teams.map((team) => team.id),
+            game.unavailablePlayerIds,
+          ).map((player) => ({
+            playerId: player.id,
+            teamId: player.teamId,
+            name: player.name,
+            position: player.position,
+            imageUrl: player.imageUrl,
+            profileUrl: player.profileUrl,
+            details: [],
+          }));
 
   return (
     <li className={`game-card${open ? " is-open" : ""}`}>
@@ -117,18 +136,26 @@ export function GameCard({ game, gameKey, rank }: GameCardProps) {
           })}
         </span>
 
-        <span className={`rating-block${ratingClass}`}>
-          <span>Watch rating</span>
-          <strong>{game.score.toFixed(2)}</strong>
-          <span>out of 10</span>
-          <progress
-            aria-label={`${game.matchup} watchability score`}
-            max={10}
-            value={game.score}
-          >
-            {game.score} out of 10
-          </progress>
-        </span>
+        {isSchedule ? (
+          <span className="rating-block is-scheduled">
+            <span>Schedule</span>
+            <strong>—</strong>
+            <span>{kickoff}</span>
+          </span>
+        ) : (
+          <span className={`rating-block${ratingClass}`}>
+            <span>Watch rating</span>
+            <strong>{game.score?.toFixed(2)}</strong>
+            <span>out of 10</span>
+            <progress
+              aria-label={`${game.matchup} watchability score`}
+              max={10}
+              value={game.score}
+            >
+              {game.score} out of 10
+            </progress>
+          </span>
+        )}
 
         <span className="expand-mark" aria-hidden="true">
           {open ? "−" : "+"}
@@ -138,19 +165,27 @@ export function GameCard({ game, gameKey, rank }: GameCardProps) {
       {open && (
         <div className="game-details" id={detailsId}>
           <div className="insight-copy">
-            <p className="detail-label">Why it ranks here</p>
+            <p className="detail-label">
+              {isSchedule ? "Game details" : "Why it ranks here"}
+            </p>
             <h3>{game.matchup}</h3>
-            <ul className="reason-list">
-              {reasons.map((reason) => (
-                <li key={reason}>{reason}</li>
-              ))}
-            </ul>
+            {isSchedule ? (
+              <p className="schedule-details">{kickoff}</p>
+            ) : (
+              <>
+                <ul className="reason-list">
+                  {reasons.map((reason) => (
+                    <li key={reason}>{reason}</li>
+                  ))}
+                </ul>
 
-            {headline && (
-              <blockquote className="headline">
-                <span>Pregame headline</span>
-                <p>{headline.replace("Headline:", "").trim()}</p>
-              </blockquote>
+                {headline && (
+                  <blockquote className="headline">
+                    <span>Pregame headline</span>
+                    <p>{headline.replace("Headline:", "").trim()}</p>
+                  </blockquote>
+                )}
+              </>
             )}
           </div>
 

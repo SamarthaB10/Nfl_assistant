@@ -51,6 +51,44 @@ afterEach(() => {
 });
 
 describe("RankingsWorkspace", () => {
+  it("loads the 2026 schedule without ranking controls", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json([topGame]))
+      .mockResolvedValueOnce(
+        Response.json([
+          {
+            gameId: "2026_01_NE_BUF",
+            matchup: "New England Patriots vs Buffalo Bills",
+            records: { NE: "Scheduled", BUF: "Scheduled" },
+            logos: { NE: null, BUF: null },
+            kickoff: "2026-09-10T00:20:00Z",
+          },
+        ]),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<RankingsWorkspace />);
+    await screen.findByText("Seattle Seahawks vs San Francisco 49ers");
+
+    fireEvent.change(screen.getByRole("combobox", { name: "Season" }), {
+      target: { value: "2026" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Load schedule" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenLastCalledWith(
+        "/api/rankings?season=2026&week=18",
+        expect.objectContaining({ signal: undefined }),
+      );
+    });
+    expect(
+      await screen.findByText("New England Patriots vs Buffalo Bills"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Scores coming later")).toBeInTheDocument();
+    expect(screen.queryByText("Watch rating")).not.toBeInTheDocument();
+  });
+
   it("loads the default Week 18 top-five rankings", async () => {
     const fetchMock = vi.fn().mockResolvedValue(Response.json([topGame]));
     vi.stubGlobal("fetch", fetchMock);

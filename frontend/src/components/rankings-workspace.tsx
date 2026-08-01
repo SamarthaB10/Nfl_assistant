@@ -11,6 +11,7 @@ import {
 } from "@/lib/rankings";
 
 const DEFAULT_REQUEST: RankingsRequest = {
+  season: 2025,
   week: 18,
   mode: "top",
   count: 5,
@@ -50,6 +51,12 @@ export function RankingsWorkspace() {
     [],
   );
 
+  function changeDraft(request: RankingsRequest) {
+    setDraft(
+      request.season === 2026 ? { ...request, mode: "all" } : request,
+    );
+  }
+
   useEffect(() => {
     const controller = new AbortController();
     const timeoutId = window.setTimeout(
@@ -68,13 +75,15 @@ export function RankingsWorkspace() {
         <h1 className="hero-brand-title">DRIZZLE</h1>
         <p className="hero-value">Know what’s worth watching.</p>
         <p>
-          Every matchup, ranked by team quality, rivalry, and playoff stakes.
+          {draft.season === 2026
+            ? "Explore every 2026 regular-season matchup. Watch ratings are coming later."
+            : "Every matchup, ranked by team quality, rivalry, and playoff stakes."}
         </p>
       </header>
 
       <RankingControls
         loading={loading}
-        onChange={setDraft}
+        onChange={changeDraft}
         onSubmit={() => void load(draft)}
         request={draft}
       />
@@ -94,7 +103,7 @@ export function RankingsWorkspace() {
           </div>
         ) : error ? (
           <div className="error-state" role="alert">
-            <p>Rankings unavailable</p>
+            <p>{draft.season === 2026 ? "Schedule unavailable" : "Rankings unavailable"}</p>
             <strong>{error}</strong>
             <span>Make sure FastAPI is running on port 8000, then retry.</span>
           </div>

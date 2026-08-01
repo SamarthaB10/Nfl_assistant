@@ -75,6 +75,19 @@ def schedule_rows() -> pl.DataFrame:
                 "home_score": None,
                 "div_game": 0,
             },
+            {
+                "game_id": "2026_01_LA_JAC",
+                "season": 2026,
+                "game_type": "REG",
+                "week": 1,
+                "gameday": "2026-09-10",
+                "gametime": "20:35",
+                "away_team": "LA",
+                "away_score": None,
+                "home_team": "JAC",
+                "home_score": None,
+                "div_game": 0,
+            },
         ]
     )
 
@@ -164,6 +177,19 @@ def test_builds_target_week_matchups_and_filters_postseason() -> None:
     assert matchups[0].home_team_id == "LAR"
     assert matchups[0].away_score is None
     assert set(data.teams) == {"JAX", "LAR"}
+
+
+def test_builds_future_schedule_matchups_without_scores() -> None:
+    data = SeasonData.from_frames(schedule_rows(), team_rows())
+
+    matchups = data.matchups_for_week(1, season=2026)
+
+    assert len(matchups) == 1
+    assert matchups[0].game_id == "2026_01_LA_JAC"
+    assert matchups[0].away_team_id == "LAR"
+    assert matchups[0].home_team_id == "JAX"
+    assert matchups[0].away_score is None
+    assert matchups[0].home_score is None
 
 
 def test_returns_non_active_espn_ids_for_matchup_teams_and_week() -> None:
@@ -371,7 +397,7 @@ def test_parquet_round_trip_uses_local_cache(tmp_path: Path) -> None:
         team_rows(),
         weekly_rosters=weekly_roster_rows(),
     )
-    schedule_path = tmp_path / "schedules-2024-2025.parquet"
+    schedule_path = tmp_path / "schedules-2024-2026.parquet"
     team_path = tmp_path / "teams-2025.parquet"
     weekly_roster_path = tmp_path / "rosters-weekly-2025.parquet"
 

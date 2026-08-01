@@ -1,9 +1,10 @@
 # LeagueWatch
 
 LeagueWatch is a Next.js and FastAPI application that ranks every 2025 NFL
-regular-season matchup by how valuable it should be to watch. It turns pregame
-team quality, projected competitiveness, rivalry context, and standings
-consequences into a transparent `1.00–10.00` watchability score.
+regular-season matchup by how valuable it should be to watch and displays the
+published 2026 regular-season schedule. It turns pregame team quality,
+projected competitiveness, rivalry context, and standings consequences into a
+transparent `1.00–10.00` watchability score for 2025 games.
 
 The prototype answers a focused question:
 
@@ -25,6 +26,8 @@ remains future work.
 ## Current capabilities
 
 - Ranks all 2025 regular-season games for Weeks 1–18.
+- Displays all published 2026 regular-season games for Weeks 1–18 without
+  calculating watchability scores.
 - Returns either the complete weekly slate, the top `x`, or the bottom `x`
   games.
 - Scores games on an absolute `1.00–10.00` scale with two-decimal precision.
@@ -89,8 +92,8 @@ cd frontend
 npm run dev
 ```
 
-The data sync downloads 2024 and 2025 schedule, team, weekly roster, and player
-statistics through `nflreadpy`, validates them, and writes normalized Parquet
+The data sync downloads the 2024 and 2025 schedule/statistics plus the 2026
+schedule through `nflreadpy`, validates them, and writes normalized Parquet
 files under `data/processed/`. Subsequent syncs use the local files unless
 `--force` is supplied.
 
@@ -213,14 +216,15 @@ canonical article metadata for author, image, and publisher-provided team tags.
 
 ### `GET /api/v1/rankings`
 
-Ranks one week of the 2025 regular season.
+Ranks one week of the 2025 regular season or returns one week of the 2026
+schedule.
 
 | Query field | Required | Validation | Meaning |
 | --- | --- | --- | --- |
-| `season` | No | Exactly `2025` | Supported season; defaults to `2025` |
+| `season` | No | `2025` or `2026` | Ranked season or schedule-only season; defaults to `2025` |
 | `week` | Yes | Integer `1–18` | Week to rank |
-| `top` | No | Integer `1–16` | Return only the highest-rated games |
-| `bottom` | No | Integer `1–16` | Return only the lowest-rated games, worst first |
+| `top` | No | Integer `1–16` for 2025 | Return only the highest-rated games |
+| `bottom` | No | Integer `1–16` for 2025 | Return only the lowest-rated games, worst first |
 
 `top` and `bottom` are mutually exclusive. If both are omitted, the complete
 slate is returned from highest to lowest.
@@ -236,6 +240,9 @@ curl "http://127.0.0.1:8000/api/v1/rankings?season=2025&week=4&top=5"
 
 # Five least-watchable Week 4 games
 curl "http://127.0.0.1:8000/api/v1/rankings?season=2025&week=4&bottom=5"
+
+# Published Week 1 2026 schedule; no score or ranking limit is returned
+curl "http://127.0.0.1:8000/api/v1/rankings?season=2026&week=1"
 ```
 
 Example response:
@@ -869,7 +876,7 @@ These constraints prevent postgame result leakage into a pregame ranking.
 Before nflverse data is accepted, the service verifies:
 
 - required schedule and team columns exist;
-- only 2024 and 2025 regular-season games are retained;
+- only 2024, 2025, and 2026 regular-season games are retained;
 - game IDs are unique;
 - a completed game has both scores, never exactly one;
 - all 32 teams have metadata;
@@ -1007,7 +1014,8 @@ npm audit --audit-level=high
 
 ## Known limitations
 
-- Only the 2025 regular season is supported.
+- Only the 2025 regular season is scored; 2026 currently provides schedule data
+  without rankings.
 - The API currently ranks for a general viewer; favorite-team personalization
   is not implemented.
 - Injuries do not affect watchability scores. Player cards use weekly roster
