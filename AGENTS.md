@@ -6,7 +6,11 @@ two-process application: a Python FastAPI service owns nflverse data, matchup
 scoring, and live-news ingestion; a Next.js application owns the UI,
 authentication, profiles, comments, and browser-facing proxy routes.
 
-## Product scope
+
+
+## Github repo for pushing => https://github.com/SamarthaB10/Nfl_assistant
+
+## Current Product scope
 
 - Rankings currently support the 2025 NFL regular season, Weeks 1–18.
 - Ratings are displayed on a `1.00–10.00` scale and are deterministic.
@@ -141,9 +145,17 @@ For a focused change, run the nearest colocated test first, then the complete
 suite before committing. If a test depends on PostgreSQL, start the compose
 service and apply migrations before running it.
 
-## Implementation conventions
-Always refer to the AGENT SKILLS when developing,
 
+
+## Implementation conventions
+Always refer to the {AGENT SKILLS} when developing, {ponytail development} conventions is also important 
+
+- Do not preserve backward compatibility
+- Choose the simplest impelmentation that fully meets the current requirements
+- Prefer Establiished, well-maintained libraries over custom implementations
+- Make Architectural decisions for the long term
+- Do not accept a stopgap that only works for now and is meant to be replaced later 
+- Grow the system in layers. Start from the smallest version that works end to end, and add each new capability on top of a product that already works. Never trade a working product for unfinished complexitiy 
 - Inspect the target source, its tests, and one nearby existing pattern before
   editing. Prefer small, contained diffs over new abstractions.
 - Keep ranking calculations pure and deterministic. Do not perform network or
@@ -176,3 +188,13 @@ Always refer to the AGENT SKILLS when developing,
 When requirements conflict with existing behavior, surface the conflict and
 ask before changing public API shape, scoring weights, database schema, auth
 semantics, or deployment architecture.
+
+
+
+# Upcoming additions that are being brainstormed
+
+-Widget creation in full typescript components 
+- Nfl 2026 season season + schedule processing (load the entire season schedule from Nflverse or espn) 
+- Adding better UI features, making widgets 
+- Removing the Entire Auth function 
+  
